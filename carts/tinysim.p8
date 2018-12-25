@@ -192,14 +192,12 @@ function dispai()
   ai[2][2]=72+pitch
   ai[3][2]=-80+pitch
   ai[4][2]=222+pitch
-  ax,ay=rotatepoint(ai[1],aic,-bank)
-  bx,by=rotatepoint(ai[2],aic,-bank)
-  cx,cy=rotatepoint(ai[3],aic,-bank)
-  dx,dy=rotatepoint(ai[4],aic,-bank)
-  tri={{ax,ay},{bx,by},{cx,cy}}
-  fill_triangle(tri,12)
-  tri={{ax,ay},{bx,by},{dx,dy}}
-  fill_triangle(tri,4)
+  local ax,ay=rotatepoint(ai[1],aic,-bank)
+  local bx,by=rotatepoint(ai[2],aic,-bank)
+  local cx,cy=rotatepoint(ai[3],aic,-bank)
+  local dx,dy=rotatepoint(ai[4],aic,-bank)
+  trifill(ax,ay,bx,by,cx,cy,12)
+  trifill(ax,ay,bx,by,dx,dy,4)
   clip(35,44,55,43)
   for j=0,15 do
     local tmp=aipitch[2]-j*aistep+pitch
@@ -220,6 +218,7 @@ function dispai()
   line(80,75,aic[1],aic[2])
 end
 
+-- TODO: optimize
 function transrect(x1,y1,x2,y2)
  for x=x1,x2 do
     for y=y1,y2 do
@@ -400,6 +399,7 @@ end
 
 function disphsi()
   --transparency
+  --todo: eats 20% cpu
   local aimatrix={}
   for j=49,79 do
     for k=96,126 do
@@ -571,82 +571,6 @@ end
 
 function lerp(a,b,alpha)
 	return a*(1.0-alpha)+b*alpha
-end
-
-function fill_triangle( triangle, c )
-	local v1 = triangle[1];
-	local v2 = triangle[2];
-	local v3 = triangle[3];
-	local x1 = flr(v1[1]);
-	local y1 = flr(v1[2]);
-	local x2 = flr(v2[1]);
-	local y2 = flr(v2[2]);
-	local x3 = flr(v3[1]);
-	local y3 = flr(v3[2]);
-	
-	-- order triangle points so that y1 is on top
-	if(y2<y1) then
-		if(y3<y2) then
-			local tmp = y1
-			y1 = y3
-			y3 = tmp
-			tmp = x1
-			x1 = x3
-			x3 = tmp
-		else
-			local tmp = y1
-			y1 = y2
-			y2 = tmp
-			tmp = x1
-			x1 = x2
-			x2 = tmp
-		end
-	else
-		if(y3<y1) then
-			local tmp = y1
-			y1 = y3
-			y3 = tmp
-			tmp = x1
-			x1 = x3
-			x3 = tmp
-		end
-	end
-
-	y1 += 0.001 -- offset to avoid divide per 0
-
-	local miny = min(y2,y3)
-	local maxy = max(y2,y3)
-
-	local fx = x2
-	if(y2<y3) then
-		fx = x3
-	end
-
-	local d12 = (y2-y1)
-	if(d12 != 0) d12 = 1.0/d12
-	local d13 = (y3-y1)
-	if(d13 != 0) d13 = 1.0/d13
-
-	local cl_y1 = clip2(y1)
-	local cl_miny = clip2(miny)
-	local cl_maxy = clip2(maxy)
-
-	for y=cl_y1,cl_miny do
-		local sx = lerp(x1,x3, (y-y1) * d13 )
-		local ex = lerp(x1,x2, (y-y1) * d12 )
-		rectfill(sx,y,ex,y,c)
-	end
-	local sx = lerp(x1,x3, (miny-y1) * d13 )
-	local ex = lerp(x1,x2, (miny-y1) * d12 )
-
-	local df = (maxy-miny)
-	if(df != 0) df = 1.0/df
-
-	for y=cl_miny,cl_maxy do
-		local sx2 = lerp(sx,fx, (y-miny) * df )
-		local ex2 = lerp(ex,fx, (y-miny) * df )
-		rectfill(sx2,y,ex2,y,c)
-	end
 end
 
 function drawmenu()
@@ -913,6 +837,7 @@ function _draw()
     dispwind()
     --3d
 	   -- draw all the objects
+	   --[[
 	   if(alt<ceiling) then
 	     for shape in all(objects) do
 		      local np={}
@@ -927,7 +852,9 @@ function _draw()
         draw_points(np)
       end
     end
+    ]]
   end
+  print(stat(1),2,2,7)
 end
 
 --****************
@@ -1042,16 +969,48 @@ function rotate_point(p,a,r,c)
   end
 end
 
-function clamp_wrap(low, hi, val)
-	while val < low do val = hi - (low-val) end
-	while val > hi  do val = low + (val-hi) end
+-->8
+-- trifill
+-- by @p01
+function p01_trapeze_h(l,r,lt,rt,y0,y1)
+  lt,rt=(lt-l)/(y1-y0),(rt-r)/(y1-y0)
+  if(y0<0)l,r,y0=l-y0*lt,r-y0*rt,0 
+   for y0=y0,min(y1,128) do
+   rectfill(l,y0,r,y0)
+   l+=lt
+   r+=rt
+  end
+ end
+ function p01_trapeze_w(t,b,tt,bt,x0,x1)
+  tt,bt=(tt-t)/(x1-x0),(bt-b)/(x1-x0)
+  if(x0<0)t,b,x0=t-x0*tt,b-x0*bt,0 
+  for x0=x0,min(x1,128) do
+   rectfill(x0,t,x0,b)
+   t+=tt
+   b+=bt
+  end
+ end
+ 
+ function trifill(x0,y0,x1,y1,x2,y2,col)
+  color(col)
+  if(y1<y0)x0,x1,y0,y1=x1,x0,y1,y0
+  if(y2<y0)x0,x2,y0,y2=x2,x0,y2,y0
+  if(y2<y1)x1,x2,y1,y2=x2,x1,y2,y1
+  if max(x2,max(x1,x0))-min(x2,min(x1,x0)) > y2-y0 then
+   col=x0+(x2-x0)/(y2-y0)*(y1-y0)
+   p01_trapeze_h(x0,x0,x1,col,y0,y1)
+   p01_trapeze_h(x1,col,x2,x2,y1,y2)
+  else
+   if(x1<x0)x0,x1,y0,y1=x1,x0,y1,y0
+   if(x2<x0)x0,x2,y0,y2=x2,x0,y2,y0
+   if(x2<x1)x1,x2,y1,y2=x2,x1,y2,y1
+   col=y0+(y2-y0)/(x2-x0)*(x1-x0)
+   p01_trapeze_w(y0,y0,y1,col,x0,x1)
+   p01_trapeze_w(y1,col,y2,y2,x1,x2)
+  end
+ end
+ 
 
-	return val
-end
-
-function clamp(low, hi, val)
-	return (val < low) and low or (val > hi and hi or val)
-end
 __gfx__
 00000000fff7777faa777777777777ee5fffffff7fffffff77ff777fffffffff0000000000000000000000000000000000000000000000000000000000000000
 00000000ff7fffffffffffffffffffff55fffffff7f7ffff7f7f777ffffffeff0000000000000000000000000000000000000000000000000000000000000000
@@ -1078,8 +1037,8 @@ __gfx__
 00000000ffffffff0000000fffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
 00000000ffffffff00000000ffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
 00000000fff55555ffffff55000fffff77ffffff7f7fffffff222fffff222fff0000000000000000000000000000000000000000000000000000000000000000
-0000000055555555ffff5555070fffff7f7fffff7f7ffffff2eee2fff2eee2ff0000000000000000000000000000000000000000000000000000000000000000
-0000000055555555ffff5555070fffff7f7fffff777fffff2eeeee2f2eee7e2f0000000000000000000000000000000000000000000000000000000000000000
+0000000055566666ffff5566070fffff7f7fffff7f7ffffff2eee2fff2eee2ff0000000000000000000000000000000000000000000000000000000000000000
+0000000066655555ffff6655070fffff7f7fffff777fffff2eeeee2f2eee7e2f0000000000000000000000000000000000000000000000000000000000000000
 0000000055555555ffff5555070fffff7f7fffff777fffff2777772f2ee7ee2f0000000000000000000000000000000000000000000000000000000000000000
 0000000055500000ffff5500070fffffffffffffffffffff2eeeee2f2e7eee2f0000000000000000000000000000000000000000000000000000000000000000
 0000000000000000ffff0000070ffffffffffffffffffffff2eee2fff2eee2ff0000000000000000000000000000000000000000000000000000000000000000
