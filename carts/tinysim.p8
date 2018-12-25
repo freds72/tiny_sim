@@ -48,19 +48,42 @@ mapc={22,111} --center
 mapclr={apt=14,vor=12,ils=15}
 
 --3d
-rwy = {} 
-for i = 1,31 do -- rwy sides and center
- add(rwy, {-1,0,-i,6})
- add(rwy, {1,0,-i,6})
- if(i < 21) add(rwy, {0,0,-i*1.5,7})
-end
-for i = 0,5 do -- rwy ends
- add(rwy, {-1+i*0.4,0,0,11})
- add(rwy, {-1+i*0.4,0,-31,8})
-end
+
+-- world axis
+local v_fwd,v_right,v_up={0,0,1},{1,0,0},{0,1,0}
+
+-- models
+local all_models={
+	landing_strip={
+		c=6,
+		v={{-1,0,0}, --points
+			{-1,0,30},
+			{1,0,30},
+			{1,0,0},
+			{0,0,20},
+			{0,0,17},
+			{0,0,15},
+			{0,0,12}},
+		e={{1,2}, --lines
+			{2,3},
+			{3,4},
+			{4,1},
+			{5,6},
+			{7,8}
+		}
+	}
+}
+local actors={}
+local all_actors={
+	tower={
+		model=all_models.tower
+	},
+	landing={
+		model=all_models.landing_strip
+	}
+}
 
 function _init()
-  cls()
   menu=1
   item=0
   scen=1
@@ -83,10 +106,14 @@ function _init()
   --
   rec=0
   flight={}
+
   --3d
-  objects 	= {}
-  create_object(rwy,{384.6,0,-422.2},85) --tny 
-	 create_object(rwy,{153.8,0,-66.7},40) --smv
+  cam=make_cam(64,12,64)
+ 
+ --
+ actors={}
+	add(actors,make_actor(all_actors.landing,{-422.2,0,384.6},85/360)) -- tny
+	add(actors,make_actor(all_actors.landing,{-66.7,0,153.8},40/360)) -- smv
 end
 
 function scenario(s)
@@ -104,8 +131,6 @@ function scenario(s)
   wind=wx[wnd][2]
   ceiling=wx[wnd][3]
   if(pitch==99) bank,pitch=unusual()
-  --3d
-  update_engine()
 end
 
 function unusual()
@@ -218,7 +243,7 @@ function dispai()
   line(80,75,aic[1],aic[2])
 end
 
--- TODO: optimize
+-- todo: optimize
 function transrect(x1,y1,x2,y2)
  for x=x1,x2 do
     for y=y1,y2 do
@@ -399,7 +424,7 @@ end
 
 function disphsi()
   --transparency
-  --todo: eats 20% cpu
+  --todo: optimize, eats 20% cpu
   local aimatrix={}
   for j=49,79 do
     for k=96,126 do
@@ -805,7 +830,21 @@ function _update()
     flaps()
     blackbox()
     --3d
-	   update_engine()
+  	zbuf_clear()
+	
+  	local q=make_q(v_right,-pitch/360)
+	  q_x_q(q,make_q(v_fwd,-bank/360))
+	  -- avoid matrix skew
+	  q_normz(q)
+ 
+	  -- update cam
+	  cam:track({lat,alt/25,lon},q)
+	
+	  zbuf_filter(actors)
+	
+	  -- must be done after update loop
+	  cam:update()
+
     if btnp(4,1) then --tab
       message="pause"
       menu=2
@@ -836,6 +875,11 @@ function _draw()
     dispflaps()
     dispwind()
     --3d
+	  clip(0,0,128,24)
+	  draw_ground()	
+	  zbuf_draw()
+	  clip()
+
 	   -- draw all the objects
 	   --[[
 	   if(alt<ceiling) then
@@ -854,119 +898,421 @@ function _draw()
     end
     ]]
   end
-  print(stat(1),2,2,7)
 end
 
---****************
---* 3d functions *
---****************
+-->8
+-- 3d engine @freds72
 
--- based on 3d pico engine
--- by matheus mortatti
+-- register json context here
+function nop() return true end
 
-function update_engine()
-	fps({lon,-alt/25,lat},pitch/360,heading/360)
+-- ground constants 
+local ground_shift,ground_colors,ground_level=2,{1,13,6}
+
+-- zbuffer (kind of)
+local drawables={}
+function zbuf_clear()
+	drawables={}
 end
-
-function create_object(shape, pos, rh)
-	local ns = {}
-	ns.pos=pos
-	ns.rh = rh
-	--ns.points = shape ; not possible as ref to rwy is passed
-	ns.points={}
-	for p in all(shape) do
-	 add(ns.points, {p[1],p[2],p[3],p[4]})
+function zbuf_draw()
+	local objs={}
+	for _,d in pairs(drawables) do
+		local p=d.pos
+		local x,y,z,w=cam:project(p[1],p[2],p[3])
+		-- cull objects too far
+ --	if z>-3 then
+			add(objs,{obj=d,key=z,x=x,y=y,z=z,w=w})
+	--	end
 	end
-	rotate_shape(ns.points, "y", ns.rh/360)
-	add(objects, ns)
-	return ns
+	-- z-sorting
+	sort(objs)
+	-- actual draw
+	for i=1,#objs do
+		local d=objs[i]
+		d.obj:draw(d.x,d.y,d.z,d.w)
+	end
+	
+	print(#drawables,2,8,8)
 end
 
---------------------------
--- draw functions
---------------------------
+function zbuf_filter(array)
+	for _,a in pairs(array) do
+		if not a:update() then
+			del(array,a)
+		else
+			add(drawables,a)
+		end
+	end
+end
 
-function draw_points(rwy)
- for p in all(rwy) do
-  local c = p[4]
-  local p1=mul_view(p)
-  local x1,y1=project(p1)
-  if p1[3]<-0.1 then -- clipping?
-   if(y1<26) pset(x1,y1,c)
+function clone(src,dst)
+	dst=dst or {}
+	for k,v in pairs(src) do
+		if(not dst[k]) dst[k]=v
+	end
+	-- randomize selected values
+	if src.rnd then
+		for k,v in pairs(src.rnd) do
+			-- don't overwrite values
+			if not dst[k] then
+				dst[k]=v[3] and rndarray(v) or rndlerp(v[1],v[2])
+			end
+		end
+	end
+	return dst
+end
+
+function lerp(a,b,t)
+	return a*(1-t)+b*t
+end
+function rndlerp(a,b)
+	return lerp(b,a,1-rnd())
+end
+function smoothstep(t)
+	t=mid(t,0,1)
+	return t*t*(3-2*t)
+end
+function rndrng(ab)
+	return flr(rndlerp(ab[1],ab[2]))
+end
+function rndarray(a)
+	return a[flr(rnd(#a))+1]
+end
+function lerparray(a,t)
+	return a[mid(flr((#a-1)*t+0.5),1,#a)]
+end
+
+-- https://github.com/morgan3d/misc/tree/master/p8sort
+function sort(data)
+ for num_sorted=1,#data-1 do 
+  local new_val=data[num_sorted+1]
+  local new_val_key,i=new_val.key,num_sorted+1
+
+  while i>1 and new_val_key>data[i-1].key do
+   data[i]=data[i-1]   
+   i-=1
   end
+  data[i]=new_val
  end
-end  
-
-function project(p)
-	local x=abs(p[3])<=0.1 and 0 or -127/2*(p[1])/(p[3])+127/2
-	local y=abs(p[3])<=0.1 and 0 or -26*(p[2])/(p[3])+10
-	return x,y
 end
 
--------------------------
--- linear algebra
--------------------------
-
-function fps(eye,pitch,yaw)
-	local cosp,sinp,cosy,siny=
-			cos(pitch),sin(pitch),
-			cos(yaw),sin(yaw)
-
-	local x,y,z = {cosy,0,-siny},
-				  {siny*sinp,cosp,cosy*sinp},
-				  {siny*cosp,-sinp,cosp*cosy}
-
-	viewmatrix = {
-		{x[1],y[1],z[1],0},
-		{x[2],y[2],z[2],0},
-		{x[3],y[3],z[3],0},
-		{-dot_product(x,eye),-dot_product(y,eye),-dot_product(z,eye),1}}
+-- edge cases:
+-- a: -23	-584	-21
+-- b: 256	-595	256
+function sqr_dist(a,b)
+	local dx,dy,dz=b[1]-a[1],b[2]-a[2],b[3]-a[3]
+	if abs(dx)>128 or abs(dy)>128 or abs(dz)>128 then
+		return 32000
+	end
+	local d=dx*dx+dy*dy+dz*dz 
+	-- overflow?
+	return d<0 and 32000 or d
 end
 
-function mul_view(v)
+function make_v(a,b)
 	return {
-	v[1]*viewmatrix[1][1] + v[2]*viewmatrix[2][1] + v[3]*viewmatrix[3][1] + viewmatrix[4][1],
-	v[1]*viewmatrix[1][2] + v[2]*viewmatrix[2][2] + v[3]*viewmatrix[3][2] + viewmatrix[4][2],
-	v[1]*viewmatrix[1][3] + v[2]*viewmatrix[2][3] + v[3]*viewmatrix[3][3] + viewmatrix[4][3],
-	v[1]*viewmatrix[1][4] + v[2]*viewmatrix[2][4] + v[3]*viewmatrix[3][4] + viewmatrix[4][4],
-			}
+		b[1]-a[1],
+		b[2]-a[2],
+		b[3]-a[3]}
 end
-
-function dot_product(v1, v2)
-	return v1[1]*v2[1] + v1[2]*v2[2] + v1[3]*v2[3]
+function v_clone(v)
+	return {v[1],v[2],v[3]}
 end
-
-function rotate_shape(s,a,r,c)
- for p in all(s) do
-  rotate_point(p,a,r,c)
- end
+function v_dot(a,b)
+	return a[1]*b[1]+a[2]*b[2]+a[3]*b[3]
 end
-
-function rotate_point(p,a,r,c)
-	if c then
-	  p[1]-=c[1]
-	  p[2]-=c[2]
-	  p[3]-=c[3]
+function v_normz(v)
+	local d=v_dot(v,v)
+	if d>0.001 then
+		d=sqrt(d)
+		v[1]/=d
+		v[2]/=d
+		v[3]/=d
 	end
-	local x,y,z=1,2,3
+	return d
+end
+function v_scale(v,scale)
+	v[1]*=scale
+	v[2]*=scale
+	v[3]*=scale
+end
+function v_add(v,dv,scale)
+	scale=scale or 1
+	v[1]+=scale*dv[1]
+	v[2]+=scale*dv[2]
+	v[3]+=scale*dv[3]
+end
 
-	if 		a=="z" then x,y,z=1,2,3
-	elseif 	a=="y" then x,y,z=3,1,2
-	elseif 	a=="x" then x,y,z=2,3,1
+-- matrix functions
+function m_x_v(m,v)
+	local x,y,z=v[1],v[2],v[3]
+	v[1],v[2],v[3]=m[1]*x+m[5]*y+m[9]*z+m[13],m[2]*x+m[6]*y+m[10]*z+m[14],m[3]*x+m[7]*y+m[11]*z+m[15]
+end
+function m_x_xyz(m,x,y,z)		
+	return
+		m[1]*x+m[5]*y+m[9]*z+m[13],
+		m[2]*x+m[6]*y+m[10]*z+m[14],
+		m[3]*x+m[7]*y+m[11]*z+m[15]
+end
+
+-- quaternion
+function make_q(v,angle)
+	angle/=2
+	-- fix pico sin
+	local s=-sin(angle)
+	return {v[1]*s,
+	        v[2]*s,
+	        v[3]*s,
+	        cos(angle)}
+end
+function q_clone(q)
+	return {q[1],q[2],q[3],q[4]}
+end
+function q_normz(q)
+	local d=v_dot(q,q)+q[4]*q[4]
+	if d>0 then
+		d=sqrt(d)
+		q[1]/=d
+		q[2]/=d
+		q[3]/=d
+		q[4]/=d
 	end
-  -- figure out which axis we're rotating on
-  local _x = cos(r)*(p[x]) - sin(r) * (p[y]) -- calculate the new x location
-  local _y = sin(r)*(p[x]) + cos(r) * (p[y]) -- calculate the new y location
+end
 
-  p[x] = _x
-  p[y] = _y
-  p[z] = p[z]
+function q_x_q(a,b)
+	local qax,qay,qaz,qaw=a[1],a[2],a[3],a[4]
+	local qbx,qby,qbz,qbw=b[1],b[2],b[3],b[4]
+        
+	a[1]=qax*qbw+qaw*qbx+qay*qbz-qaz*qby
+	a[2]=qay*qbw+qaw*qby+qaz*qbx-qax*qbz
+	a[3]=qaz*qbw+qaw*qbz+qax*qby-qay*qbx
+	a[4]=qaw*qbw-qax*qbx-qay*qby-qaz*qbz
+end
+function m_from_q(q)
+	local x,y,z,w=q[1],q[2],q[3],q[4]
+	local x2,y2,z2=x+x,y+y,z+z
+	local xx,xy,xz=x*x2,x*y2,x*z2
+	local yy,yz,zz=y*y2,y*z2,z*z2
+	local wx,wy,wz=w*x2,w*y2,w*z2
 
-  if c then
-	  p[1]+=c[1]
-	  p[2]+=c[2]
-	  p[3]+=c[3]
-  end
+	return {
+		1-(yy+zz),xy+wz,xz-wy,0,
+		xy-wz,1-(xx+zz),yz+wx,0,
+		xz+wy,yz-wx,1-(xx+yy),0,
+		0,0,0,1
+	}
+end
+
+-- only invert 3x3 part
+function m_inv(m)
+	m[2],m[5]=m[5],m[2]
+	m[3],m[9]=m[9],m[3]
+	m[7],m[10]=m[10],m[7]
+end
+function m_set_pos(m,v)
+	m[13],m[14],m[15]=v[1],v[2],v[3]
+end
+-- returns foward vector from matrix
+function m_fwd(m)
+	return {m[9],m[10],m[11]}
+end
+-- returns up vector from matrix
+function m_up(m)
+	return {m[5],m[6],m[7]}
+end
+-- right vector
+function m_right(m)
+	return {m[1],m[2],m[3]}
+end
+
+function draw_actor(self,x,y,z,w)	
+	-- distance culling
+	draw_model(self.model,self.m,x,y,z,w)
+end
+
+-- little hack to perform in-place data updates
+local draw_session_id=0
+local znear,zdir=3,-1
+function draw_model(model,m,x,y,z,w)
+	draw_session_id+=1
+
+	color(model.c)
+
+	-- edges
+	local p={}
+	for _,e in pairs(model.e) do	
+		-- edges indices
+		local ak,bk=e[1],e[2]
+		-- edge positions
+		local a,b=p[ak],p[bk]
+		-- not in cache?
+		if not a then
+			local v=v_clone(model.v[ak])
+			-- relative to world
+			m_x_v(m,v)
+			-- world to cam
+			v_add(v,cam.pos,-1)
+			m_x_v(cam.m,v)
+			a,p[ak]=v,v
+		end
+		if not b then
+			local v=v_clone(model.v[bk])
+			-- relative to world
+			m_x_v(m,v)
+			-- world to cam
+			v_add(v,cam.pos,-1)
+			m_x_v(cam.m,v)
+			b,p[bk]=v,v
+		end
+		-- line clipping aginst near cam plane
+		-- swap end points
+		if(a[3]<b[3]) a,b=b,a
+		local s=make_v(a,b)
+		local den=zdir*s[3]
+		if a[3]>znear and b[3]<znear then
+			local t=zdir*(znear-a[3])/den
+			if t>=0 and t<=1 then
+				-- intersect pos
+				v_scale(s,t)
+				v_add(s,a)
+				local x0,y0=cam:project2d(a)
+				local x1,y1=cam:project2d(s)
+				line(x0,y0,x1,y1,1)
+				pset(x1,y1,8)
+			end
+		elseif b[3]>znear then
+			local x0,y0=cam:project2d(a)
+			local x1,y1=cam:project2d(b)
+			line(x0,y0,x1,y1,1)
+		end
+	end
+end
+
+function plane_ray_intersect(n,p,a,b)
+	local r=make_v(a,b)
+	local den=v_dot(r,n)
+	-- no intersection
+	if abs(den)>0.001 then
+		local t=v_dot(make_v(a,p),n)/den
+		if t>=0 and t<=1 then
+			-- intersect pos
+			v_scale(r,t)
+			v_add(r,a)
+			return r
+		end
+	end
+end
+
+function make_actor(src,p,angle)
+	-- instance
+	local a=clone(src,{
+		pos=v_clone(p),		
+		q=make_q(v_up,angle or 0)
+	})
+	a.draw=a.draw or draw_actor
+	a.update=a.update or nop
+	-- init orientation
+	local m=m_from_q(a.q)
+	m_set_pos(m,p)
+	a.m=m
+	return a
+end
+
+function make_cam(x0,y0,focal)
+	local c={
+		pos={0,0,3},
+		q=make_q(v_up,0),
+		update=function(self)
+			self.m=m_from_q(self.q)
+			m_inv(self.m)
+		end,
+		track=function(self,pos,q)
+			self.pos,q=v_clone(pos),q_clone(q)
+			self.q=q
+		end,
+		project=function(self,x,y,z)
+			-- world to view
+			x-=self.pos[1]
+			y-=self.pos[2]
+			z-=self.pos[3]
+			x,y,z=m_x_xyz(self.m,x,y,z)
+			-- too close to cam plane?
+			if(z<0.001) return nil,nil,-1,nil
+			-- view to screen
+	 		local w=focal/z
+ 			return x0+x*w,y0-y*w,z,w
+		end,
+		-- project cam-space points into 2d
+		project2d=function(self,v)
+			-- view to screen
+ 			local w=focal/v[3]
+ 			return x0+v[1]*w,y0-v[2]*w
+		end
+	}
+	return c
+end
+
+function draw_ground(self)
+
+	-- draw horizon
+	local zfar=-96
+	local x,y=-64*zfar/64,64*zfar/64
+	local farplane={
+			{x,y,zfar},
+			{x,-y,zfar},
+			{-x,-y,zfar},
+			{-x,y,zfar}}
+	-- ground point in cam space	
+	local p={0,cam.pos[2],0}
+	m_x_v(cam.m,p)
+
+	-- ground normal in cam space
+	local n={0,1,0}
+	m_x_v(cam.m,n)
+
+	local v0=farplane[#farplane]
+	local horiz={}
+	for i=1,#farplane do
+		local v1=farplane[i]
+		local s=plane_ray_intersect(n,p,v0,v1)
+		if(s) add(horiz,s)
+		v0=v1
+	end
+	
+	-- view frustrum
+	--[[
+	local x0,y0=cam:project2d(farplane[#farplane])
+	for i=1,#farplane do
+		local x1,y1=cam:project2d(farplane[i])
+		line(x0,y0,x1,y1,1)
+		x0,y0=x1,y1
+	end
+	]]
+	
+	-- complete line?
+	if #horiz==2 then
+		local x0,y0=cam:project2d(horiz[1])
+		local x1,y1=cam:project2d(horiz[2])
+		line(x0,y0,x1,y1,3)
+	end
+
+	local cy=cam.pos[2]
+
+	local scale=4*max(flr(cy/32+0.5),1)
+	scale*=scale
+	local x0,z0=cam.pos[1],cam.pos[3]
+	local dx,dy=x0%scale,z0%scale
+	
+	for i=-4,4 do
+		local ii=scale*i-dx+x0
+		for j=-4,4 do
+			local jj=scale*j-dy+z0
+			local x,y,z,w=cam:project(ii,0,jj)
+			if z>0 then
+				pset(x,y,3)
+			end
+ 	end
+	end
 end
 
 -->8
