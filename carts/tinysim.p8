@@ -5,47 +5,53 @@ __lua__
 --t cueni
 
 --scenarios (name,lat,lon,hdg,alt,pitch,bank,throttle,gps dto,nav1,nav2)
-scenarios={{"visual approach",-417,326.3,85,600,-1,0,25,3,2,1},
-           {"final approach",-408.89,230.77,85,1000,1,0,75,3,2,1},
-           {"full approach",-222.22,461.54,313,3000,0,0,91,3,2,1},
-           {"engine failure!",-244.44,261.54,50,3500,0,0,0,4,2,5},
-           {"unusual attitude",-222.22,461.54,330,450,99,99,100,3,2,1}}
+local scenarios={
+	{"visual approach",-417,326.3,85,600,-1,0,25,3,2,1},
+ {"final approach",-408.89,230.77,85,1000,1,0,75,3,2,1},
+ {"full approach",-222.22,461.54,313,3000,0,0,91,3,2,1},
+ {"engine failure!",-244.44,261.54,50,3500,0,0,0,4,2,5},
+ {"unusual attitude",-222.22,461.54,330,450,99,99,100,3,2,1}}
 --weather (name,wind,ceiling)
-wx={{"clear, calm",{0,0},20000},
-    {"clouds, breezy",{60,10},500},
-    {"low clouds, stormy",{10,45},200}}
+local wx={
+	{"clear, calm",{0,0},20000},
+ {"clouds, breezy",{60,10},500},
+ {"low clouds, stormy",{10,45},200}}
 
 --airport and navaid database (rwy hdg < 180)
-db={{-251.11,430.77,"pco","vor"},
-    {-422.22,384.62,"itn","ils",85},
-    {-422.22,384.62,"tny","apt",85},
-    {-66.67,153.85,"smv","apt",40},
-    {-177.78,246.15,"wee","vor"}}
+local db={
+	{-251.11,430.77,"pco","vor"},
+ {-422.22,384.62,"itn","ils",85},
+ {-422.22,384.62,"tny","apt",85},
+ {-66.67,153.85,"smv","apt",40},
+ {-177.78,246.15,"wee","vor"}}
 
 --general settings and vars
 palt(15,true)
 palt(0,false)
-frame=0
+local frame=0
+
+-- plane pos/orientation
+local lat,lon,heading,pitch,bank
 
 --instruments
 --ai
-aic={64,71} --center
-ai={{-87,72},{215,72},{64,-79},{64,223}}
-aipitch = {60,141}
-aistep=10
-aiwidth=8
+local aic={64,71} --center
+local ai={{-87,72},{215,72},{64,-79},{64,223}}
+local aipitch={60,141}
+local aistep=10
+local aiwidth=8
 
 --hsi
-hsic={64,111} --center
-bp={{{64,98},{64,102},{62,100},{66,100},{64,120},{64,124}},
+local hsic={64,111} --center
+local bp={{{64,98},{64,102},{62,100},{66,100},{64,120},{64,124}},
     {{1,2},{1,3},{1,4},{5,6}}} --bearing pointer
-nesw={{64,99,52},{52,111,53},{64,123,36},{76,111,37}} --cardinal directions
-cdii={{{64,98},{64,102},{62,100},{66,100},{64,120},{64,124},{64,104},{64,118}},
+local nesw={{64,99,52},{52,111,53},{64,123,36},{76,111,37}} --cardinal directions
+local cdii={{{64,98},{64,102},{62,100},{66,100},{64,120},{64,124},{64,104},{64,118}},
     {{1,2},{1,3},{1,4},{5,6},{7,8}}} --cdi
 
 --inset map
-mapc={22,111} --center
-mapclr={apt=14,vor=12,ils=15}
+local mapc={22,111} --center
+local mapclr={apt=14,vor=12,ils=15}
 
 --3d
 
@@ -75,45 +81,61 @@ local all_models={
 }
 local actors={}
 local all_actors={
-	tower={
-		model=all_models.tower
-	},
-	landing={
+	runway={
 		model=all_models.landing_strip
-	}
+  },
+  papi={
+    draw=function(self,x,y,z,w)
+      local v=make_v(self.pos,cam.pos)
+      v_normz(v)
+      local d=v_dot(v_up,v)
+      local c=7
+      if d>0.1 then
+       c=8
+      elseif d<-0.1 then
+       c=11
+      end
+      pset(x,y,c)
+      print(self.pos[1].."/"..self.pos[3],x,y-8,1)
+    end
+  }
 }
 
 function _init()
-  menu=1
-  item=0
-  scen=1
-  wnd=1
-  --
-  rpm=2200
-  tas=112
-  vs=0
-  aoa=0
-  timer=0
-  flps=0
-  blag=0 --bank lag
-  plag=0 --pitch lag
-  slag=0 --stall lag
-  --
-  brg={}
-  dist={}
-  crs=0
-  cdi=0
-  --
-  rec=0
-  flight={}
+ menu=1
+ item=0
+ scen=1
+ wnd=1
+ --
+ rpm=2200
+ tas=112
+ vs=0
+ aoa=0
+ timer=0
+ flps=0
+ blag=0 --bank lag
+ plag=0 --pitch lag
+ slag=0 --stall lag
+ --
+ brg={}
+ dist={}
+ crs=0
+ cdi=0
+ --
+ rec=0
+ flight={}
 
-  --3d
-  cam=make_cam(64,12,64)
- 
+ --3d
+ cam=make_cam(64,12,64)
+
  --
  actors={}
-	add(actors,make_actor(all_actors.landing,{-422.2,0,384.6},85/360)) -- tny
-	add(actors,make_actor(all_actors.landing,{-66.7,0,153.8},40/360)) -- smv
+	add(actors,make_actor(all_actors.runway,{-422.2,0,384.6},85/360)) -- tny
+	add(actors,make_actor(all_actors.papi,{-412.2,0,345.6})) -- 
+	add(actors,make_actor(all_actors.papi,{-412.2,0,346.6})) -- 
+ add(actors,make_actor(all_actors.papi,{-412.2,0,347.6})) -- 
+  
+	add(actors,make_actor(all_actors.runway,{-66.7,0,153.8},40/360)) -- smv
 end
 
 function scenario(s)
@@ -372,6 +394,7 @@ end
 function calcposition()
    local dx=-groundspeed*sin(track/360)/2880
    local dy=groundspeed*cos(track/360)/2880
+   -- todo: clarify world coord space
    lon+=dx
    lat-=dy
 end
@@ -569,6 +592,7 @@ function calcwind()
   groundspeed=flr(10*groundspeed+0.5)
   wca=atan2(tas+relh,relc)*360
   wca=(wca+180)%360-180
+		-- actual 2d velocity direction
   track=heading+wca
 end
 
@@ -589,34 +613,25 @@ function blackbox()
   if(rec%150==1) add(flight, {lat,lon,alt})
 end
 
---triangle fill functions written by nusan
-function clip2(v)
-	return max(-1,min(128,v))
-end
-
-function lerp(a,b,alpha)
-	return a*(1.0-alpha)+b*alpha
-end
-
 function drawmenu()
   local c = frame%16<8 and 7 or 9
   cls()
   spr(2,25,10)
   spr(3,92,10)	
-		print("tiny sim v0.50",35,10,7)
-		print("the world's smallest flight sim",2,20,6)
-		print("flight:",8,37,item==0 and c or 7)
-		print(scenarios[scen][1],44,37,7)
+  print("tiny sim v0.50",35,10,7)
+  print("the world's smallest flight sim",2,20,6)
+  print("flight:",8,37,item==0 and c or 7)
+  print(scenarios[scen][1],44,37,7)
  	print("weather:",8,47,item==1 and c or 7)
-		print(wx[wnd][1],44,47,7)
-		print("press ❎ for briefing",8,57,7)
-		print("x/z: throttle",8,80,6)
-		print("q: toggle flaps",8,87,6)
-		print("tab: toggle map / pause",8,94,6)
-		rect(5,77,101,101,6)
-		rectfill(70,88,75,89,7) --flaps
-		spr(4,62,80) --throttle
-		print("tc 2018",49,123,6)
+  print(wx[wnd][1],44,47,7)
+  print("press ❎ for briefing",8,57,7)
+  print("x/z: throttle",8,80,6)
+  print("q: toggle flaps",8,87,6)
+  print("tab: toggle map / pause",8,94,6)
+  rect(5,77,101,101,6)
+  rectfill(70,88,75,89,7) --flaps
+  spr(4,62,80) --throttle
+  print("tc 2018",49,123,6)
 end
 
 function drawmap(message)
@@ -665,9 +680,7 @@ end
 
 function scalemap(_x,_y)
   --based on 16nm per 128px
-  local y=128+_y/600*128
-  local x=_x/600*128
-  return x,y
+  return (_x/600)*128,128+(_y/600)*128
 end
 
 function drawbriefing()
@@ -831,14 +844,15 @@ function _update()
     blackbox()
     --3d
   	zbuf_clear()
-	
-  	local q=make_q(v_right,-pitch/360)
+  
+   local q=make_q(v_right,-pitch/360)
 	  q_x_q(q,make_q(v_fwd,-bank/360))
+	  local q2=make_q(v_up,heading/360)
+	  q_x_q(q2,q)
 	  -- avoid matrix skew
-	  q_normz(q)
- 
+	  q_normz(q2)
 	  -- update cam
-	  cam:track({lat,alt/25,lon},q)
+	  cam:track({lat,alt/25,lon},q2)
 	
 	  zbuf_filter(actors)
 	
@@ -874,29 +888,13 @@ function _draw()
     dispgs()
     dispflaps()
     dispwind()
-    --3d
+    -- 3d
 	  clip(0,0,128,24)
 	  draw_ground()	
 	  zbuf_draw()
 	  clip()
 
-	   -- draw all the objects
-	   --[[
-	   if(alt<ceiling) then
-	     for shape in all(objects) do
-		      local np={}
-		      for p in all(shape.points) do
-          local nt = {}
-          nt[1] = p[1] + shape.pos[1]
-          nt[2] = p[2] + shape.pos[2]
-          nt[3] = p[3] + shape.pos[3]
-          nt[4] = p[4]
-          add(np, nt)
-        end
-        draw_points(np)
-      end
-    end
-    ]]
+   print(lat.."/"..lon,2,2,7)
   end
 end
 
@@ -1236,11 +1234,10 @@ function make_cam(x0,y0,focal)
 			y-=self.pos[2]
 			z-=self.pos[3]
 			x,y,z=m_x_xyz(self.m,x,y,z)
-			-- too close to cam plane?
-			if(z<0.001) return nil,nil,-1,nil
+			
 			-- view to screen
-	 		local w=focal/z
- 			return x0+x*w,y0-y*w,z,w
+	 	local w=focal/z
+ 		return x0+x*w,y0-y*w,z,w
 		end,
 		-- project cam-space points into 2d
 		project2d=function(self,v)
@@ -1255,7 +1252,7 @@ end
 function draw_ground(self)
 
 	-- draw horizon
-	local zfar=-96
+	local zfar=-512
 	local x,y=-64*zfar/64,64*zfar/64
 	local farplane={
 			{x,y,zfar},
@@ -1358,11 +1355,11 @@ function p01_trapeze_h(l,r,lt,rt,y0,y1)
  
 
 __gfx__
-00000000fff7777faa777777777777ee5fffffff7fffffff77ff777fffffffff0000000000000000000000000000000000000000000000000000000000000000
+00000000fff7777f49777777777777e25fffffff7fffffff77ff777fffffffff0000000000000000000000000000000000000000000000000000000000000000
 00000000ff7fffffffffffffffffffff55fffffff7f7ffff7f7f777ffffffeff0000000000000000000000000000000000000000000000000000000000000000
-00000000f7ffffffffbb77777777ddff555fffffff77ffff7f7f7f7feeeeeeef0000000000000000000000000000000000000000000000000000000000000000
+00000000f7ffffffff3b77777777d5ff555fffffff77ffff7f7f7f7feeeeeeef0000000000000000000000000000000000000000000000000000000000000000
 000000007fffffffffffffffffffffff55fffffff777fffffffffffffffffeff0000000000000000000000000000000000000000000000000000000000000000
-00000000ffffffffffffcc7777ccffff5fffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
+00000000ffffffffffff1c7777c1ffff5fffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
 00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
 00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
 00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
