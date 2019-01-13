@@ -1000,6 +1000,11 @@ function make_v(a,b)
 		b[2]-a[2],
 		b[3]-a[3]}
 end
+function make_v_cross(a,b)
+	local ax,ay,az=a[1],a[2],a[3]
+	local bx,by,bz=b[1],b[2],b[3]
+	return {ay*bz-az*by,az*bx-ax*bz,ax*by-ay*bx}
+end
 function v_clone(v)
 	return {v[1],v[2],v[3]}
 end
@@ -1157,7 +1162,6 @@ function draw_model(model,m,x,y,z,w)
 			if not a then
 				local v=model.v[ak]
 				local x,y,z,w=v[1],v[2],v[3]
-				--m_x_v(m,v)
 				x,y,z,w=cam:project(m[1]*x+m[5]*y+m[9]*z+m[13],m[2]*x+m[6]*y+m[10]*z+m[14],m[3]*x+m[7]*y+m[11]*z+m[15])
 				p[ak]={x,y,z,w}
 				a=p[ak]
@@ -1174,21 +1178,60 @@ function draw_model(model,m,x,y,z,w)
 			if(a[3]>0 and b[3]>0) line(a[1],a[2],b[1],b[2])
 		end
 	end
+
+  -- lights
+  for _,l in pairs(model.l) do
+ 		local x,y,z,w=l.pos[1],l.pos[2],l.pos[3]
+		x,y,z,w=cam:project(m[1]*x+m[5]*y+m[9]*z+m[13],m[2]*x+m[6]*y+m[10]*z+m[14],m[3]*x+m[7]*y+m[11]*z+m[15])
+    -- directional light?
+    local c=l.c
+    if l.n then
+      local fwd,ln=m_fwd(cam.mw),v_clone(l.n)
+      -- light dir in world space      
+      m_x_v(m,ln)
+      -- facing light?
+      if v_dot(fwd,ln)<0 then
+      	local lup=v_clone(l.up)
+      	m_x_v(m,lup)
+      	-- 
+      	c=v_dot(fwd,lup)>0 and 11 or 8
+      end
+    end
+    pset(x,y,c)
+  end
 end
 
-function plane_ray_intersect(n,p,a,b)
-	local r=make_v(a,b)
-	local den=v_dot(r,n)
-	-- no intersection
-	if abs(den)>0.001 then
-		local t=v_dot(make_v(a,p),n)/den
-		if t>=0 and t<=1 then
-			-- intersect pos
-			v_scale(r,t)
-			v_add(r,a)
-			return r
-		end
+-- sutherland-hodgman clipping
+function plane_poly_clip(n,p,v)
+	local dist,allin={},true
+	for i=1,#v do
+		dist[i]=v_dot(make_v(v[i],p),n)
+		allin=band(allin,dist[i]>0)
 	end
+	-- early exit
+	if(allin==true) return v
+	
+	local res={}
+	local v0,d0=v[#v],dist[#v]
+	for i=1,#v do
+		local v1,d1=v[i],dist[i]
+		if d1>0 then
+			if d0<=0 then
+				local r=make_v(v0,v1)
+				v_scale(r,d0/(d0-d1))
+				v_add(r,v0)
+				add(res,r)
+			end
+			add(res,v1)
+		elseif d0>0 then
+			local r=make_v(v0,v1)
+			v_scale(r,d0/(d0-d1))
+			v_add(r,v0)
+			add(res,r)
+		end
+		v0,d0=v1,d1
+	end
+	return res
 end
 
 function make_actor(src,p,angle)
@@ -1213,7 +1256,8 @@ function make_cam(x0,y0,focal)
 		pos={0,0,3},
 		q=make_q(v_up,0),
 		update=function(self)
-			self.m=m_from_q(self.q)
+      -- keep world orientation in mw
+			self.mw,self.m=m_from_q(self.q),m_from_q(self.q)      
 			m_inv(self.m)
 		end,
 		track=function(self,pos,q)
@@ -1228,63 +1272,62 @@ function make_cam(x0,y0,focal)
 			x,y,z=m_x_xyz(self.m,x,y,z)
 			
 			-- view to screen
-	 	local w=focal/z
- 		return x0+x*w,y0-y*w,z,w
+	 	  local w=focal/z
+ 		  return x0+x*w,y0-y*w,z,w
 		end,
 		-- project cam-space points into 2d
 		project2d=function(self,v)
-			-- view to screen
- 			local w=focal/v[3]
- 			return x0+v[1]*w,y0-v[2]*w
+        -- view to screen
+      local w=focal/v[3]
+      return x0+v[1]*w,y0-v[2]*w
 		end
 	}
 	return c
 end
 
+local stars={}
+for i=1,48 do
+	local v={rnd()-0.5,rnd(0.5),rnd()-0.5}
+	v_normz(v)
+	v_scale(v,32)
+	add(stars,v)
+end
+
+local sky_gradient={0xee,0x2e,0x11}
+local sky_fillp={0xffff,0xffff,0xffff}
 function draw_ground(self)
 
 	-- draw horizon
-	local zfar=-512
+	local zfar=-256
 	local x,y=-64*zfar/64,64*zfar/64
 	local farplane={
 			{x,y,zfar},
 			{x,-y,zfar},
 			{-x,-y,zfar},
 			{-x,y,zfar}}
-	-- ground point in cam space	
-	local p={0,cam.pos[2],0}
-	m_x_v(cam.m,p)
-
 	-- ground normal in cam space
 	local n={0,1,0}
 	m_x_v(cam.m,n)
-
-	local v0=farplane[#farplane]
-	local horiz={}
-	for i=1,#farplane do
-		local v1=farplane[i]
-		local s=plane_ray_intersect(n,p,v0,v1)
-		if(s) add(horiz,s)
-		v0=v1
-	end
 	
-	-- view frustrum
-	--[[
-	local x0,y0=cam:project2d(farplane[#farplane])
-	for i=1,#farplane do
-		local x1,y1=cam:project2d(farplane[i])
-		line(x0,y0,x1,y1,1)
-		x0,y0=x1,y1
-	end
-	]]
+	for k=0,#sky_gradient-1 do
+		-- ground location in cam space	
+		local p={0,cam.pos[2]-8*k*k,0}
+		m_x_v(cam.m,p)
 	
-	-- complete line?
-	if #horiz==2 then
-		local x0,y0=cam:project2d(horiz[1])
-		local x1,y1=cam:project2d(horiz[2])
-		line(x0,y0,x1,y1,3)
+		local v0=farplane[#farplane]
+		local sky=plane_poly_clip(n,p,farplane)
+		-- complete line?
+		fillp(sky_fillp[k+1])
+		polyfill(sky,sky_gradient[k+1])
 	end
-
+ fillp()
+ 
+ -- stars
+	for _,v in pairs(stars) do
+		local x,y,z,w=cam:project(cam.pos[1]+v[1],cam.pos[2]+v[2],cam.pos[3]+v[3])
+		if(z>0) pset(x,y,7)
+	end
+	 
 	local cy=cam.pos[2]
 
 	local scale=4*max(flr(cy/32+0.5),1)
@@ -1300,9 +1343,10 @@ function draw_ground(self)
 			if z>0 then
 				pset(x,y,3)
 			end
- 	end
+ 		end
 	end
 end
+
 
 -->8
 -- trifill
@@ -1345,7 +1389,17 @@ function trifill(x0,y0,x1,y1,x2,y2,col)
  end
 end
 
-
+function polyfill(p,c)
+	if #p>2 then
+		local x0,y0=cam:project2d(p[1])
+		local x1,y1=cam:project2d(p[2])
+		for i=3,#p do
+			local x2,y2=cam:project2d(p[i])
+			trifill(x0,y0,x1,y1,x2,y2,c)
+			x1,y1=x2,y2
+		end
+	end
+end
 -->8
 -- unpack models
 local mem=0x1000
@@ -1411,6 +1465,25 @@ function unpack_models()
 				-- always visible?
 				unpack_int()==1 and true or -1
 			})
+		end
+
+    -- lights
+    model.l={}
+		for i=1,unpack_int() do
+			local l=add(model.l,{
+				-- color
+				c=unpack_int(),
+    -- papi light?
+    papi=unpack_int()==1,
+				-- position
+				pos={unpack_float(),unpack_float(),unpack_float()}
+			})
+    -- directional light?
+    if l.papi==true then
+     l.n={unpack_float(),unpack_float(),unpack_float()}
+     l.up=make_v_cross(v_right,l.n)
+     v_normz(l.up)
+    end
 		end
 
 		-- n.p cache	
@@ -1500,11 +1573,11 @@ __gfx__
 715100516100618100817100b1910091a100a1c100c1b100f1d100d1e100e1020002f100321200122200224200423200725200526200628200827200b2920092
 a200a2c200c2b200f2d200d2e200e2030003f200331300132300234300433300735300536300638300837300b3930093a300a3c300c3b300f3d300d3e300e304
 0004f300341400142400244400443400745400546400648400847400b49400a4c400c4b400f4d400d4e400e4050005f40094150015350025a400554500355500
-45250050f1a12201d110113808383808d7d708d7d708383888383888d7d788d7d7883838a83838a8d7d7a8d7d7a83838a83838a8d7d7a8d7d7a83838c8d7d060
-409011d021104030905010204050b07040304070c080605040302080a0c040019181a18040c03101415040a041e0117040b021f031d040618171519040e0a161
-b1b040f0c17191a040d0b151c1d00ac7080a080808080606080808080a06080806c7080887f9080806080a0808080a0808060a0808d110200010400010500020
-300020600030400030700040800050600050800060700070800090a00090c000a0b000b0c000509000a0600070b000c08000d0e000d00100e0f000f00100b0f0
-0001c000d09000a0e000e01110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+452500407000e708827000e708827000f708827000f7088250f1a12201d110113808383808d7d708d7d708383888383888d7d788d7d7883838a83838a8d7d7a8
+d7d7a83838a83838a8d7d7a8d7d7a83838c8d7d060409011d021104030905010204050b07040304070c080605040302080a0c040019181a18040c03101415040
+a041e0117040b021f031d040618171519040e0a161b1b040f0c17191a040d0b151c1d00ac7080a080808080606080808080a06080806c7080887f9080806080a
+0808080a0808060a0808d110200010400010500020300020600030400030700040800050600050800060700070800090a00090c000a0b000b0c000509000a060
+0070b000c08000d0e000d00100e0f000f00100b0f00001c000d09000a0e000e01110108000d7a838000000000000000000000000000000000000000000000000
 __label__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000

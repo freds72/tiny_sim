@@ -16,7 +16,10 @@ try:
 except Exception as e:
     sys.exit(repr(e))
 
-obdata = bpy.context.object.data
+scene = bpy.context.scene
+# select first mesh object
+obcontext = [o for o in scene.objects if o.type == 'MESH'][0]
+obdata = obcontext.data
 
 # charset
 charset="_0123456789abcdefghijklmnopqrstuvwxyz"
@@ -27,17 +30,27 @@ def pack_float(x):
         raise Exception('Unable to convert: {} into a byte: {}'.format(x,h))
     return h
 
+p8_colors = ['000000','1D2B53','7E2553','008751','AB5236','5F574F','C2C3C7','FFF1E8','FF004D','FFA300','FFEC27','00E436','29ADFF','83769C','FF77A8','FFCCAA']
+def to_p8color(rgb):
+    h = "{:02X}{:02X}{:02X}".format(int(round(255*rgb.r)),int(round(255*rgb.g)),int(round(255*rgb.b)))
+    try:
+        #print("diffuse:{} -> {}\n".format(rgb,p8_colors.index(h)))
+        return p8_colors.index(h)
+    except Exception as e:
+        # unknown color
+        raise Exception('Unknown color: 0x{}'.format(h))
+
 # model data
 s = ""
 
 # object name
-name = bpy.context.object.name.lower()
+name = obcontext.name.lower()
 s = s + "{:02x}".format(len(name))
 for c in name:
     s = s + "{:02x}".format(charset.index(c)+1)
 
 # scale (custom model property)
-s = s + "{:02x}".format(bpy.context.object.get("scale", 1))
+s = s + "{:02x}".format(obcontext.get("scale", 1))
 
 bm = bmesh.new()
 bm.from_mesh(obdata)
@@ -66,6 +79,21 @@ s = s + "{:02x}".format(len(bm.edges))
 for e in bm.edges:
     s = s + "{:02x}{:02x}{:02x}".format(e.verts[0].index+1, e.verts[1].index+1,1 if e.is_wire else 0)
 
+# lamps
+lamp_objects = [o for o in scene.objects if o.type == 'LAMP']
+s = s + "{:02x}".format(len(lamp_objects))
+for l in lamp_objects:
+    # color
+    s = s + "{:02x}".format(to_p8color(l.data.color))
+    # papi light?
+    is_papi = l.get("papi", 0) 
+    s = s + "{:02x}".format(is_papi)
+    # position
+    s = s + "{}{}{}".format(pack_float(l.location.x), pack_float(l.location.z), pack_float(l.location.y))
+    # direction?
+    if is_papi==1:
+        mat = l.matrix_world
+        s = s + "{}{}{}".format(pack_float(mat[0][2]), pack_float(mat[2][2]), pack_float(mat[1][2]))
 #
 with open(args.out, 'w') as f:
     f.write(s)
