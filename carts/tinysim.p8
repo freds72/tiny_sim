@@ -67,20 +67,6 @@ local all_actors={
   },
 	tower_small={
 		model="tower"
-  },
-  papi={
-    draw=function(self,x,y,z,w)
-      local v=make_v(self.pos,cam.pos)
-      v_normz(v)
-      local d=v_dot(v_up,v)
-      local c=7
-      if d>0.1 then
-       c=8
-      elseif d<-0.1 then
-       c=11
-      end
-      pset(x,y,c)      
-    end
   }
 }
 
@@ -145,8 +131,7 @@ function scenario(s)
 end
 
 function unusual()
-  local sign=1
-  if(rnd(2)<1) sign=-1
+  local sign=rnd()<0.5 and 1 or -1
   local bank=(80-rnd(15))*sign
   local pitch=-45
   return bank,pitch
@@ -161,23 +146,22 @@ function setrpm()
     throttle-=1.5
     blag=3
   end
-  if(throttle<=0) throttle=0
-  if(throttle>=100) throttle=100
+  throttle=mid(throttle,0,100)
   --calculate rpm  
   maxrpm=2400
   if(alt>=2000) maxrpm=2456-0.028*alt
   targetrpm=throttle/100*(maxrpm-700)+700
   rpm+=(targetrpm-rpm)/20
   if(abs(targetrpm-rpm)>=30) plag=(targetrpm-rpm)/20 
-  if(rpm<=700) rpm=700
+  rpm=max(rpm,700)
 end
 
 function disprpm()
-  drpm=flr(rpm/10+0.5)*10
-  if(drpm<=2000) then c=7 --white
-  elseif(drpm<=2400) then c=11 --green
+  local drpm,c=flr(rpm/10+0.5)*10
+  if drpm<=2000 then c=7 --white
+  elseif drpm<=2400 then c=11 --green
   end
-  if(drpm>=1000) then
+  if drpm>=1000 then
     print(sub(drpm,1,2),1,116,c)
     print(sub(drpm,3,4),1,122,c)
   else
@@ -189,38 +173,34 @@ end
 
 function movepitch()
   if btn(2) then --pitch dn
-    plag-=2
-    if(plag<=-60) plag=-60
+    plag=max(plag-2,-60)
     pitch-=0.25*cos(bank/360)
-  elseif (btn(3) and aoa<18) then --pitch up
-    plag+=2
-    if(plag>=60) plag=60
+  elseif btn(3) and aoa<18 then --pitch up
+    plag=min(plag+2,60)
     pitch+=0.35*cos(bank/360)
-  elseif(plag!=0) then
+  elseif plag!=0 then
     pitch+=0.004*plag*cos(bank/360)
     plag-=plag/abs(plag) 
   end
-  if(abs(pitch)>=45) pitch=45*pitch/abs(pitch)
+  if(abs(pitch)>=45) pitch*=45/abs(pitch)
 end
 
 function movebank()
-  if btn(0) then
-    blag-=1
-    if(blag<=-50) blag=-50
+  if btn(0) then    
+    blag=max(blag-1,-50)
     bank-=1.8-tas/250
   elseif btn(1) then
-    blag+=1
-    if(blag>=50) blag=50
+    blag=min(blag+1,50)
     bank+=1.8-tas/250
-  elseif(blag!=0) then
+  elseif blag!=0 then
     bank+=0.03*blag
     blag-=blag/abs(blag) 
   end
-  if (abs(bank)<4 and blag==0) bank=bank/1.1 --bank stability
+  if (abs(bank)<4 and blag==0) bank/=1.1 --bank stability
   if(abs(bank)>20) pitch-=0.3*abs(sin(bank/360))
   if(abs(bank)>160) pitch-=0.15
-  if(bank>180) bank=bank-360
-  if(bank<-180) bank=360+bank
+  if(bank>180) bank-=360
+  if(bank<-180) bank+=360
 end
 
 function dispai()
@@ -237,8 +217,8 @@ function dispai()
   clip(35,44,55,43)
   for j=0,15 do
     local tmp=aipitch[2]-j*aistep+pitch
-    x1,y1=rotatepoint({aipitch[1],tmp},aic,-bank)
-    x2,y2=rotatepoint({aipitch[1]+aiwidth,tmp},aic,-bank)
+    local x1,y1=rotatepoint({aipitch[1],tmp},aic,-bank)
+    local x2,y2=rotatepoint({aipitch[1]+aiwidth,tmp},aic,-bank)
     if(j!=7) line(x1,y1,x2,y2,7)  
   end
   warn(-8,3)
@@ -270,9 +250,9 @@ function warn(y,j)
     local _y=y+i*aistep+pitch
     local j=1
     if(y>64) j=-1
-    x1,y1=rotatepoint({aipitch[1],_y},aic,-bank)
-    x2,y2=rotatepoint({aipitch[1]+aiwidth/2,_y+(aistep-2)*j},aic,-bank)
-    x3,y3=rotatepoint({aipitch[1]+aiwidth,_y},aic,-bank)
+    local x1,y1=rotatepoint({aipitch[1],_y},aic,-bank)
+    local x2,y2=rotatepoint({aipitch[1]+aiwidth/2,_y+(aistep-2)*j},aic,-bank)
+    local x3,y3=rotatepoint({aipitch[1]+aiwidth,_y},aic,-bank)
     line(x1,y1,x2,y2,8)
     line(x3,y3,x2,y2)
   end
@@ -298,10 +278,10 @@ function dispalt()
   print(((y2+1)%10)..0,104,60+y3)
   clip()
   local z
-  if(alt>=9995) then
+  if alt>=9995 then
     rectfill(91,68,94,74,0)
     z=92
-  elseif(alt<995) then
+  elseif alt<995 then
     z=100  
   else
     z=96  
@@ -310,47 +290,37 @@ function dispalt()
 end
 
 function dispvs()
-  vsoffset=flr(vs/100+0.5)
-  if(vsoffset>=21) then
-    vsoffset=21
-  elseif(vsoffset<=-19) then
-    vsoffset=-19
-  end
+  local vsoffset=flr(vs/100+0.5)
+  vsoffset=mid(vsoffset,-19,21)
   rectfill(115,68-vsoffset,126,74-vsoffset,0)
   spr(23,112,68-vsoffset)
   if(vsoffset!=0) print(flr(vs/100+0.5),115,69-vsoffset,7)
 end
 
 function calcheading()
-  if(abs(bank)<=90) then heading+=bank*0.007
-    else heading+=(180-abs(bank))*bank/abs(bank)*0.007 end
-  if(heading>=360) then
-    heading-=360
-  elseif(heading<=0) then
-    heading+=360
-  end
+  if abs(bank)<=90 then heading+=bank*0.007
+  else heading+=(180-abs(bank))*bank/abs(bank)*0.007 end
+  heading=(heading+360)%360
 end
 
 function dispheading()
  local hdg=flr(heading+0.5)%360
- if(hdg<10) then print("00"..hdg,58,89,7)
- elseif(hdg<100) then print("0"..hdg,58,89,7)
+ if hdg<10 then print("00"..hdg,58,89,7)
+ elseif hdg<100 then print("0"..hdg,58,89,7)
  else print(hdg,58,89,7) end
 end
 
 function calcspeed()
-  targetspeed=38.67+rpm/30-3.8*pitch --3.6
-  if(targetspeed>200) targetspeed=200
-  if(targetspeed<-30) targetspeed=-30
+  local targetspeed=38.67+rpm/30-3.8*pitch --3.6
+  targetspeed=mid(targetspeed,-30,200)
   if(flps==1) targetspeed-=10
   tas+=(targetspeed-tas)/250
   ias=tas/(1+alt/1000*0.02) --2% per 1000 ft
 end
 
 function dispspeed()
-  if(ias>=163) then c=8 --red
-    else c=0
-  end  
+  -- red or black
+  local c=ias>=163 and 8 or 0
   rectfill(21,68,33,74,c) 
   rectfill(29,65,33,77)
   local y=ias-flr(ias/10)*10
@@ -361,41 +331,35 @@ function dispspeed()
   print((y2-1)%10,30,72+y3)
   print((y2+1)%10,30,60+y3)
   clip()
-  local z
-  if(ias>=99.5) then z=22
-    else z=26
-  end
+  local z=ias>=99.5 and 22 or 26
   print(flr((ias+0.5)/10),z,69)
   print(groundspeed,116,37,14)
 end
 
 function calcaoa()
-  if(ias>=71.1) then
+  if ias>=71.1 then
     aoa=13.2-0.12*ias
-  elseif(ias>=46.7) then
+  elseif ias>=46.7 then
     aoa=26-0.3*ias
   else
     aoa=54-0.9*ias
   end
-  if(aoa<=0) aoa=0
+  aoa=max(aoa)
 end
 
 function calcposition()
-   local dx=-groundspeed*sin(track/360)/2880
-   local dy=groundspeed*cos(track/360)/2880
-   -- todo: clarify world coord space
+   local dx,dy=-groundspeed*sin(track/360)/2880,groundspeed*cos(track/360)/2880
    lon+=dx
    lat-=dy
 end
 
 function disptime()
   timer+=1/30
-  minutes=flr(timer/60)
-  seconds=flr(timer-minutes*60)
+  local minutes=flr(timer/60)
+  local seconds=flr(timer-minutes*60)
   if(minutes<10) minutes="0"..minutes
   if(seconds<10) seconds="0"..seconds
-  disptimer=minutes..":"..seconds
-  print(disptimer,108,122)
+  print(minutes..":"..seconds,108,122)
 end
 
 function dispmap()
@@ -417,12 +381,11 @@ function disppoint(p)
 end
 
 function checkonmap(p)
-  if((p[1]>11 and p[1]<33) and (p[2]>97 and p[2]<120)) return true
-  return false
+  return p[1]>11 and p[1]<33 and p[2]>97 and p[2]<120
 end
 
 function calcdistbrg()
-  j=1
+  local j=1
   for l in all(db) do
     dy=-(l[1]-lat)*16/600
     dx=(l[2]-lon)*16/600
@@ -452,13 +415,13 @@ function disphsi()
   spr(19,62,95) --tick mark 
   --cardinal directions
   for l in all(nesw) do   
-    x,y=rotatepoint(l,hsic,-heading)
+    local x,y=rotatepoint(l,hsic,-heading)
     spr(l[3],x-1,y-1)
   end
   --bearing pointer
   for l in all(bp[2]) do
-    x1,y1=rotatepoint(bp[1][l[1]],hsic,brg[nav2])
-    x2,y2=rotatepoint(bp[1][l[2]],hsic,brg[nav2])
+    local x1,y1=rotatepoint(bp[1][l[1]],hsic,brg[nav2])
+    local x2,y2=rotatepoint(bp[1][l[2]],hsic,brg[nav2])
     line(x1,y1,x2,y2,12)
   end
   --cdi
@@ -466,21 +429,21 @@ function disphsi()
   cdii[1][7][1]=cdi+64
   cdii[1][8][1]=cdi+64
   for l in all(cdii[2]) do
-    x1,y1=rotatepoint(cdii[1][l[1]],hsic,crs)
-    x2,y2=rotatepoint(cdii[1][l[2]],hsic,crs)
+    local x1,y1=rotatepoint(cdii[1][l[1]],hsic,crs)
+    local x2,y2=rotatepoint(cdii[1][l[2]],hsic,crs)
     line(x1,y1,x2,y2,11)
   end
   spr(33,62,110) --heading plane symbol
 end
 
 function rotatepoint(p,c,angle)
-  local x=((p[1]-c[1])*cos(angle/360)+(p[2]-c[2])*sin(angle/360))+c[1]
-  local y=(-(p[1]-c[1])*sin(angle/360)+(p[2]-c[2])*cos(angle/360))+c[2]
-  return x,y
+  local x,y=p[1]-c[1],p[2]-c[2]
+  local cs,ss=cos(angle/360),sin(angle/360)
+  return x*cs+y*ss+c[1],-x*ss+y*cs+c[2]
 end
 
-function dispdist(j,x,y,c)
-  if(dist[j]<10) then
+function dispdist(j,x,y,c)  
+  if dist[j]<10 then
     print(flr(dist[j]*10)/10,x,y,c)
   else
     print(flr(dist[j]),x,y,c)
@@ -493,12 +456,12 @@ function dispnav()
   print(db[dto][3],56,37)
   print(db[nav2][3],89,122,12)
   dispdist(nav2,89,116,7)
-  dispdist(dto,88,37,14)  
+  dispdist(dto,88,37,14)
 end
 
 function stall()
   local critical=18+4*flps
-  if(aoa>=critical) then
+  if aoa>=critical then
     slag=45
     plag=0
     blag=-10
@@ -508,14 +471,12 @@ function stall()
 end
 
 function calcgs() --glideslope
-    local alpha=atan2(alt/6072,dist[nav1])*360-270
-    gsy=63+10/0.7*(alpha-3)
-    if(gsy<=50) then gsy=50
-    elseif(gsy>=74) then gsy=74 end
+  local alpha=atan2(alt/6072,dist[nav1])*360-270
+  gsy=mid(63+10/0.7*(alpha-3),50,74)
 end
 
 function dispgs() --glideslope
-  if((dist[nav1]<15) and (alt< 9995)) then
+  if dist[nav1]<15 and alt< 9995 then
     transrect(91,58,93,84)
     for j=0,4 do pset(92,61+j*5,7) end
     line(91,71,93,71,7)
@@ -524,25 +485,25 @@ function dispgs() --glideslope
 end
 
 function calccdi()
-  cdangle=brg[nav1]-crs
+  local cdangle=brg[nav1]-crs
   cdangle=(cdangle+360)%360
   if(cdangle>180) cdangle-=360
-  if(cdangle>90) then cdangle=180-cdangle --backcourse
-  elseif(cdangle<-90) then cdangle=-180-cdangle end
+  if cdangle>90 then cdangle=180-cdangle --backcourse
+  elseif cdangle<-90 then cdangle=-180-cdangle end
   cdi=18/10*cdangle --5 deg full deflection
   if(abs(cdi)>9) cdi=9*cdi/abs(cdi)
 end  
 
 function crash()
-  if(ias>180) then
+  if ias>180 then
     menu=2
     return "crash: exceeded vmax"
   end
-  if(alt<=9) then
+  if alt<=9 then
     menu=2
     local h=abs(heading-db[dto][5])
-    if (vs>-300) and (tas<65) and (pitch>=0) then 
-      if (h<5 or abs(h-180)<5) and (dist[dto]<0.3) then
+    if vs>-300 and tas<65 and pitch>=0 then 
+      if (h<5 or abs(h-180)<5) and dist[dto]<0.3 then
         return "good landing!"
       else
         return "off-airport landing..."
@@ -557,15 +518,14 @@ end
 function flaps()
   if btnp(5,1) then --q
     flps=1-flps --toggle
-    if(flps==1) then plag=70
-    elseif(flps==0) then plag=-70 end
+    plag=flps==1 and 70 or -70
   end   
 end
 
 function dispflaps()
  line(4,74,4,79,5)
  line(5,74,5,79,13)
- if(flps==1) then
+ if flps==1 then
    rectfill(2,78,7,79,7)
  else
    rectfill(2,74,7,75,7)
@@ -586,13 +546,13 @@ function calcwind()
 end
 
 function dispwind()
-  if(relwind>=0) and (relwind<90) then
+  if relwind>=0 and relwind<90 then
     spr(5,41,96)
-  elseif(relwind<=0) and (relwind>-90) then
+  elseif relwind<=0 and relwind>-90 then
     spr(5,37,96,1,1,true,false)
-  elseif(relwind>=90) and (relwind<180) then
+  elseif relwind>=90 and relwind<180 then
     spr(5,41,92,1,1,false,true)
-  elseif(relwind<=-90) and (relwind>-180) then
+  elseif relwind<=-90 and relwind>-180 then
     spr(5,37,92,1,1,true,true)
   end
 end
@@ -631,10 +591,10 @@ function drawmap(message)
     x-=3 --correct for sprite size
     y-=3
     --navaids
-    if(l[4]=="vor") then
+    if l[4]=="vor" then
       spr(39,x,y)
       print(l[3],x+9,y+1,7)
-    elseif(l[4]=="ils") then
+    elseif l[4]=="ils" then
       local a=(l[5]-3)/360
       local b=(l[5]+3)/360
       local _x=sin(a)
@@ -645,11 +605,11 @@ function drawmap(message)
       line(x+3,y+3,50*_x+x+3,50*_y+y+3,11)
       print(l[3],62*_x+x+2,62*_y+y+3,7)  
     --airports
-    elseif(l[4]=="apt") then  
-      if(l[5]>=0 and l[5]<23) then spr(22,x,y)
-      elseif(l[5]>22 and l[5]<68) then spr(55,x,y)
-      elseif(l[5]>67 and l[5]<103) then spr(54,x,y)
-      elseif(l[5]>102 and l[5]<148) then spr(55,x-1,y,1,1,true,false)
+    elseif l[4]=="apt" then  
+      if l[5]>=0 and l[5]<23 then spr(22,x,y)
+      elseif l[5]>22 and l[5]<68 then spr(55,x,y)
+      elseif l[5]>67 and l[5]<103 then spr(54,x,y)
+      elseif l[5]>102 and l[5]<148 then spr(55,x-1,y,1,1,true,false)
       else spr(22,x,y) end
       print(l[3],x+9,y+1,7)
     end  
@@ -658,7 +618,7 @@ function drawmap(message)
     local x,y=scalemap(l[2],l[1])
     pset(x,y,10)
   end
-  if(message) then
+  if message then
     rectfill(1,9,128,15,5)
     print(message,10,10,c)
   end
@@ -676,7 +636,7 @@ function drawbriefing()
   cls()
   print("flight briefing:",8,10,6)
   print(name,8,17,7)
-  if(scen==1) then
+  if scen==1 then
     print("remain on runway axis. extend the",8,30,6)
     print("flaps and keep speed at 65-70",8,37)
     print("knots by using pitch and",8,44)
@@ -685,50 +645,50 @@ function drawbriefing()
     print("nose to gently touch down",8,65)
     print("below 65 knots.",8,72)
     print("too easy? add some wind!",8,79)
-  elseif(scen==2) then
+  elseif scen==2 then
     print("fly heading of approx. 085",8,30,6)
-		  print("keep localizer (  ) centered",8,37)
-		  spr(20,71,37)
-		  print("(the wind might push you away)",8,44)
-		  print("maintain 1000 ft",8,51)
-		  print("intercept glide slope ( )",8,58)
-		  spr(38,100,59)
+		print("keep localizer (  ) centered",8,37)
+		spr(20,71,37)
+		print("(the wind might push you away)",8,44)
+		print("maintain 1000 ft",8,51)
+		print("intercept glide slope ( )",8,58)
+		spr(38,100,59)
     print("reduce power and extend flaps",8,65)
     print("start 500 ft/min descent",8,72)
     print("keep localizer centered",8,79)
     print("keep glideslope centered",8,86)
     print("at 200 ft reduce power & land",8,93)
-  elseif(scen==3) then
+  elseif scen==3 then
     print("cross pco (  ) on heading 313",8,30,6)
-		  spr(35,51,30)
-		  print("intercept localizer (  )",8,37)
-		  spr(20,91,37)
-		  print("turn left heading 265",8,44)
-		  print("descend to 2000 ft",8,51)
-		  print("turn right heading 310",8,58)
+    spr(35,51,30)
+    print("intercept localizer (  )",8,37)
+    spr(20,91,37)
+    print("turn left heading 265",8,44)
+    print("descend to 2000 ft",8,51)
+    print("turn right heading 310",8,58)
     print("fly 1 minute",8,65)
     print("turn left heading 130",8,72)
     print("intercept localizer",8,79)
     print("turn left heading 085",8,86)
     print("fly final approach and land",8,93)
-  elseif(scen==4) then 
+  elseif scen==4 then 
     print("you are enroute to tinyville",8,30,6)
-		  print("when the engine suddenly quits",8,37)
-		  print("fly best glide speed 65 knots",8,44)
-		  print("turn towards wee vor (  )",8,51)
-		  spr(35,95,51)
-		  print("leave wee vor on heading 220",8,58)
-		  print("head towards smallville",8,65)
-		  spr(55,104,64) 
-		  print("glide to airport and land",8,72)
+    print("when the engine suddenly quits",8,37)
+    print("fly best glide speed 65 knots",8,44)
+    print("turn towards wee vor (  )",8,51)
+    spr(35,95,51)
+    print("leave wee vor on heading 220",8,58)
+    print("head towards smallville",8,65)
+    spr(55,104,64) 
+    print("glide to airport and land",8,72)
     print("good luck!",8,79)
   else
     print("while checking the map you did",8,30,6)
-		  print("not pay attention to your",8,37)
-		  print("attitude. when you look up,",8,44)
-		  print("the airplane is out of control",8,51) 
-		  print("at low altitude. oops!",8,58)
-		  print("can you recover?",8,65)
+    print("not pay attention to your",8,37)
+    print("attitude. when you look up,",8,44)
+    print("the airplane is out of control",8,51) 
+    print("at low altitude. oops!",8,58)
+    print("can you recover?",8,65)
     print("hint: bank first, then pull up",8,72)
   end
   print("press ❎ to   fly",8,112,7)
@@ -738,10 +698,6 @@ function drawbriefing()
 end
 
 function drawstatic()
-  rectfill(12,26,128,29,5) --glareshield
-  rectfill(12,30,128,32,0)
-  spr(49,4,27)
-  spr(50,-4,29)
   line(0,26,11,26,0)
   line(0,27,6,27)
   line(0,28,3,28)
@@ -774,7 +730,7 @@ end
 
 function _update()
   frame+=1
-  if(menu==1) then --menu
+  if menu==1 then --menu
     if btnp(5) then --x
       menu=3
       scenario(scen)
@@ -785,29 +741,29 @@ function _update()
       item-=1
       item%=2
     elseif btnp(1) then --right
-      if(item==0) then 
+      if item==0 then 
         scen+=1
         if(scen==#scenarios+1) scen=1
-      elseif(item==1) then
+      elseif item==1 then
         wnd+=1
         if(wnd==#wx+1) wnd=1
       end
     elseif btnp(0) then --left
-      if(item==0) then
+      if item==0 then
         scen-=1
         if(scen==0) scen=#scenarios
-      elseif(item==1) then
+      elseif item==1 then
         wnd-=1
         if(wnd==0) wnd=#wx
       end
     end
-  elseif(menu==2) then --pause/map screen
+  elseif menu==2 then --pause/map screen
     if btnp(4) then --z
       _init()
     elseif btnp(4,1) then --tab
       menu=0
     end
-  elseif(menu==3) then --briefing
+  elseif menu==3 then --briefing
     if btnp(5) then --x
       menu=0
       _update()
@@ -841,7 +797,7 @@ function _update()
 	  -- avoid matrix skew
 	  q_normz(q2)
 	  -- update cam
-	  cam:track({lat,alt/25,lon},q2)
+	  cam:track({lat,alt/120,lon},q2)
 	
 	  zbuf_filter(actors)
 	
@@ -856,11 +812,11 @@ function _update()
 end
 
 function _draw()
-  if(menu==1) then
+  if menu==1 then
     drawmenu() 
-	 elseif(menu==2) then
+	 elseif menu==2 then
     drawmap(message)
-	 elseif(menu==3) then
+	 elseif menu==3 then
 	   drawbriefing()
 	 else
     dispai()
@@ -878,11 +834,16 @@ function _draw()
     dispflaps()
     dispwind()
     -- 3d
-	  clip(0,0,128,24)
+	  clip(0,0,128,31)
 	  draw_ground()	
 	  zbuf_draw()
 	  clip()
-
+	
+			-- glareshield		 
+  	spr(49,4,27)
+  	spr(50,-4,29)
+			sspr(15,24,1,8,12,26,116,8)
+			
    -- print(lat.."/"..lon,2,2,7)
   end
 end
@@ -1522,11 +1483,11 @@ __gfx__
 00000000ffffffff0000000fffffffffffffffffffffffffffffffffffcccfff0000000000000000000000000000000000000000000000000000000000000000
 00000000ffffffff0000000fffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
 00000000ffffffff00000000ffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
-00000000fff55555ffffff55000fffff77ffffff7f7fffffff222fffff222fff0000000000000000000000000000000000000000000000000000000000000000
-0000000055566666ffff5566070fffff7f7fffff7f7ffffff2eee2fff2eee2ff0000000000000000000000000000000000000000000000000000000000000000
-0000000066655555ffff6655070fffff7f7fffff777fffff2eeeee2f2eee7e2f0000000000000000000000000000000000000000000000000000000000000000
-0000000055555555ffff5555070fffff7f7fffff777fffff2777772f2ee7ee2f0000000000000000000000000000000000000000000000000000000000000000
-0000000055500000ffff5500070fffffffffffffffffffff2eeeee2f2e7eee2f0000000000000000000000000000000000000000000000000000000000000000
+00000000fff66666ffffff66000fffff77ffffff7f7fffffff222fffff222fff0000000000000000000000000000000000000000000000000000000000000000
+0000000066677777ffff6677070fffff7f7fffff7f7ffffff2eee2fff2eee2ff0000000000000000000000000000000000000000000000000000000000000000
+0000000077755555ffff7755070fffff7f7fffff777fffff2eeeee2f2eee7e2f0000000000000000000000000000000000000000000000000000000000000000
+0000000055511111ffff5511070fffff7f7fffff777fffff2777772f2ee7ee2f0000000000000000000000000000000000000000000000000000000000000000
+0000000011100000ffff1100070fffffffffffffffffffff2eeeee2f2e7eee2f0000000000000000000000000000000000000000000000000000000000000000
 0000000000000000ffff0000070ffffffffffffffffffffff2eee2fff2eee2ff0000000000000000000000000000000000000000000000000000000000000000
 0000000000000000ffff0000000fffffffffffffffffffffff222fffff222fff0000000000000000000000000000000000000000000000000000000000000000
 00000000000fffffffff00ffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
@@ -1711,7 +1672,7 @@ __label__
 __map__
 0808080808000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0808080808080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0808080808080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000000808080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0808080808080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0808080800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __sfx__
