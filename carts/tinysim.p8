@@ -567,7 +567,7 @@ function drawmenu()
   cls()
   spr(2,25,10)
   spr(3,92,10)
-  print("tiny sim v0.50",35,10,7)
+  print("tiny sim v0.60",35,10,7)
   print("the world's smallest flight sim",2,20,6)
   print("flight:",8,37,item==0 and c or 7)
   print(scenarios[scen][1],44,37,7)
@@ -580,7 +580,7 @@ function drawmenu()
   rect(5,77,101,101,6)
   rectfill(70,88,75,89,7) --flaps
   spr(4,62,80) --throttle
-  print("tc 2018",49,123,6)
+  print("@yellowbaron 2019",49,123,6)
 end
 
 function drawmap(message)
