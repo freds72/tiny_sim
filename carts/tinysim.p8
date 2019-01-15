@@ -2,7 +2,7 @@ pico-8 cartridge // http://www.pico-8.com
 version 16
 __lua__
 --tiny sim 0.60
---@yellowbaron, @freds72
+--@yellowbaron, 3d engine @freds72
 
 --scenarios (name,lat,lon,hdg,alt,pitch,bank,throttle,gps dto,nav1,nav2)
 local scenarios={
@@ -11,6 +11,7 @@ local scenarios={
  {"full approach",-222.22,461.54,313,3000,0,0,91,3,2,1},
  {"engine failure!",-244.44,261.54,50,3500,0,0,0,4,2,5},
  {"unusual attitude",-222.22,461.54,330,450,99,99,100,3,2,1}}
+
 --weather (name,wind,ceiling)
 local wx={
 	{"clear, calm",{0,0},20000},
@@ -91,7 +92,7 @@ function _init()
  crs=0
  cdi=0
  --
- rec=0
+ rec,t=0,0
  flight={}
 
  --3d
@@ -183,6 +184,7 @@ function movepitch()
     plag-=plag/abs(plag)
   end
   if(abs(pitch)>=45) pitch*=45/abs(pitch)
+		if alt==0 then pitch=max(pitch,0) end
 end
 
 function movebank()
@@ -201,6 +203,7 @@ function movebank()
   if(abs(bank)>160) pitch-=0.15
   if(bank>180) bank-=360
   if(bank<-180) bank+=360
+		if(alt==0) bank/=1.3
 end
 
 function dispai()
@@ -262,7 +265,9 @@ function calcalt()
   local coeff=88
   if(vs<0) coeff=74
   vs=tas*-(sin((pitch-aoa)/360))*coeff
+		if alt==0 then vs=max(vs,0) end
   alt+=vs/1800
+		alt=max(alt,0)
 end
 
 function dispalt()
@@ -314,6 +319,7 @@ function calcspeed()
   local targetspeed=38.67+rpm/30-3.8*pitch --3.6
   targetspeed=mid(targetspeed,-30,200)
   if(flps==1) targetspeed-=10
+		if(alt==0) targetspeed-=40
   tas+=(targetspeed-tas)/250
   ias=tas/(1+alt/1000*0.02) --2% per 1000 ft
 end
@@ -464,9 +470,13 @@ function stall()
   if aoa>=critical then
     slag=45
     plag=0
-    blag=-10
+    if(alt>0) blag=-10
   end
-  pitch-=slag*0.008
+  if alt>0 then
+			 pitch-=slag*0.008
+		else
+			 pitch-=slag*0.003
+		end
   if (slag>=1) slag-=1
 end
 
@@ -494,22 +504,24 @@ function calccdi()
   if(abs(cdi)>9) cdi=9*cdi/abs(cdi)
 end
 
-function crash()
+function state()
   if ias>180 then
     menu=2
-    return "crash: exceeded vmax"
+    return "crash: exceeded maximum speed"
   end
-  if alt<=9 then
-    menu=2
+  if alt==0 then
+    --menu=2
     local h=abs(heading-db[dto][5])
     if vs>-300 and tas<65 and pitch>=0 then
       if (h<5 or abs(h-180)<5) and dist[dto]<0.3 then
-        return "good landing!"
+						  t = rec+60
+								return "good landing!"
       else
-        return "off-airport landing..."
+        t = rec+60
+								return "off-airport landing"
       end
     else
-      return "crash: collision with terrain"
+						return "crash: collision with terrain"
     end
   end
   return false
@@ -523,7 +535,7 @@ function flaps()
 end
 
 function dispflaps()
- line(4,74,4,79,5)
+	line(4,74,4,79,5)
  line(5,74,5,79,13)
  if flps==1 then
    rectfill(2,78,7,79,7)
@@ -562,6 +574,14 @@ function blackbox()
   if(rec%150==1) add(flight, {lat,lon,alt})
 end
 
+function flash(message)
+		if rec<t and message then
+    local c = frame%16<8 and 7 or 9
+    rectfill(0,9,127,15,5)
+    print(message,10,10,c)
+		end
+end
+
 function drawmenu()
   local c = frame%16<8 and 7 or 9
   cls()
@@ -580,7 +600,7 @@ function drawmenu()
   rect(5,77,101,101,6)
   rectfill(70,88,75,89,7) --flaps
   spr(4,62,80) --throttle
-  print("@yellowbaron 2019",49,123,6)
+  print("@yellowbaron | 3d by @freds72",7,123,6)
 end
 
 function drawmap(message)
@@ -619,7 +639,7 @@ function drawmap(message)
     pset(x,y,10)
   end
   if message then
-    rectfill(1,9,128,15,5)
+    rectfill(0,9,127,15,5)
     print(message,10,10,c)
   end
   print("1 nm",112,110,7)
@@ -784,13 +804,13 @@ function _update()
     stall()
     calcgs()
     calccdi()
-    message=crash()
+    message=state()
     flaps()
     blackbox()
     --3d
   	zbuf_clear()
 
-    local q=make_q(v_right,-pitch/360)
+   local q=make_q(v_right,-pitch/360)
 	  q_x_q(q,make_q(v_fwd,-bank/360))
 	  local q2=make_q(v_up,heading/360-0.25)
 	  q_x_q(q2,q)
@@ -844,7 +864,7 @@ function _draw()
   	spr(50,-4,29)
 			sspr(15,24,1,8,12,26,116,8)
 
-   -- print(lat.."/"..lon,2,2,7)
+			flash(message)
   end
 end
 
