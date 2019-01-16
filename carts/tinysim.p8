@@ -10,7 +10,8 @@ local scenarios={
  {"final approach",-408.89,230.77,85,1000,1,0,75,3,2,1},
  {"full approach",-222.22,461.54,313,3000,0,0,91,3,2,1},
  {"engine failure!",-244.44,261.54,50,3500,0,0,0,4,2,5},
- {"unusual attitude",-222.22,461.54,330,450,99,99,100,3,2,1}}
+ {"unusual attitude",-222.22,461.54,330,450,99,99,100,3,2,1},
+ {"free flight",-422.2,384.6,85,0,0,0,0,3,2,1}}
 
 --weather (name,wind,ceiling)
 local wx={
