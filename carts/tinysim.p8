@@ -21,8 +21,8 @@ local wx={
 --airport and navaid database (rwy hdg < 180)
 local db={
 	{-251.11,430.77,"pco","vor"},
- {-422.22,384.62,"itn","ils",85},
- {-422.22,384.62,"tny","apt",85},
+ {-422.2,370,"itn","ils",85},
+ {-422.2,384.6,"tny","apt",85},
  {-66.67,153.85,"smv","apt",40},
  {-177.78,246.15,"wee","vor"}}
 
@@ -52,10 +52,9 @@ local cdii={{{64,98},{64,102},{62,100},{66,100},{64,120},{64,124},{64,104},{64,1
 
 --inset map
 local mapc={22,111} --center
-local mapclr={apt=14,vor=12,ils=15}
+local mapclr={apt=14,vor=12,ils=0}
 
 --3d
-
 -- world axis
 local v_fwd,v_right,v_up={0,0,1},{1,0,0},{0,1,0}
 
@@ -93,6 +92,8 @@ function _init()
  cdi=0
  --
  rec,t=0,0
+	onground=false
+	hardlanding=0 --0: soft, 1: hard, 2:crash
  flight={}
 
  --3d
@@ -373,7 +374,7 @@ function dispmap()
   latmin=lat+67.77
   lonmin=lon-93.75 --187.5/2
   for l in all(db) do
-    local p=disppoint(l)
+				local p=disppoint(l)
     if(checkonmap(p)) pset(p[1]+0.5,p[2],mapclr[l[4]]) --x+0.5 necessary?
   end
   spr(33,20,110) --map plane symbol
@@ -504,27 +505,41 @@ function calccdi()
   if(abs(cdi)>9) cdi=9*cdi/abs(cdi)
 end
 
-function state()
-  if ias>180 then
+function checklanded()
+  if alt==0 and (onground==false) then
+   onground=true
+   t=rec+60 --message displayed for 2s
+			if vs>-300 and pitch>-0.5 then hardlanding=0
+			elseif vs>-1000 and pitch>-0.5 then hardlanding=1
+			else hardlanding=2 end
+	 end
+		if alt>0 and (onground==true) then
+			onground=false
+			--t=rec+60
+		end
+end
+
+function dispmessage()
+  local message=false
+		if ias>180 then
     menu=2
     return "crash: exceeded maximum speed"
   end
-  if alt==0 then
-    --menu=2
-    local h=abs(heading-db[dto][5])
-    if vs>-300 and tas<65 and pitch>=0 then
-      if (h<5 or abs(h-180)<5) and dist[dto]<0.3 then
-						  t = rec+60
-								return "good landing!"
-      else
-        t = rec+60
-								return "off-airport landing"
-      end
-    else
-						return "crash: collision with terrain"
+  if onground then
+    if hardlanding==0 then
+        message="good landing!"
+    elseif hardlanding==1 then
+        message="oops... hard landing"
+				else
+					 menu=2
+						return "crash: collision with ground"
     end
   end
-  return false
+		if rec<t and message then
+				local c = frame%16<8 and 7 or 9
+				rectfill(0,9,127,15,5)
+				print(message,10,10,c)
+		end
 end
 
 function flaps()
@@ -553,6 +568,7 @@ function calcwind()
   groundspeed=flr(10*groundspeed+0.5)
   wca=atan2(tas+relh,relc)*360
   wca=(wca+180)%360-180
+		if(alt==0) wca=0
 		-- actual 2d velocity direction
   track=heading+wca
 end
@@ -572,14 +588,6 @@ end
 function blackbox()
   rec+=1
   if(rec%150==1) add(flight, {lat,lon,alt})
-end
-
-function flash(message)
-		if rec<t and message then
-    local c = frame%16<8 and 7 or 9
-    rectfill(0,9,127,15,5)
-    print(message,10,10,c)
-		end
 end
 
 function drawmenu()
@@ -641,7 +649,10 @@ function drawmap(message)
   if message then
     rectfill(0,9,127,15,5)
     print(message,10,10,c)
-  end
+  else
+			 rectfill(0,9,127,15,5)
+				print("pause",10,10,c)
+		end
   print("1 nm",112,110,7)
   line(112,108,120,108,7)
   print("tab: cockpit, z: exit to menu",0,123,6)
@@ -804,8 +815,8 @@ function _update()
     stall()
     calcgs()
     calccdi()
-    message=state()
-    flaps()
+    checklanded()
+				flaps()
     blackbox()
     --3d
   	zbuf_clear()
@@ -817,7 +828,7 @@ function _update()
 	  -- avoid matrix skew
 	  q_normz(q2)
 	  -- update cam
-	  cam:track({lat,alt/120,lon},q2)
+	  cam:track({lat,(alt+4.4)/120,lon},q2) --correction for height of pilot in airplane
 
 	  zbuf_filter(actors)
 
@@ -825,7 +836,6 @@ function _update()
 	  cam:update()
 
     if btnp(4,1) then --tab
-      message="pause"
       menu=2
     end
   end
@@ -835,7 +845,8 @@ function _draw()
   if menu==1 then
     drawmenu()
 	 elseif menu==2 then
-    drawmap(message)
+    message=dispmessage()
+				drawmap(message)
 	 elseif menu==3 then
 	   drawbriefing()
 	 else
@@ -858,13 +869,11 @@ function _draw()
 	  draw_ground()
 	  zbuf_draw()
 	  clip()
-
 			-- glareshield
   	spr(49,4,27)
   	spr(50,-4,29)
 			sspr(15,24,1,8,12,26,116,8)
-
-			flash(message)
+			dispmessage()
   end
 end
 
