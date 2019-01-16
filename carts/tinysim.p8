@@ -716,59 +716,72 @@ function drawbriefing()
   print("flight briefing:",8,10,6)
   print(name,8,17,7)
   if scen==1 then
-    print("remain on runway axis. extend the",8,30,6)
-    print("flaps and keep speed at 65-70",8,37)
-    print("knots by using pitch and",8,44)
-    print("throttle. at 50 feet, smoothly",8,51)
-    print("close throttle and raise the",8,58)
-    print("nose to gently touch down",8,65)
-    print("below 65 knots.",8,72)
-    print("too easy? add some wind!",8,79)
+    local msg=[[
+remain on runway axis. extend the
+flaps and keep speed at 65-70
+knots by using pitch and
+throttle. at 50 feet, smoothly
+close throttle and raise the
+nose to gently touch down
+below 65 knots.
+too easy? add some wind!]]
+    print(msg,8,30,6)
   elseif scen==2 then
-    print("fly heading of approx. 085",8,30,6)
-		print("keep localizer (  ) centered",8,37)
-		spr(20,71,37)
-		print("(the wind might push you away)",8,44)
-		print("maintain 1000 ft",8,51)
-		print("intercept glide slope ( )",8,58)
-		spr(38,100,59)
-    print("reduce power and extend flaps",8,65)
-    print("start 500 ft/min descent",8,72)
-    print("keep localizer centered",8,79)
-    print("keep glideslope centered",8,86)
-    print("at 200 ft reduce power & land",8,93)
+    local msg=[[
+fly heading of approx. 085
+keep localizer (  ) centered
+(the wind might push you away)
+maintain 1000 ft
+intercept glide slope ( )
+reduce power and extend flaps
+start 500 ft/min descent
+keep localizer centered
+keep glideslope centered
+at 200 ft reduce power & land]]
+    print(msg,8,30,6)
+    -- icons
+			spr(20,71,36)
+			spr(38,100,55)
   elseif scen==3 then
-    print("cross pco (  ) on heading 313",8,30,6)
-    spr(35,51,30)
-    print("intercept localizer (  )",8,37)
-    spr(20,91,37)
-    print("turn left heading 265",8,44)
-    print("descend to 2000 ft",8,51)
-    print("turn right heading 310",8,58)
-    print("fly 1 minute",8,65)
-    print("turn left heading 130",8,72)
-    print("intercept localizer",8,79)
-    print("turn left heading 085",8,86)
-    print("fly final approach and land",8,93)
+    local msg=[[      
+cross pco (  ) on heading 313
+intercept localizer (  )
+turn left heading 265
+descend to 2000 ft
+turn right heading 310
+fly 1 minute
+turn left heading 130
+intercept localizer
+turn left heading 085
+fly final approach and land]]
+    print(msg,8,30,6)
+    -- icons
+    spr(35,51,36)
+    spr(20,91,42)
   elseif scen==4 then
-    print("you are enroute to tinyville",8,30,6)
-    print("when the engine suddenly quits",8,37)
-    print("fly best glide speed 65 knots",8,44)
-    print("turn towards wee vor (  )",8,51)
+    local msg=[[
+you are enroute to tinyville
+when the engine suddenly quits
+fly best glide speed 65 knots
+turn towards wee vor (  )
+leave wee vor on heading 220
+head towards smallville
+glide to airport and land
+good luck!]]
+    print(msg,8,30,6)
+    -- icons
     spr(35,95,51)
-    print("leave wee vor on heading 220",8,58)
-    print("head towards smallville",8,65)
     spr(55,104,64)
-    print("glide to airport and land",8,72)
-    print("good luck!",8,79)
   else
-    print("while checking the map you did",8,30,6)
-    print("not pay attention to your",8,37)
-    print("attitude. when you look up,",8,44)
-    print("the airplane is out of control",8,51)
-    print("at low altitude. oops!",8,58)
-    print("can you recover?",8,65)
-    print("hint: bank first, then pull up",8,72)
+    local msg=[[
+while checking the map you did
+not pay attention to your
+attitude. when you look up,
+the airplane is out of control
+at low altitude. oops!
+can you recover?
+hint: bank first, then pull up]]
+    print(msg,8,30,6)
   end
   print("press ❎ to   fly",8,112,7)
   spr(2,54,112)
@@ -879,9 +892,9 @@ function _update()
 	  -- must be done after update loop
 	  cam:update()
 
-    if btnp(4,1) then --tab
-      menu=2
-    end
+   if btnp(4,1) then --tab
+     menu=2
+   end
   end
 end
 
