@@ -1,8 +1,8 @@
 pico-8 cartridge // http://www.pico-8.com
 version 16
 __lua__
---tiny sim 0.50
---t cueni
+--tiny sim 0.60
+--@yellowbaron, 3d engine @freds72
 
 --scenarios (name,lat,lon,hdg,alt,pitch,bank,throttle,gps dto,nav1,nav2)
 local scenarios={
@@ -11,6 +11,7 @@ local scenarios={
  {"full approach",-222.22,461.54,313,3000,0,0,91,3,2,1},
  {"engine failure!",-244.44,261.54,50,3500,0,0,0,4,2,5},
  {"unusual attitude",-222.22,461.54,330,450,99,99,100,3,2,1}}
+
 --weather (name,wind,ceiling)
 local wx={
 	{"clear, calm",{0,0},20000},
@@ -20,8 +21,8 @@ local wx={
 --airport and navaid database (rwy hdg < 180)
 local db={
 	{-251.11,430.77,"pco","vor"},
- {-422.22,384.62,"itn","ils",85},
- {-422.22,384.62,"tny","apt",85},
+ {-422.2,370,"itn","ils",85},
+ {-422.2,384.6,"tny","apt",85},
  {-66.67,153.85,"smv","apt",40},
  {-177.78,246.15,"wee","vor"}}
 
@@ -51,10 +52,9 @@ local cdii={{{64,98},{64,102},{62,100},{66,100},{64,120},{64,124},{64,104},{64,1
 
 --inset map
 local mapc={22,111} --center
-local mapclr={apt=14,vor=12,ils=15}
+local mapclr={apt=14,vor=12,ils=0}
 
 --3d
-
 -- world axis
 local v_fwd,v_right,v_up={0,0,1},{1,0,0},{0,1,0}
 
@@ -94,8 +94,8 @@ local all_models={
 			{20,0,-1800},
 			},
 		e={
-			{1,2,1}, --lines + color + number of lights
-			{3,4,1},
+			{1,2,1}, -- lines + color + number of lights (optional = solid line)
+			{3,4,1}, -- note: lines are draw in declared order (allow for lines + lights)
 			{1,2,7,128},
 			{3,4,7,128},
 			{1,3,8,10},
@@ -141,7 +141,9 @@ function _init()
  crs=0
  cdi=0
  --
- rec=0
+ rec,t=0,0
+	onground=false
+	hardlanding=0 --0: soft, 1: hard, 2:crash
  flight={}
 
  --3d
@@ -194,12 +196,12 @@ function setrpm()
     blag=3
   end
   throttle=mid(throttle,0,100)
-  --calculate rpm  
+  --calculate rpm
   maxrpm=2400
   if(alt>=2000) maxrpm=2456-0.028*alt
   targetrpm=throttle/100*(maxrpm-700)+700
   rpm+=(targetrpm-rpm)/20
-  if(abs(targetrpm-rpm)>=30) plag=(targetrpm-rpm)/20 
+  if(abs(targetrpm-rpm)>=30) plag=(targetrpm-rpm)/20
   rpm=max(rpm,700)
 end
 
@@ -227,13 +229,14 @@ function movepitch()
     pitch+=0.35*cos(bank/360)
   elseif plag!=0 then
     pitch+=0.004*plag*cos(bank/360)
-    plag-=plag/abs(plag) 
+    plag-=plag/abs(plag)
   end
   if(abs(pitch)>=45) pitch*=45/abs(pitch)
+		if alt==0 then pitch=max(pitch,0) end
 end
 
 function movebank()
-  if btn(0) then    
+  if btn(0) then
     blag=max(blag-1,-50)
     bank-=1.8-tas/250
   elseif btn(1) then
@@ -241,13 +244,14 @@ function movebank()
     bank+=1.8-tas/250
   elseif blag!=0 then
     bank+=0.03*blag
-    blag-=blag/abs(blag) 
+    blag-=blag/abs(blag)
   end
   if (abs(bank)<4 and blag==0) bank/=1.1 --bank stability
   if(abs(bank)>20) pitch-=0.3*abs(sin(bank/360))
   if(abs(bank)>160) pitch-=0.15
   if(bank>180) bank-=360
   if(bank<-180) bank+=360
+		if(alt==0) bank/=1.3
 end
 
 function dispai()
@@ -267,7 +271,7 @@ function dispai()
     local tmp=aipitch[2]-j*aistep+pitch
     local x1,y1=rotatepoint({aipitch[1],tmp},aic,-bank)
     local x2,y2=rotatepoint({aipitch[1]+aiwidth,tmp},aic,-bank)
-    if(j!=7) line(x1,y1,x2,y2,7)  
+    if(j!=7) line(x1,y1,x2,y2,7)
   end
   warn(-8,3)
   warn(110,3)
@@ -277,7 +281,7 @@ function dispai()
   transrect(95,50,111,90)
   rectfill(0,33,127,42,6)
   rectfill(0,33,9,127)
-  rectfill(0,0,127,25,0) 
+  rectfill(0,0,127,25,0)
   line(48,75,aic[1],aic[2],10) --aircraft symbol
   line(80,75,aic[1],aic[2])
 end
@@ -310,7 +314,9 @@ function calcalt()
   local coeff=88
   if(vs<0) coeff=74
   vs=tas*-(sin((pitch-aoa)/360))*coeff
+		if alt==0 then vs=max(vs,0) end
   alt+=vs/1800
+		alt=max(alt,0)
 end
 
 function dispalt()
@@ -330,9 +336,9 @@ function dispalt()
     rectfill(91,68,94,74,0)
     z=92
   elseif alt<995 then
-    z=100  
+    z=100
   else
-    z=96  
+    z=96
   end
   print(flr((_y+0.5)/10),z,69,7)
 end
@@ -362,6 +368,7 @@ function calcspeed()
   local targetspeed=38.67+rpm/30-3.8*pitch --3.6
   targetspeed=mid(targetspeed,-30,200)
   if(flps==1) targetspeed-=10
+		if(alt==0) targetspeed-=40
   tas+=(targetspeed-tas)/250
   ias=tas/(1+alt/1000*0.02) --2% per 1000 ft
 end
@@ -369,7 +376,7 @@ end
 function dispspeed()
   -- red or black
   local c=ias>=163 and 8 or 0
-  rectfill(21,68,33,74,c) 
+  rectfill(21,68,33,74,c)
   rectfill(29,65,33,77)
   local y=ias-flr(ias/10)*10
   local y2=flr(y+0.5)
@@ -415,7 +422,7 @@ function dispmap()
   latmin=lat+67.77
   lonmin=lon-93.75 --187.5/2
   for l in all(db) do
-    local p=disppoint(l)
+				local p=disppoint(l)
     if(checkonmap(p)) pset(p[1]+0.5,p[2],mapclr[l[4]]) --x+0.5 necessary?
   end
   spr(33,20,110) --map plane symbol
@@ -452,7 +459,7 @@ function disphsi()
   for j=49,79 do
     for k=96,126 do
       add(aimatrix,{j,k,pget(j,k)})
-    end 
+    end
   end
   circfill(64,111,15,5)
   for l in all(aimatrix) do
@@ -460,9 +467,9 @@ function disphsi()
     if(c==5) pset(l[1],l[2],l[3]+1)
   end
   circ(64,111,8,7)
-  spr(19,62,95) --tick mark 
+  spr(19,62,95) --tick mark
   --cardinal directions
-  for l in all(nesw) do   
+  for l in all(nesw) do
     local x,y=rotatepoint(l,hsic,-heading)
     spr(l[3],x-1,y-1)
   end
@@ -490,7 +497,7 @@ function rotatepoint(p,c,angle)
   return x*cs+y*ss+c[1],-x*ss+y*cs+c[2]
 end
 
-function dispdist(j,x,y,c)  
+function dispdist(j,x,y,c)
   if dist[j]<10 then
     print(flr(dist[j]*10)/10,x,y,c)
   else
@@ -512,9 +519,13 @@ function stall()
   if aoa>=critical then
     slag=45
     plag=0
-    blag=-10
+    if(alt>0) blag=-10
   end
-  pitch-=slag*0.008
+  if alt>0 then
+			 pitch-=slag*0.008
+		else
+			 pitch-=slag*0.003
+		end
   if (slag>=1) slag-=1
 end
 
@@ -540,38 +551,54 @@ function calccdi()
   elseif cdangle<-90 then cdangle=-180-cdangle end
   cdi=18/10*cdangle --5 deg full deflection
   if(abs(cdi)>9) cdi=9*cdi/abs(cdi)
-end  
+end
 
-function crash()
-  if ias>180 then
+function checklanded()
+  if alt==0 and (onground==false) then
+   onground=true
+   t=rec+60 --message displayed for 2s
+			if vs>-300 and pitch>-0.5 then hardlanding=0
+			elseif vs>-1000 and pitch>-0.5 then hardlanding=1
+			else hardlanding=2 end
+	 end
+		if alt>0 and (onground==true) then
+			onground=false
+			--t=rec+60
+		end
+end
+
+function dispmessage()
+  local message=false
+		if ias>180 then
     menu=2
-    return "crash: exceeded vmax"
+    return "crash: exceeded maximum speed"
   end
-  if alt<=9 then
-    menu=2
-    local h=abs(heading-db[dto][5])
-    if vs>-300 and tas<65 and pitch>=0 then 
-      if (h<5 or abs(h-180)<5) and dist[dto]<0.3 then
-        return "good landing!"
-      else
-        return "off-airport landing..."
-      end
-    else
-      return "crash: collision with terrain"  
+  if onground then
+    if hardlanding==0 then
+        message="good landing!"
+    elseif hardlanding==1 then
+        message="oops... hard landing"
+				else
+					 menu=2
+						return "crash: collision with ground"
     end
   end
-  return false
+		if rec<t and message then
+				local c = frame%16<8 and 7 or 9
+				rectfill(0,9,127,15,5)
+				print(message,10,10,c)
+		end
 end
 
 function flaps()
   if btnp(5,1) then --q
     flps=1-flps --toggle
     plag=flps==1 and 70 or -70
-  end   
+  end
 end
 
 function dispflaps()
- line(4,74,4,79,5)
+	line(4,74,4,79,5)
  line(5,74,5,79,13)
  if flps==1 then
    rectfill(2,78,7,79,7)
@@ -589,6 +616,7 @@ function calcwind()
   groundspeed=flr(10*groundspeed+0.5)
   wca=atan2(tas+relh,relc)*360
   wca=(wca+180)%360-180
+		if(alt==0) wca=0
 		-- actual 2d velocity direction
   track=heading+wca
 end
@@ -614,8 +642,8 @@ function drawmenu()
   local c = frame%16<8 and 7 or 9
   cls()
   spr(2,25,10)
-  spr(3,92,10)	
-  print("tiny sim v0.50",35,10,7)
+  spr(3,92,10)
+  print("tiny sim v0.60",35,10,7)
   print("the world's smallest flight sim",2,20,6)
   print("flight:",8,37,item==0 and c or 7)
   print(scenarios[scen][1],44,37,7)
@@ -628,12 +656,12 @@ function drawmenu()
   rect(5,77,101,101,6)
   rectfill(70,88,75,89,7) --flaps
   spr(4,62,80) --throttle
-  print("tc 2018",49,123,6)
+  print("@yellowbaron | 3d by @freds72",7,123,6)
 end
 
 function drawmap(message)
   local c = frame%16<8 and 7 or 9
-  cls() 
+  cls()
   for l in all(db) do
     local x,y=scalemap(l[2],l[1])
     x-=3 --correct for sprite size
@@ -651,25 +679,28 @@ function drawmap(message)
       local _x=sin(b)
       local _y=cos(b)
       line(x+3,y+3,50*_x+x+3,50*_y+y+3,11)
-      print(l[3],62*_x+x+2,62*_y+y+3,7)  
+      print(l[3],62*_x+x+2,62*_y+y+3,7)
     --airports
-    elseif l[4]=="apt" then  
+    elseif l[4]=="apt" then
       if l[5]>=0 and l[5]<23 then spr(22,x,y)
       elseif l[5]>22 and l[5]<68 then spr(55,x,y)
       elseif l[5]>67 and l[5]<103 then spr(54,x,y)
       elseif l[5]>102 and l[5]<148 then spr(55,x-1,y,1,1,true,false)
       else spr(22,x,y) end
       print(l[3],x+9,y+1,7)
-    end  
+    end
   end
   for l in all(flight) do
     local x,y=scalemap(l[2],l[1])
     pset(x,y,10)
   end
   if message then
-    rectfill(1,9,128,15,5)
+    rectfill(0,9,127,15,5)
     print(message,10,10,c)
-  end
+  else
+			 rectfill(0,9,127,15,5)
+				print("pause",10,10,c)
+		end
   print("1 nm",112,110,7)
   line(112,108,120,108,7)
   print("tab: cockpit, z: exit to menu",0,123,6)
@@ -719,7 +750,7 @@ function drawbriefing()
     print("intercept localizer",8,79)
     print("turn left heading 085",8,86)
     print("fly final approach and land",8,93)
-  elseif scen==4 then 
+  elseif scen==4 then
     print("you are enroute to tinyville",8,30,6)
     print("when the engine suddenly quits",8,37)
     print("fly best glide speed 65 knots",8,44)
@@ -727,14 +758,14 @@ function drawbriefing()
     spr(35,95,51)
     print("leave wee vor on heading 220",8,58)
     print("head towards smallville",8,65)
-    spr(55,104,64) 
+    spr(55,104,64)
     print("glide to airport and land",8,72)
     print("good luck!",8,79)
   else
     print("while checking the map you did",8,30,6)
     print("not pay attention to your",8,37)
     print("attitude. when you look up,",8,44)
-    print("the airplane is out of control",8,51) 
+    print("the airplane is out of control",8,51)
     print("at low altitude. oops!",8,58)
     print("can you recover?",8,65)
     print("hint: bank first, then pull up",8,72)
@@ -785,7 +816,7 @@ function _update()
       item-=1
       item%=2
     elseif btnp(1) then --right
-      if item==0 then 
+      if item==0 then
         scen+=1
         if(scen==#scenarios+1) scen=1
       elseif item==1 then
@@ -828,44 +859,44 @@ function _update()
     stall()
     calcgs()
     calccdi()
-    message=crash()
-    flaps()
+    checklanded()
+				flaps()
     blackbox()
     --3d
   	zbuf_clear()
-  
-    local q=make_q(v_right,-pitch/360)
+
+   local q=make_q(v_right,-pitch/360)
 	  q_x_q(q,make_q(v_fwd,-bank/360))
 	  local q2=make_q(v_up,heading/360-0.25)
 	  q_x_q(q2,q)
 	  -- avoid matrix skew
 	  q_normz(q2)
 	  -- update cam
-	  cam:track({lat,alt/120,lon},q2)
-	
+	  cam:track({lat,(alt+4.4)/120,lon},q2) --correction for height of pilot in airplane
+
 	  zbuf_filter(actors)
-	
+
 	  -- must be done after update loop
 	  cam:update()
 
     if btnp(4,1) then --tab
-      message="pause"
       menu=2
-    end 
+    end
   end
 end
 
 function _draw()
   if menu==1 then
-    drawmenu() 
+    drawmenu()
 	 elseif menu==2 then
-    drawmap(message)
+    message=dispmessage()
+				drawmap(message)
 	 elseif menu==3 then
 	   drawbriefing()
 	 else
     dispai()
     drawstatic()
-    disphsi()   
+    disphsi()
     disprpm()
     dispspeed()
     dispalt()
@@ -880,16 +911,19 @@ function _draw()
     -- 3d
 	  clip(0,0,128,31)
 	  rectfill(0,0,128,31,0)
-	  draw_ground()	
+	  draw_ground()
 	  zbuf_draw()
 	  clip()
-	
-			-- glareshield		 
+			-- glareshield
   	spr(49,4,27)
   	spr(50,-4,29)
-			sspr(15,24,1,8,12,26,116,8)
-			
-   print(stat(1),2,2,7)
+		sspr(15,24,1,8,12,26,116,8)			
+		dispmessage()
+
+    -- perf monitor!
+    local cpu=flr(100*stat(1)).."%"
+    print(cpu,2,3,2)
+    print(cpu,2,2,7)
   end
 end
 
@@ -899,7 +933,7 @@ end
 -- register json context here
 function nop() return true end
 
--- ground constants 
+-- ground constants
 local ground_shift,ground_colors,ground_level=2,{1,13,6}
 
 -- zbuffer (kind of)
@@ -956,7 +990,7 @@ function sqr_dist(a,b)
 	if abs(dx)>128 or abs(dy)>128 or abs(dz)>128 then
 		return 32000
 	end
-	local d=dx*dx+dy*dy+dz*dz 
+	local d=dx*dx+dy*dy+dz*dz
 	-- overflow?
 	return d<0 and 32000 or d
 end
@@ -1000,7 +1034,7 @@ function m_x_v(m,v)
 	local x,y,z=v[1],v[2],v[3]
 	v[1],v[2],v[3]=m[1]*x+m[5]*y+m[9]*z+m[13],m[2]*x+m[6]*y+m[10]*z+m[14],m[3]*x+m[7]*y+m[11]*z+m[15]
 end
-function m_x_xyz(m,x,y,z)		
+function m_x_xyz(m,x,y,z)
 	return
 		m[1]*x+m[5]*y+m[9]*z+m[13],
 		m[2]*x+m[6]*y+m[10]*z+m[14],
@@ -1040,7 +1074,7 @@ end
 function q_x_q(a,b)
 	local qax,qay,qaz,qaw=a[1],a[2],a[3],a[4]
 	local qbx,qby,qbz,qbw=b[1],b[2],b[3],b[4]
-        
+
 	a[1]=qax*qbw+qaw*qbx+qay*qbz-qaz*qby
 	a[2]=qay*qbw+qaw*qby+qaz*qbx-qax*qbz
 	a[3]=qaz*qbw+qaw*qbz+qax*qby-qay*qbx
@@ -1083,7 +1117,7 @@ function m_right(m)
 	return {m[1],m[2],m[3]}
 end
 
-function draw_actor(self,x,y,z,w)	
+function draw_actor(self,x,y,z,w)
 	-- distance culling
 	draw_model(self.model,self.m,x,y,z,w)
 end
@@ -1164,13 +1198,13 @@ end
     local c=l.c
     if l.n then
       local fwd,ln=m_fwd(cam.mw),v_clone(l.n)
-      -- light dir in world space      
+      -- light dir in world space
       m_x_v(m,ln)
       -- facing light?
       if v_dot(fwd,ln)<0 then
       	local lup=v_clone(l.up)
       	m_x_v(m,lup)
-      	-- 
+      	--
       	c=v_dot(fwd,lup)>0 and 11 or 8
       end
     end
@@ -1188,7 +1222,7 @@ function plane_poly_clip(n,p,v)
 	end
 	-- early exit
 	if(allin==true) return v
-	
+
 	local res={}
 	local v0,d0=v[#v],dist[#v]
 	for i=1,#v do
@@ -1215,7 +1249,7 @@ end
 function make_actor(src,p,angle)
 	-- instance
 	local a=clone(src,{
-		pos=v_clone(p),		
+		pos=v_clone(p),
 		-- north is up
 		q=make_q(v_up,angle-0.25)
 	})
@@ -1235,7 +1269,7 @@ function make_cam(x0,y0,focal)
 		q=make_q(v_up,0),
 		update=function(self)
       -- keep world orientation in mw
-			self.mw,self.m=m_from_q(self.q),m_from_q(self.q)      
+			self.mw,self.m=m_from_q(self.q),m_from_q(self.q)
 			m_inv(self.m)
 		end,
 		track=function(self,pos,q)
@@ -1248,7 +1282,7 @@ function make_cam(x0,y0,focal)
 			y-=self.pos[2]
 			z-=self.pos[3]
 			x,y,z=m_x_xyz(self.m,x,y,z)
-			
+
 			-- view to screen
 	 	  local w=focal/z
  		  return x0+x*w,y0-y*w,z,w
@@ -1286,12 +1320,12 @@ function draw_ground(self)
 	-- ground normal in cam space
 	local n={0,1,0}
 	m_x_v(cam.m,n)
-	
+
 	for k=0,#sky_gradient-1 do
-		-- ground location in cam space	
+		-- ground location in cam space
 		local p={0,cam.pos[2]-8*k*k,0}
 		m_x_v(cam.m,p)
-	
+
 		local v0=farplane[#farplane]
 		local sky=plane_poly_clip(n,p,farplane)
 		-- complete line?
@@ -1299,20 +1333,20 @@ function draw_ground(self)
 		polyfill(sky,sky_gradient[k+1])
 	end
  fillp()
- 
+
  -- stars
 	for _,v in pairs(stars) do
 		local x,y,z,w=cam:project(cam.pos[1]+v[1],cam.pos[2]+v[2],cam.pos[3]+v[3])
 		if(z>0) pset(x,y,7)
 	end
-	 
+
 	local cy=cam.pos[2]
 
 	local scale=4*max(flr(cy/32+0.5),1)
 	scale*=scale
 	local x0,z0=cam.pos[1],cam.pos[3]
 	local dx,dy=x0%scale,z0%scale
-	
+
 	for i=-4,4 do
 		local ii=scale*i-dx+x0
 		for j=-4,4 do
@@ -1390,7 +1424,7 @@ end
 -- by @p01
 function p01_trapeze_h(l,r,lt,rt,y0,y1)
   lt,rt=(lt-l)/(y1-y0),(rt-r)/(y1-y0)
-  if(y0<0)l,r,y0=l-y0*lt,r-y0*rt,0 
+  if(y0<0)l,r,y0=l-y0*lt,r-y0*rt,0
    for y0=y0,min(y1,128) do
    rectfill(l,y0,r,y0)
    l+=lt
@@ -1399,7 +1433,7 @@ function p01_trapeze_h(l,r,lt,rt,y0,y1)
 end
 function p01_trapeze_w(t,b,tt,bt,x0,x1)
  tt,bt=(tt-t)/(x1-x0),(bt-b)/(x1-x0)
- if(x0<0)t,b,x0=t-x0*tt,b-x0*bt,0 
+ if(x0<0)t,b,x0=t-x0*tt,b-x0*bt,0
  for x0=x0,min(x1,128) do
   rectfill(x0,t,x0,b)
   t+=tt
