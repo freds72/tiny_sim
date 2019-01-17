@@ -70,12 +70,47 @@ local all_models={
 		 {15,0,0}, --points
 			{15,0,-1500},
 			{-15,0,0},
-			{-15,0,-1500}},
+			{-15,0,-1500},
+			{20,0,-1500},
+			{-20,0,-1500},
+			{15,0,-1550},
+			{-15,0,-1550},
+			{0,0,-1500},
+			{0,0,-1600},	
+			{-2,0,-1600},
+			{-2,0,-1800},	
+			{2,0,-1600},
+			{2,0,-1800},
+			-- central line
+			{0,0,0},
+			{0,0,-1500},
+			-- landing lights
+			{-5,0,-1550},
+			{5,0,-1550},	
+			{-8,0,-1600},
+			{8,0,-1600},
+			{-10,0,-1700},
+			{10,0,-1700},
+			{-20,0,-1800},
+			{20,0,-1800},
+			},
 		e={
-			{1,2}, --lines + color + light definition
-			{3,4},
-			{1,3,8,10,30},
-			{2,4,11,30}
+			{1,2,1}, -- lines + color + number of lights (optional = solid line)
+			{3,4,1}, -- note: lines are draw in declared order (allow for lines + lights)
+			{1,2,7,128},
+			{3,4,7,128},
+			{1,3,8,10},
+			{5,6,11,20},
+		 {2,7,8,5},
+		 {4,8,8,5},
+		 {9,10,10,10},
+		 {11,12,10,10},
+		 {13,14,10,10},
+		 {15,16,6,128},
+		 {17,18,7,8},
+		 {19,20,7,8},
+		 {21,22,7,10},
+		 {23,24,7,10},
 		}
 	}
 }
@@ -682,59 +717,72 @@ function drawbriefing()
   print("flight briefing:",8,10,6)
   print(name,8,17,7)
   if scen==1 then
-    print("remain on runway axis. extend the",8,30,6)
-    print("flaps and keep speed at 65-70",8,37)
-    print("knots by using pitch and",8,44)
-    print("throttle. at 50 feet, smoothly",8,51)
-    print("close throttle and raise the",8,58)
-    print("nose to gently touch down",8,65)
-    print("below 65 knots.",8,72)
-    print("too easy? add some wind!",8,79)
+    local msg=[[
+remain on runway axis. extend the
+flaps and keep speed at 65-70
+knots by using pitch and
+throttle. at 50 feet, smoothly
+close throttle and raise the
+nose to gently touch down
+below 65 knots.
+too easy? add some wind!]]
+    print(msg,8,30,6)
   elseif scen==2 then
-    print("fly heading of approx. 085",8,30,6)
-		print("keep localizer (  ) centered",8,37)
-		spr(20,71,37)
-		print("(the wind might push you away)",8,44)
-		print("maintain 1000 ft",8,51)
-		print("intercept glide slope ( )",8,58)
-		spr(38,100,59)
-    print("reduce power and extend flaps",8,65)
-    print("start 500 ft/min descent",8,72)
-    print("keep localizer centered",8,79)
-    print("keep glideslope centered",8,86)
-    print("at 200 ft reduce power & land",8,93)
+    local msg=[[
+fly heading of approx. 085
+keep localizer (  ) centered
+(the wind might push you away)
+maintain 1000 ft
+intercept glide slope ( )
+reduce power and extend flaps
+start 500 ft/min descent
+keep localizer centered
+keep glideslope centered
+at 200 ft reduce power & land]]
+    print(msg,8,30,6)
+    -- icons
+			spr(20,71,36)
+			spr(38,100,55)
   elseif scen==3 then
-    print("cross pco (  ) on heading 313",8,30,6)
-    spr(35,51,30)
-    print("intercept localizer (  )",8,37)
-    spr(20,91,37)
-    print("turn left heading 265",8,44)
-    print("descend to 2000 ft",8,51)
-    print("turn right heading 310",8,58)
-    print("fly 1 minute",8,65)
-    print("turn left heading 130",8,72)
-    print("intercept localizer",8,79)
-    print("turn left heading 085",8,86)
-    print("fly final approach and land",8,93)
+    local msg=[[      
+cross pco (  ) on heading 313
+intercept localizer (  )
+turn left heading 265
+descend to 2000 ft
+turn right heading 310
+fly 1 minute
+turn left heading 130
+intercept localizer
+turn left heading 085
+fly final approach and land]]
+    print(msg,8,30,6)
+    -- icons
+    spr(35,51,36)
+    spr(20,91,42)
   elseif scen==4 then
-    print("you are enroute to tinyville",8,30,6)
-    print("when the engine suddenly quits",8,37)
-    print("fly best glide speed 65 knots",8,44)
-    print("turn towards wee vor (  )",8,51)
+    local msg=[[
+you are enroute to tinyville
+when the engine suddenly quits
+fly best glide speed 65 knots
+turn towards wee vor (  )
+leave wee vor on heading 220
+head towards smallville
+glide to airport and land
+good luck!]]
+    print(msg,8,30,6)
+    -- icons
     spr(35,95,51)
-    print("leave wee vor on heading 220",8,58)
-    print("head towards smallville",8,65)
     spr(55,104,64)
-    print("glide to airport and land",8,72)
-    print("good luck!",8,79)
   else
-    print("while checking the map you did",8,30,6)
-    print("not pay attention to your",8,37)
-    print("attitude. when you look up,",8,44)
-    print("the airplane is out of control",8,51)
-    print("at low altitude. oops!",8,58)
-    print("can you recover?",8,65)
-    print("hint: bank first, then pull up",8,72)
+    local msg=[[
+while checking the map you did
+not pay attention to your
+attitude. when you look up,
+the airplane is out of control
+at low altitude. oops!
+can you recover?
+hint: bank first, then pull up]]
+    print(msg,8,30,6)
   end
   print("press ❎ to   fly",8,112,7)
   spr(2,54,112)
@@ -845,9 +893,9 @@ function _update()
 	  -- must be done after update loop
 	  cam:update()
 
-    if btnp(4,1) then --tab
-      menu=2
-    end
+   if btnp(4,1) then --tab
+     menu=2
+   end
   end
 end
 
@@ -883,8 +931,13 @@ function _draw()
 			-- glareshield
   	spr(49,4,27)
   	spr(50,-4,29)
-			sspr(15,24,1,8,12,26,116,8)
-			dispmessage()
+		sspr(15,24,1,8,12,26,116,8)			
+		dispmessage()
+
+    -- perf monitor!
+    local cpu=flr(100*stat(1)).."%"
+    print(cpu,2,3,2)
+    print(cpu,2,2,7)
   end
 end
 
@@ -1087,7 +1140,8 @@ local znear,zdir=0.25,-1
 function draw_model(model,m,x,y,z,w)
   -- edges
 	local p={}
-	for _,e in pairs(model.e) do
+	for i=1,#model.e do
+		local e=model.e[i]
 		-- edges indices
 		local ak,bk,c=e[1],e[2],e[3] or model.c
 		-- edge positions
@@ -1119,21 +1173,32 @@ function draw_model(model,m,x,y,z,w)
 		local az,bz=a[3],b[3]
 		if(az<bz) a,b,az,bz=b,a,bz,az
 		local den=zdir*(bz-az)
+		local t,viz=1,false
 		if az>znear and bz<znear then
-			local t=zdir*(znear-az)/den
+			t=zdir*(znear-az)/den
 			if t>=0 and t<=1 then
 				-- intersect pos
 				local s=make_v(a,b)
 				v_scale(s,t)
 				v_add(s,a)
-				local x0,y0,z0,w0=cam:project2d(a)
-				local x1,y1,z1,w1=cam:project2d(s)
-				lightline(x0,y0,x1,y1,c,t,w0,w1,10)
+				-- in-place
+				b=s
 			end
+			viz=true
 		elseif bz>znear then
-			local x0,y0,z0,w0=cam:project2d(a)
-			local x1,y1,z1,w1=cam:project2d(b)
-			lightline(x0,y0,x1,y1,c,1,w0,w1,10)
+	 	viz=true
+	 end
+	 
+		-- draw line
+		if viz==true then
+ 		local x0,y0,z0,w0=cam:project2d(a)
+ 		local x1,y1,z1,w1=cam:project2d(b)
+ 		-- is it a light line?
+ 		if e[4] then
+ 			lightline(x0,y0,x1,y1,c,t,w0,w1,e[4])
+ 		else
+ 			line(x0,y0,x1,y1,c)
+ 		end
 		end
 	end
 end
@@ -1237,10 +1302,10 @@ function make_cam(x0,y0,focal)
  		  return x0+x*w,y0-y*w,z,w
 		end,
 		-- project cam-space points into 2d
-		project2d=function(self,v)
-        -- view to screen
-      local w=focal/v[3]
-      return x0+v[1]*w,y0-v[2]*w,v[3],w
+  project2d=function(self,v)
+  	-- view to screen
+  	local w=focal/v[3]
+  	return x0+v[1]*w,y0-v[2]*w,v[3],w
 		end
 	}
 	return c
@@ -1309,16 +1374,64 @@ function draw_ground(self)
 end
 
 -- draw a light line
+-- note: u0 is assumed to be zero
 function lightline(x0,y0,x1,y1,c,u1,w0,w1,n)
- n=flr(u1*n)
- u1*=w1
-	local t,dt=0,1/n
-	color(c)
-	for i=0,n-1 do
-		local u=t*u1/lerp(w0,w1,t)
-		pset(lerp(x0,x1,u),lerp(y0,y1,u))
-		t+=dt
-	end
+ local w,h=abs(x1-x0),abs(y1-y0)
+ 
+ -- adjust remaining number of points
+ n=flr(n*u1)
+ if(n<1) return
+ 
+ local u0,t,prevu=0,0,-1
+   
+ color(c)
+ if h>w then
+  -- too small?
+  if 1.8*h<n then
+   line(x0,y0,x1,y1)
+   return
+  end
+
+  -- order points on y
+  if(y0>y1) x0,y0,x1,y1,u0,u1,w0,w1=x1,y1,x0,y0,u1,u0,w1,w0
+  w=x1-x0
+
+  -- y-major
+  if(y0<0) x0,y0,t=x0-y0*w/h,0,-y0/h
+  
+  u0*=n*w0
+  u1*=n*w1
+  for y=y0,min(y1,127) do	
+   -- perspective correction
+   local u=flr(lerp(u0,u1,t)/lerp(w0,w1,t))
+   if(prevu!=u) pset(x0,y)
+   x0+=w/h
+   t+=1/h
+   prevu=u
+  end
+
+  else
+   if 1.8*w<n then
+    line(x0,y0,x1,y1)
+    return
+   end
+
+   -- x-major
+   if(x0>x1) x0,y0,x1,y1,u0,u1,w0,w1=x1,y1,x0,y0,u1,u0,w1,w0
+   h=y1-y0
+
+   if(x0<0) x0,y0,t=0,y0-x0*h/w,-x0/w
+   
+	  u0*=n*w0
+	  u1*=n*w1
+   for x=x0,min(x1,127) do
+    local u=flr(lerp(u0,u1,t)/lerp(w0,w1,t))
+    if(prevu!=u) pset(x,y0)
+    y0+=h/w
+    t+=1/w
+    prevu=u
+   end
+  end
 end
 -->8
 -- trifill
