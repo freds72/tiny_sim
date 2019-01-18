@@ -4,14 +4,14 @@ __lua__
 --tiny sim 0.60
 --@yellowbaron, 3d engine @freds72
 
---scenarios (name,lat,lon,hdg,alt,pitch,bank,throttle,gps dto,nav1,nav2)
+--scenarios (name,lat,lon,hdg,alt,pitch,bank,throttle,tas,gps dto,nav1,nav2)
 local scenarios={
-	{"visual approach",-417,326.3,85,600,-1,0,25,3,2,1},
- {"final approach",-408.89,230.77,85,1000,1,0,75,3,2,1},
- {"full approach",-222.22,461.54,313,3000,0,0,91,3,2,1},
- {"engine failure!",-244.44,261.54,50,3500,0,0,0,4,2,5},
- {"unusual attitude",-222.22,461.54,330,450,99,99,100,3,2,1},
- {"free flight",-422.2,384.6,85,0,0,0,0,3,2,1}}
+	{"visual approach",-417,326.3,85,600,-1,0,25,112,3,2,1},
+ {"final approach",-408.89,230.77,85,1000,1,0,75,112,3,2,1},
+ {"full approach",-222.22,461.54,313,3000,0,0,91,112,3,2,1},
+ {"engine failure!",-244.44,261.54,50,3500,0,0,0,112,4,2,5},
+ {"unusual attitude",-222.22,461.54,330,450,99,99,100,112,3,2,1},
+ {"free flight",-422.2,384.6,85,0,0,0,0,0,3,2,1}}
 
 --weather (name,wind,ceiling)
 local wx={
@@ -76,9 +76,9 @@ local all_models={
 			{15,0,-1550},
 			{-15,0,-1550},
 			{0,0,-1500},
-			{0,0,-1600},	
+			{0,0,-1600},
 			{-2,0,-1600},
-			{-2,0,-1800},	
+			{-2,0,-1800},
 			{2,0,-1600},
 			{2,0,-1800},
 			-- central line
@@ -86,7 +86,7 @@ local all_models={
 			{0,0,-1500},
 			-- landing lights
 			{-5,0,-1550},
-			{5,0,-1550},	
+			{5,0,-1550},
 			{-8,0,-1600},
 			{8,0,-1600},
 			{-10,0,-1700},
@@ -128,7 +128,6 @@ function _init()
  wnd=1
  --
  rpm=2200
- tas=112
  vs=0
  aoa=0
  timer=0
@@ -172,12 +171,14 @@ function scenario(s)
   pitch=scenarios[s][6]
   bank=scenarios[s][7]
   throttle=scenarios[s][8]
-  dto=scenarios[s][9]
-  nav1=scenarios[s][10]
-  nav2=scenarios[s][11]
+  tas=scenarios[s][9]
+		dto=scenarios[s][10]
+  nav1=scenarios[s][11]
+  nav2=scenarios[s][12]
   wind=wx[wnd][2]
   ceiling=wx[wnd][3]
   if(pitch==99) bank,pitch=unusual()
+		if(s==6) onground=true
 end
 
 function unusual()
@@ -238,11 +239,19 @@ end
 
 function movebank()
   if btn(0) then
-    blag=max(blag-1,-50)
-    bank-=1.8-tas/250
+    if onground and tas<30 then
+					 heading-=0.4
+				else
+				  blag=max(blag-1,-50)
+      bank-=1.8-tas/250
+				end
   elseif btn(1) then
-    blag=min(blag+1,50)
-    bank+=1.8-tas/250
+    if onground and tas<30 then
+					 heading+=0.4
+				else
+				  blag=min(blag+1,50)
+      bank+=1.8-tas/250
+				end
   elseif blag!=0 then
     bank+=0.03*blag
     blag-=blag/abs(blag)
@@ -744,7 +753,7 @@ at 200 ft reduce power & land]]
 			spr(20,71,36)
 			spr(38,100,55)
   elseif scen==3 then
-    local msg=[[      
+    local msg=[[
 cross pco (  ) on heading 313
 intercept localizer (  )
 turn left heading 265
@@ -757,8 +766,8 @@ turn left heading 085
 fly final approach and land]]
     print(msg,8,30,6)
     -- icons
-    spr(35,51,36)
-    spr(20,91,42)
+    spr(35,51,30)
+    spr(20,91,36)
   elseif scen==4 then
     local msg=[[
 you are enroute to tinyville
@@ -771,9 +780,9 @@ glide to airport and land
 good luck!]]
     print(msg,8,30,6)
     -- icons
-    spr(35,95,51)
-    spr(55,104,64)
-  else
+    spr(35,95,48)
+    spr(55,110,65)
+  elseif scen==5 then
     local msg=[[
 while checking the map you did
 not pay attention to your
@@ -783,7 +792,13 @@ at low altitude. oops!
 can you recover?
 hint: bank first, then pull up]]
     print(msg,8,30,6)
-  end
+  else
+			 local msg=[[
+you are cleared for take-off
+on runway 08 at tinyville.
+have fun!]]
+    print(msg,8,30,6)
+		end
   print("press ❎ to   fly",8,112,7)
   spr(2,54,112)
   spr(3,77,112)
@@ -876,7 +891,7 @@ function _update()
     checklanded()
 				flaps()
     blackbox()
-    --3d
+   --3d
   	zbuf_clear()
 
    local q=make_q(v_right,-pitch/360)
@@ -922,7 +937,7 @@ function _draw()
     dispgs()
     dispflaps()
     dispwind()
-    -- 3d
+   -- 3d
 	  clip(0,0,128,31)
 	  rectfill(0,0,128,31,0)
 	  draw_ground()
@@ -931,8 +946,8 @@ function _draw()
 			-- glareshield
   	spr(49,4,27)
   	spr(50,-4,29)
-		sspr(15,24,1,8,12,26,116,8)			
-		dispmessage()
+		 sspr(15,24,1,8,12,26,116,8)
+		 dispmessage()
 
     -- perf monitor!
     local cpu=flr(100*stat(1)).."%"
@@ -1188,7 +1203,7 @@ function draw_model(model,m,x,y,z,w)
 		elseif bz>znear then
 	 	viz=true
 	 end
-	 
+
 		-- draw line
 		if viz==true then
  		local x0,y0,z0,w0=cam:project2d(a)
@@ -1377,13 +1392,13 @@ end
 -- note: u0 is assumed to be zero
 function lightline(x0,y0,x1,y1,c,u1,w0,w1,n)
  local w,h=abs(x1-x0),abs(y1-y0)
- 
+
  -- adjust remaining number of points
  n=flr(n*u1)
  if(n<1) return
- 
+
  local u0,t,prevu=0,0,-1
-   
+
  color(c)
  if h>w then
   -- too small?
@@ -1398,10 +1413,10 @@ function lightline(x0,y0,x1,y1,c,u1,w0,w1,n)
 
   -- y-major
   if(y0<0) x0,y0,t=x0-y0*w/h,0,-y0/h
-  
+
   u0*=n*w0
   u1*=n*w1
-  for y=y0,min(y1,127) do	
+  for y=y0,min(y1,127) do
    -- perspective correction
    local u=flr(lerp(u0,u1,t)/lerp(w0,w1,t))
    if(prevu!=u) pset(x0,y)
@@ -1421,7 +1436,7 @@ function lightline(x0,y0,x1,y1,c,u1,w0,w1,n)
    h=y1-y0
 
    if(x0<0) x0,y0,t=0,y0-x0*h/w,-x0/w
-   
+
 	  u0*=n*w0
 	  u1*=n*w1
    for x=x0,min(x1,127) do
