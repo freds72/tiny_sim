@@ -46,11 +46,17 @@ local aiwidth=8
 
 --hsi
 local hsic={64,111} --center
-local bp={{{64,98},{64,102},{62,100},{66,100},{64,120},{64,124}},
-    {{1,2},{1,3},{1,4},{5,6}}} --bearing pointer
+local bp={
+  -- vertices
+  v={{64,98},{64,102},{62,100},{66,100},{64,120},{64,124}},
+  -- edges
+  e={{1,2},{1,3},{1,4},{5,6}}} --bearing pointer
 local nesw={{64,99,52},{52,111,53},{64,123,36},{76,111,37}} --cardinal directions
-local cdii={{{64,98},{64,102},{62,100},{66,100},{64,120},{64,124},{64,104},{64,118}},
-    {{1,2},{1,3},{1,4},{5,6},{7,8}}} --cdi
+local cdii={
+  -- vertices
+  v={{64,98},{64,102},{62,100},{66,100},{64,120},{64,124},{64,104},{64,118}},
+  -- edges
+  e={{1,2},{1,3},{1,4},{5,6},{7,8}}} --cdi
 
 --inset map
 local mapc={22,111} --center
@@ -163,18 +169,19 @@ function _init()
 end
 
 function scenario(s)
-  name=scenarios[s][1]
-  lat=scenarios[s][2]
-  lon=scenarios[s][3]
-  heading=scenarios[s][4]
-  alt=scenarios[s][5]
-  pitch=scenarios[s][6]
-  bank=scenarios[s][7]
-  throttle=scenarios[s][8]
-  tas=scenarios[s][9]
-		dto=scenarios[s][10]
-  nav1=scenarios[s][11]
-  nav2=scenarios[s][12]
+  s=scenarios[s]
+  name=s[1]
+  lat=s[2]
+  lon=s[3]
+  heading=s[4]
+  alt=s[5]
+  pitch=s[6]
+  bank=s[7]
+  throttle=s[8]
+  tas=s[9]
+		dto=s[10]
+  nav1=s[11]
+  nav2=s[12]
   wind=wx[wnd][2]
   ceiling=wx[wnd][3]
   if(pitch==99) bank,pitch=unusual()
@@ -183,9 +190,7 @@ end
 
 function unusual()
   local sign=rnd()<0.5 and 1 or -1
-  local bank=(80-rnd(15))*sign
-  local pitch=-45
-  return bank,pitch
+  return (80-rnd(15))*sign,-45
 end
 
 function setrpm()
@@ -276,6 +281,7 @@ function dispai()
   clip(10,36,118,96)
   trifill(ax,ay,bx,by,cx,cy,12)
   trifill(ax,ay,bx,by,dx,dy,4)
+  line(ax,ay,bx,by,7)
   clip(35,44,55,43)
   for j=0,15 do
     local tmp=aipitch[2]-j*aistep+pitch
@@ -313,9 +319,8 @@ function calcalt()
   local coeff=88
   if(vs<0) coeff=74
   vs=tas*-(sin((pitch-aoa)/360))*coeff
-		if alt==0 then vs=max(vs,0) end
-  alt+=vs/1800
-		alt=max(alt,0)
+	if(alt==0) vs=max(vs)
+  alt=max(alt+vs/1800,0)
 end
 
 function dispalt()
@@ -323,8 +328,7 @@ function dispalt()
   rectfill(103,65,111,77)
   local _y=alt/10
   local y=_y-flr(_y/10)*10
-  local y2=flr(y+0.5)
-  local y3=((y-0.5)*7)%7
+  local y2,y3=flr(y+0.5),((y-0.5)*7)%7
   clip(104,65,7,13)
   print((y2%10)..0,104,66+y3,7)
   print(((y2-1)%10)..0,104,72+y3)
@@ -445,12 +449,10 @@ end
 function calcdistbrg()
   local j=1
   for l in all(db) do
-    dy=-(l[1]-lat)*16/600
-    dx=(l[2]-lon)*16/600
-    brg[j]=atan2(dx,dy)
-    brg[j]=90+(brg[j]*360)-heading
+    local dy,dx=-(l[1]-lat)*16/600,(l[2]-lon)*16/600
+    brg[j]=90+(atan2(dx,dy)*360)-heading
     brg[j]-=flr(brg[j]/360)*360
-    dist[j]=sqrt(dx^2+dy^2)
+    dist[j]=sqrt(dx*dx+dy*dy)
     j+=1
   end
 end
@@ -466,23 +468,24 @@ function disphsi()
     spr(l[3],x-1,y-1)
   end
   --bearing pointer
-  for l in all(bp[2]) do
-    local x1,y1=rotatepoint(bp[1][l[1]],hsic,brg[nav2])
-    local x2,y2=rotatepoint(bp[1][l[2]],hsic,brg[nav2])
-    line(x1,y1,x2,y2,12)
-  end
+  polyliner(bp,hsic,brg[nav2],12)
   --cdi
   crs=db[nav1][5]-heading
-  cdii[1][7][1]=cdi+64
-  cdii[1][8][1]=cdi+64
-  for l in all(cdii[2]) do
-    local x1,y1=rotatepoint(cdii[1][l[1]],hsic,crs)
-    local x2,y2=rotatepoint(cdii[1][l[2]],hsic,crs)
-    line(x1,y1,x2,y2,11)
-  end
+  cdii.v[7][1]=cdi+64
+  cdii.v[8][1]=cdi+64
+  polyliner(cdii,hsic,crs,11)
   spr(33,62,110) --heading plane symbol
 end
 
+-- draw a rotated poly line
+function polyliner(m,c,angle,col)
+  color(col)
+  for _,l in pairs(m.e) do
+    local x1,y1=rotatepoint(m.v[l[1]],c,angle)
+    local x2,y2=rotatepoint(m.v[l[2]],c,angle)
+    line(x1,y1,x2,y2)
+  end
+end
 function rotatepoint(p,c,angle)
   local x,y=p[1]-c[1],p[2]-c[2]
   local cs,ss=cos(angle/360),sin(angle/360)
@@ -1379,56 +1382,52 @@ function lightline(x0,y0,x1,y1,c,u1,w0,w1,n)
  n=flr(n*u1)
  if(n<1) return
 
- local u0,t,prevu=0,0,-1
-
  color(c)
+
+ -- too small?
+ if h<n and w<n then
+  line(x0,y0,x1,y1)
+  return
+ end
+
+ local u0,prevu=0,-1
+
  if h>w then
-  -- too small?
-  if 1.8*h<n then
-   line(x0,y0,x1,y1)
-   return
-  end
 
   -- order points on y
   if(y0>y1) x0,y0,x1,y1,u0,u1,w0,w1=x1,y1,x0,y0,u1,u0,w1,w0
   w=x1-x0
 
   -- y-major
-  if(y0<0) x0,y0,t=x0-y0*w/h,0,-y0/h
+  if(y0<0) x0,y0,u0=x0-y0*w/h,0,-u0*y0/h
 
-  u0*=n*w0
-  u1*=n*w1
+  local du,dw=(u1*w1-u0*w0)/h,(w1-w0)/h
   for y=y0,min(y1,127) do
    -- perspective correction
-   local u=flr(lerp(u0,u1,t)/lerp(w0,w1,t))
+   local u=flr(n*u0/w0)
    if(prevu!=u) pset(x0,y)
    x0+=w/h
-   t+=1/h
+			u0+=du
+			w0+=dw
    prevu=u
   end
+ else
+  -- x-major
+  if(x0>x1) x0,y0,x1,y1,u0,u1,w0,w1=x1,y1,x0,y0,u1,u0,w1,w0
+  h=y1-y0
 
-  else
-   if 1.8*w<n then
-    line(x0,y0,x1,y1)
-    return
-   end
+  if(x0<0) x0,y0,u0=0,y0-x0*h/w,-u0*x0/w
 
-   -- x-major
-   if(x0>x1) x0,y0,x1,y1,u0,u1,w0,w1=x1,y1,x0,y0,u1,u0,w1,w0
-   h=y1-y0
-
-   if(x0<0) x0,y0,t=0,y0-x0*h/w,-x0/w
-
-	  u0*=n*w0
-	  u1*=n*w1
-   for x=x0,min(x1,127) do
-    local u=flr(lerp(u0,u1,t)/lerp(w0,w1,t))
-    if(prevu!=u) pset(x,y0)
-    y0+=h/w
-    t+=1/w
-    prevu=u
-   end
+  local du,dw=(u1*w1-u0*w0)/w,(w1-w0)/w
+  for x=x0,min(x1,127) do
+   local u=flr(n*u0/w0)
+   if(prevu!=u) pset(x,y0)
+   y0+=h/w
+   u0+=du
+   w0+=dw
+   prevu=u
   end
+ end
 end
 -->8
 -- trifill
@@ -1492,10 +1491,16 @@ end
 local shades={
 	[0xc]=0xd,
 	[0x4]=0x5,
-	[0xcc]=0xdd,
+	[0x7]=0xd,
+	[0xcc]=0x66,
 	[0x44]=0x55,
-	[0x4c]=0x5d,
-	[0xc4]=0x55}
+	[0x4c]=0x56,
+	[0xc4]=0x55,
+	[0x77]=0xdd,
+	[0xc7]=0x6d,
+	[0x7c]=0xd6,
+	[0x47]=0x5d,
+	[0x74]=0xd5}
 
 function rectfillt(x0,y0,x1,y1)
 	x0,x1=max(flr(x0)),min(flr(x1),127)
