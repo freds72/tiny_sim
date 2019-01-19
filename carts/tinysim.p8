@@ -9,7 +9,8 @@ local scenarios={
 	{"visual approach",-417,326.3,85,600,-1,0,25,112,3,2,1},
  {"final approach",-408.89,230.77,85,1000,1,0,75,112,3,2,1},
  {"full approach",-222.22,461.54,313,3000,0,0,91,112,3,2,1},
- {"engine failure!",-244.44,261.54,50,3500,0,0,0,112,4,2,5},
+	--{"engine failure!",-244.44,261.54,50,3500,0,0,0,112,4,2,5},
+	{"engine failure!",-422.2,408,85,500,10,0,0,65,4,2,5},
  {"unusual attitude",-222.22,461.54,330,450,99,99,100,112,3,2,1},
  {"free flight",-422.2,384.6,85,0,0,0,0,0,3,2,1}}
 
@@ -22,7 +23,7 @@ local wx={
 --airport and navaid database (rwy hdg < 180)
 local db={
 	{-251.11,430.77,"pco","vor"},
- {-422.2,370,"itn","ils",85},
+ {-422.2,384.6,"itn","ils",85}, --370
  {-422.2,384.6,"tny","apt",85},
  {-66.67,153.85,"smv","apt",40},
  {-177.78,246.15,"wee","vor"}}
@@ -30,7 +31,7 @@ local db={
 --general settings and vars
 palt(15,true)
 palt(0,false)
-local frame=0
+local frame,frame2=0,0
 
 -- plane pos/orientation
 local lat,lon,heading,pitch,bank
@@ -141,7 +142,6 @@ function _init()
  crs=0
  cdi=0
  --
- rec,t=0,0
 	onground=false
 	hardlanding=0 --0: soft, 1: hard, 2:crash
  flight={}
@@ -178,7 +178,7 @@ function scenario(s)
   wind=wx[wnd][2]
   ceiling=wx[wnd][3]
   if(pitch==99) bank,pitch=unusual()
-		if(s==6) onground=true
+		if(s==6) onground=true --avoid 'good landing' message at take-off
 end
 
 function unusual()
@@ -239,7 +239,7 @@ end
 
 function movebank()
   if btn(0) then
-    if onground and tas<30 then
+    if onground and tas<30 then --nosewheel steering <30 knots
 					 heading-=0.4
 				else
 				  blag=max(blag-1,-50)
@@ -350,7 +350,7 @@ function dispalt()
   else
     z=96
   end
-  print(flr((_y+0.5)/10),z,69,7)
+  if(alt>=100) print(flr((_y+0.5)/10),z,69,7)
 end
 
 function dispvs()
@@ -391,13 +391,17 @@ function dispspeed()
   local y=ias-flr(ias/10)*10
   local y2=flr(y+0.5)
   local y3=((y-0.5)*7)%7
-  clip(30,65,3,13)
-  print(y2%10,30,66+y3,7)
-  print((y2-1)%10,30,72+y3)
-  print((y2+1)%10,30,60+y3)
-  clip()
-  local z=ias>=99.5 and 22 or 26
-  print(flr((ias+0.5)/10),z,69)
+  if ias>=20 then
+		  clip(30,65,3,13)
+    print(y2%10,30,66+y3,7)
+    print((y2-1)%10,30,72+y3)
+    print((y2+1)%10,30,60+y3)
+    clip()
+				local z=ias>=99.5 and 22 or 26
+		  print(flr((ias+0.5)/10),z,69)
+		else
+		  print('---',22,69,7)
+		end
   print(groundspeed,116,37,14)
 end
 
@@ -566,14 +570,13 @@ end
 function checklanded()
   if alt==0 and (onground==false) then
    onground=true
-   t=rec+60 --message displayed for 2s
-			if vs>-300 and pitch>-0.5 then hardlanding=0
-			elseif vs>-1000 and pitch>-0.5 then hardlanding=1
+   frame2=frame+60 --message displayed for 2s
+			if vs>-300 and pitch>-0.5 and abs(bank)<5 then hardlanding=0
+			elseif vs>-1000 and pitch>-0.5 and abs(bank)<30 then hardlanding=1
 			else hardlanding=2 end
 	 end
 		if alt>0 and (onground==true) then
 			onground=false
-			--t=rec+60
 		end
 end
 
@@ -593,7 +596,7 @@ function dispmessage()
 						return "crash: collision with ground"
     end
   end
-		if rec<t and message then
+		if frame<frame2 and message then
 				local c = frame%16<8 and 7 or 9
 				rectfill(0,9,127,15,5)
 				print(message,10,10,c)
@@ -644,8 +647,7 @@ function dispwind()
 end
 
 function blackbox()
-  rec+=1
-  if(rec%150==1) add(flight, {lat,lon,alt})
+  if(frame%150==1) add(flight, {lat,lon,alt})
 end
 
 function drawmenu()
@@ -700,6 +702,7 @@ function drawmap(message)
       print(l[3],x+9,y+1,7)
     end
   end
+		--flight track
   for l in all(flight) do
     local x,y=scalemap(l[2],l[1])
     pset(x,y,10)
@@ -770,18 +773,16 @@ fly final approach and land]]
     spr(20,91,36)
   elseif scen==4 then
     local msg=[[
-you are enroute to tinyville
-when the engine suddenly quits
-fly best glide speed 65 knots
-turn towards wee vor (  )
-leave wee vor on heading 220
-head towards smallville
-glide to airport and land
-good luck!]]
+you have just taken off
+from tinyville for a trip
+to the beach, when the
+engine suddenly quits at
+only 500 feet! make a steep
+turn back to airport while
+maintaining best glide
+speed (65 knots). can you
+make it back? good luck!]]
     print(msg,8,30,6)
-    -- icons
-    spr(35,95,48)
-    spr(55,110,65)
   elseif scen==5 then
     local msg=[[
 while checking the map you did
@@ -796,6 +797,8 @@ hint: bank first, then pull up]]
 			 local msg=[[
 you are cleared for take-off
 on runway 08 at tinyville.
+apply full power and raise
+the nose at 50-55 knots.
 have fun!]]
     print(msg,8,30,6)
 		end
@@ -865,7 +868,7 @@ function _update()
     if btnp(4) then --z
       _init()
     elseif btnp(4,1) then --tab
-      menu=0
+						menu=0
     end
   elseif menu==3 then --briefing
     if btnp(5) then --x
@@ -1335,6 +1338,7 @@ for i=1,48 do
 end
 
 local sky_gradient={0xee,0x2e,0x11}
+--local sky_gradient={0x55,0x55,0x55} --bad weather gradient wx[1] and wx[2]
 local sky_fillp={0xffff,0xffff,0xffff}
 function draw_ground(self)
 
