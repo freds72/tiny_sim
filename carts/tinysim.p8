@@ -169,7 +169,8 @@ function _init()
 end
 
 function scenario(s)
-  s=scenarios[s]
+	 if(s==6) onground=true --avoid 'good landing' message at take-off
+		s=scenarios[s]
   name=s[1]
   lat=s[2]
   lon=s[3]
@@ -185,7 +186,6 @@ function scenario(s)
   wind=wx[wnd][2]
   ceiling=wx[wnd][3]
   if(pitch==99) bank,pitch=unusual()
-		if(s==6) onground=true --avoid 'good landing' message at take-off
 end
 
 function unusual()
@@ -1491,16 +1491,16 @@ end
 local shades={
 	[0xc]=0xd,
 	[0x4]=0x5,
-	[0x7]=0xd,
-	[0xcc]=0x66,
+	[0x7]=0x6,
+	[0xcc]=0xdd,
 	[0x44]=0x55,
-	[0x4c]=0x56,
+	[0x4c]=0x5d,
 	[0xc4]=0x55,
-	[0x77]=0xdd,
-	[0xc7]=0x6d,
-	[0x7c]=0xd6,
-	[0x47]=0x5d,
-	[0x74]=0xd5}
+	[0x77]=0x66,
+	[0xc7]=0xd6,
+	[0x7c]=0x6d,
+	[0x47]=0x56,
+	[0x74]=0x65}
 
 function rectfillt(x0,y0,x1,y1)
 	x0,x1=max(flr(x0)),min(flr(x1),127)
