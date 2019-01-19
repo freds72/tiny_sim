@@ -24,16 +24,17 @@ function _draw()
 	cls(1)
 	circfill(64,64,20,6)
 	
-	rectfillt(33+x,56+y,67+x,89+y)
-
+	--rectfillt(33+x,56+y,67+x,89+y)
+ circfillt(33+x,56+y,33)
+ 
 	fillp(0xa5a5)
 	--rect(33+x,56+y,67+x,89+y,0x87)
 	fillp()
 	
-	print(flr(100*stat(1)).."%",2,2,7)
+	print(stat(1).."%",2,2,7)
 end
 
-function rectfillt(x0,y0,x1,y1)
+function rectfillt_base(x0,y0,x1,y1)
 	for j=y0,y1 do
 		for i=x0,x1 do
 			local c=pget(i,j)
@@ -46,30 +47,56 @@ function rectfillt(x0,y0,x1,y1)
 	x0,x1=max(flr(x0)),min(flr(x1),127)
 	
 	for j=max(y0),min(y1,127) do
-		linefillt(x0,j,x1)
+		linet(x0,j,x1)
  end
-	--print(x0,x0,y1+9,7)
-	--print(x1..":"..(x1-x0),x1,y1+9,7)
 end
 
-function linefillt(x0,y0,x1)
+function circfillt(x0,y0,r)
+	if(r==0) return
+ local x,y,dx,dy=flr(r),0,1,1
+ r*=2
+ local err=dx-r
+
+	-- avoid overdraw
+	local strips={}	
+ while x>=y do
+		strips[y]=x
+		strips[x]=y
+				
+	 if err<=0 then
+   y+=1
+   err+=dy
+   dy+=2
+		end
+		if err>0 then
+   x-=1
+   dx+=2
+   err+=dx-r
+		end
+	end
+	for k,v in pairs(strips) do
+		linet(x0-v,y0+k,x0+v)
+	 if(k!=0)linet(x0-v,y0-k,x0+v)
+	end
+end
+
+function linet(x0,y0,x1)
  -- odd?
- if band(x0,0x1)>0 then
- 	pset(x0,y0,sget(9,pget(x0,y0)))
+ if band(x0,0x1)==1 then
+ 	pset(x0,y0,shades[pget(x0,y0)])
  	-- move to even boundary
  	x0+=1
  end
- if band(x1,0x1)>0 then
+ if x1%2==0 then
  	-- move to even boundary
- 	x1+=1
- 	pset(x1,y0,sget(9,pget(x1,y0)))
+ 	pset(x1,y0,shades[pget(x1,y0)])
+ 	x1-=1
  end 
-	
-	local n=shr(x1-x0,1)
-	local mem=0x6000+64*y0+shr(x0,1)
-	for i=1,n do
+
+	local mem=0x6000+shl(y0,6)+shr(x0,1)
+	for i=1,shr(x1-x0+1,1) do
 		poke(mem,shades[peek(mem)])
-		mem+=1
+	 mem+=1
 	end
 end
 
