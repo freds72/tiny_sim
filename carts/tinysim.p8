@@ -1490,16 +1490,16 @@ end
 
 -- hardcoded colors
 local shades={
-	[0xc]=0x6,
+	[0xc]=0xd,
 	[0x4]=0x5,
-	[0xcc]=0x66,
+	[0xcc]=0xdd,
 	[0x44]=0x55,
-	[0x4c]=0x56,
+	[0x4c]=0x5d,
 	[0xc4]=0x55}
 
 function rectfillt(x0,y0,x1,y1)
 	x0,x1=max(flr(x0)),min(flr(x1),127)
-	
+
 	for j=max(y0),min(y1,127) do
 		linet(x0,j,x1)
  end
@@ -1511,10 +1511,10 @@ function circfillt(x0,y0,r)
  local err=dx-r
 
  -- ugly hack to avoid overdraw
- local strips={}	
+ local strips={}
  while x>=y do
 		strips[y],strips[x]=x,y
-				
+
 	 if err<=0 then
    y+=1
    err+=dy
@@ -1542,7 +1542,7 @@ function linet(x0,y0,x1)
  	pset(x1,y0,shades[pget(x1,y0)])
  	-- move to odd boundary
  	x1-=1
- end 
+ end
 
 	local mem=0x6000+shl(y0,6)+shr(x0,1)
 	for i=1,shr(x1-x0+1,1) do
