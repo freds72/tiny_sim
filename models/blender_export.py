@@ -47,6 +47,23 @@ def to_p8color(rgb):
         # unknown color
         raise Exception('Unknown color: 0x{}'.format(h))
 
+# airport lights references
+lights_db = {
+    "ALS": { "color": 8, "n": 10 },
+    "RWYEnd": { "color": 8, "n": 5 },
+    "RWYStart": { "color": 11, "n": 10 },
+    "RWL-Left": { "color": 7, "n": 64 },
+    "RWL-Right": { "color": 7, "n": 64 },
+    "RWY-CLL": { "color": 6, "n": 64 },
+    "RWY-CLL-End": { "color": 8, "n": 8 }
+}
+
+# group data
+# create vertex group lookup dictionary for names
+vgroup_names = {vgroup.index: vgroup.name for vgroup in obcontext.vertex_groups}
+# create dictionary of vertex group assignments per vertex
+vgroups = {v.index: [vgroup_names[g.group] for g in v.groups] for v in obdata.vertices}
+
 # model data
 s = ""
 
@@ -84,8 +101,27 @@ for f in obdata.polygons:
 # all edges
 s = s + "{:02x}".format(len(bm.edges))
 for e in bm.edges:
-    s = s + "{:02x}{:02x}{:02x}".format(e.verts[0].index+1, e.verts[1].index+1,1 if e.is_wire else 0)
-
+    v0 = e.verts[0].index
+    v1 = e.verts[1].index
+    # get vertex groups
+    g0 = vgroups[v0]
+    g1 = vgroups[v1]
+    is_light=False
+    light_color_index=0
+    num_lights=0
+    if len(g0)>0 and len(g1)>0:
+        # find common group
+        cg = set(g0).intersection(g1)
+        if len(cg)>1:
+            raise Exception('Multiple vertex groups for the same edge: {} x {} -> {}'.format(g0,g1,cg))
+        if len(cg)==1:
+            light=lights_db[cg.pop()]            
+            is_light=True
+            light_color_index=light['color']
+            num_lights=light['n']
+    s = s + "{:02x}{:02x}{:02x}{:02x}".format(v0+1, v1+1,1 if e.is_wire else 0,1 if is_light else 0)
+    if is_light:
+        s = s + "{:02x}{:02x}".format(light_color_index,num_lights)
 #
 with open(args.out, 'w') as f:
     f.write(s)
