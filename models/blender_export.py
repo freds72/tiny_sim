@@ -24,10 +24,17 @@ obdata = obcontext.data
 # charset
 charset="_0123456789abcdefghijklmnopqrstuvwxyz"
 
+# float must be between -3.2/+3.2
 def pack_float(x):
     h = "{:02x}".format(int(round(32*x+128,0)))
     if len(h)!=2:
         raise Exception('Unable to convert: {} into a byte: {}'.format(x,h))
+    return h
+# double must be between -2046/+2046
+def pack_double(x):
+    h = "{:04x}".format(int(round(16*x+16384,0)))
+    if len(h)!=4:
+        raise Exception('Unable to convert: {} into a double-byte: {}'.format(x,h))
     return h
 
 p8_colors = ['000000','1D2B53','7E2553','008751','AB5236','5F574F','C2C3C7','FFF1E8','FF004D','FFA300','FFEC27','00E436','29ADFF','83769C','FF77A8','FFCCAA']
@@ -57,7 +64,7 @@ bm.from_mesh(obdata)
 
 s = s + "{:02x}".format(len(obdata.vertices))
 for v in obdata.vertices:
-    s = s + "{}{}{}".format(pack_float(v.co.x), pack_float(v.co.z), pack_float(v.co.y))
+    s = s + "{}{}{}".format(pack_double(v.co.x), pack_double(v.co.z), pack_double(v.co.y))
 
 # faces
 s = s + "{:02x}".format(len(bm.faces))
@@ -79,21 +86,6 @@ s = s + "{:02x}".format(len(bm.edges))
 for e in bm.edges:
     s = s + "{:02x}{:02x}{:02x}".format(e.verts[0].index+1, e.verts[1].index+1,1 if e.is_wire else 0)
 
-# lamps
-lamp_objects = [o for o in scene.objects if o.type == 'LAMP']
-s = s + "{:02x}".format(len(lamp_objects))
-for l in lamp_objects:
-    # color
-    s = s + "{:02x}".format(to_p8color(l.data.color))
-    # papi light?
-    is_papi = l.get("papi", 0) 
-    s = s + "{:02x}".format(is_papi)
-    # position
-    s = s + "{}{}{}".format(pack_float(l.location.x), pack_float(l.location.z), pack_float(l.location.y))
-    # direction?
-    if is_papi==1:
-        mat = l.matrix_world
-        s = s + "{}{}{}".format(pack_float(mat[0][2]), pack_float(mat[2][2]), pack_float(mat[1][2]))
 #
 with open(args.out, 'w') as f:
     f.write(s)
