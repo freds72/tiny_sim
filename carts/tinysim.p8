@@ -847,6 +847,9 @@ end
 -- ground constants
 local ground_shift,ground_colors,ground_level=2,{1,13,6}
 
+local dither_pat=json_parse'[0b1111111111111111,0b0111111111111111,0b0111111111011111,0b0101111111011111,0b0101111101011111,0b0101101101011111,0b0101101101011110,0b0101101001011110,0b0101101001011010,0b0001101001011010,0b0001101001001010,0b0000101001001010,0b0000101000001010,0b0000001000001010,0b0000001000001000,0b0000000000000000]'
+
+
 -- zbuffer (kind of)
 local drawables={}
 function zbuf_clear()
@@ -855,19 +858,17 @@ end
 function zbuf_draw()
 	local objs={}
 	for _,d in pairs(drawables) do
-		local p=d.pos
-		local x,y,z,w=cam:project(p[1],p[2],p[3])
-		-- cull objects too far
- --	if z>-3 then
-			add(objs,{obj=d,key=z,x=x,y=y,z=z,w=w})
-	--	end
+  if d.model then
+   collect_drawables(d.model,d.m,objs)
+  end
 	end
 	-- z-sorting
-	-- sort(objs)
+	sort(objs)
+	
 	-- actual draw
 	for i=1,#objs do
 		local d=objs[i]
-		d.obj:draw(d.x,d.y,d.z,d.w)
+		-- todo
 	end
 end
 
@@ -891,6 +892,23 @@ end
 
 function lerp(a,b,t)
 	return a*(1-t)+b*t
+end
+function lerparray(a,t)
+	return a[mid(flr((#a-1)*t+0.5),1,#a)]
+end
+
+-- https://github.com/morgan3d/misc/tree/master/p8sort
+function sort(data)
+ for num_sorted=1,#data-1 do 
+  local new_val=data[num_sorted+1]
+  local new_val_key,i=new_val.key,num_sorted+1
+
+  while i>1 and new_val_key>data[i-1].key do
+   data[i]=data[i-1]   
+   i-=1
+  end
+  data[i]=new_val
+ end
 end
 
 -- edge cases:
@@ -1028,13 +1046,8 @@ function m_right(m)
 	return {m[1],m[2],m[3]}
 end
 
-function draw_actor(self,x,y,z,w)
-	-- distance culling
-	draw_model(self.model,self.m,x,y,z,w)
-end
-
 local znear,zdir=0.25,-1
-function draw_model(model,m,x,y,z,w)
+function collect_drawables(model,m,out)
   -- edges
 	local p={}
 	for i=1,#model.e do
@@ -1088,15 +1101,15 @@ function draw_model(model,m,x,y,z,w)
 	 end
 	 
 		-- draw line
-		if viz==true then
- 		local x0,y0,z0,w0=cam:project2d(a)
- 		local x1,y1,z1,w1=cam:project2d(b)
- 		-- is it a light line?
- 		if e.n then
- 			lightline(x0,y0,x1,y1,c,t,w0,w1,e.n)
- 		else
- 			line(x0,y0,x1,y1,c)
- 		end
+ 	if viz==true then
+   local x0,y0,z0,w0=cam:project2d(a)
+   local x1,y1,z1,w1=cam:project2d(b)
+   -- is it a light line?
+   if e.n then
+    collect_lights(x0,y0,x1,y1,c,0,t,w0,w1,e.n,out)
+   else
+    line(x0,y0,x1,y1,c)
+   end
 		end
 	end
 end
@@ -1176,6 +1189,15 @@ function make_actor(model,p,angle)
 end
 
 function make_cam(x0,y0,focal)
+	-- clip planes
+	local znear,zfar=0.25,32
+	local z_planes={
+		{0,0,zfar},
+		{0,0,znear}}
+	local z_normals={
+		{0,0,1},
+		{0,0,-1}}
+
 	local c={
 		pos={0,0,3},
 		q=make_q(v_up,0),
@@ -1200,10 +1222,20 @@ function make_cam(x0,y0,focal)
  		  return x0+x*w,y0-y*w,z,w
 		end,
 		-- project cam-space points into 2d
-  project2d=function(self,v)
-  	-- view to screen
-  	local w=focal/v[3]
-  	return x0+v[1]*w,y0-v[2]*w,v[3],w
+    project2d=function(self,v)
+    	-- view to screen
+    	local w=focal/v[3]
+  	  return x0+v[1]*w,y0-v[2]*w,v[3],w
+		end,
+		-- draw the given vertices using function fn
+		-- performs cam space clipping
+		draw=function(self,fn,v,c)
+ 		  -- clip loop
+			for i=1,#z_planes do
+			  local pp,pn=z_planes[i],z_normals[i]
+			  v=plane_poly_clip(pn,pp,v)
+			end
+			fn(v,c)
 		end
 	}
 	return c
@@ -1273,59 +1305,65 @@ end
 
 -- draw a light line
 -- note: u0 is assumed to be zero
-function lightline(x0,y0,x1,y1,c,u1,w0,w1,n)
- local w,h=abs(x1-x0),abs(y1-y0)
- 
- -- adjust remaining number of points
- n=flr(n*u1)
- if(n<1) return
+function collect_lights(x0,y0,x1,y1,c,u0,u1,w0,w1,n,out)
+	local w,h=abs(x1-x0),abs(y1-y0)
 
- color(c)
+  -- scale number of points
+  n=flr(n*abs(u1-u0))
+  if(n<1) return
 
- -- too small?
- if h<n and w<n then
-  line(x0,y0,x1,y1)
-  return
- end
+	color(c)
+	-- too small?
+	if h<n and w<n then
+		line(x0,y0,x1,y1)
+		return
+	end
  
- local u0,prevu=0,-1
-   
+ local prevu=-1
  if h>w then
-
   -- order points on y
   if(y0>y1) x0,y0,x1,y1,u0,u1,w0,w1=x1,y1,x0,y0,u1,u0,w1,w0
-  w=x1-x0
-
-  -- y-major
-  if(y0<0) x0,y0,u0=x0-y0*w/h,0,-u0*y0/h
-  
-  local du,dw=(u1*w1-u0*w0)/h,(w1-w0)/h
-  for y=y0,min(y1,40) do	
-   -- perspective correction
-   local u=flr(n*u0/w0)
-   if(prevu!=u) pset(x0,y)
-   x0+=w/h
-			u0+=du
-			w0+=dw
-   prevu=u
-  end
+  w,h=x1-x0,y1-y0
+	  local du,dw=(u1*w1-u0*w0)/h,(w1-w0)/h
+	 	
+   -- y-major
+  u0*=w0
+	  if y0<0 then
+		  local t=-y0/h
+		  x0,y0,u0,w0=x0+w*t,0,lerp(u0,u1*w0,t),lerp(w0,w1,t)
+   end
+	 
+   for y=y0,min(y1,40) do	
+		  local u=flr(n*u0/w0)
+    if(prevu!=u) pset(x0,y)
+    x0+=w/h
+    u0+=du
+    w0+=dw
+    prevu=u
+   end
  else
-  -- x-major
-  if(x0>x1) x0,y0,x1,y1,u0,u1,w0,w1=x1,y1,x0,y0,u1,u0,w1,w0
-  h=y1-y0
+   -- x-major
+	  if(x0>x1) x0,y0,x1,y1,u0,u1,w0,w1=x1,y1,x0,y0,u1,u0,w1,w0
+	w,h=x1-x0,y1-y0
+	  local du,dw=(u1*w1-u0*w0)/w,(w1-w0)/w
 
-  if(x0<0) x0,y0,u0=0,y0-x0*h/w,-u0*x0/w
-  
-  local du,dw=(u1*w1-u0*w0)/w,(w1-w0)/w
-  for x=x0,min(x1,127) do
-   local u=flr(n*u0/w0)
-   if(prevu!=u) pset(x,y0)
-   y0+=h/w
-   u0+=du
-   w0+=dw
-   prevu=u
-  end
- end
+	  u0*=w0
+	  if x0<0 then
+	    local t=-x0/w
+	    -- u is not linear
+	    -- u*w is
+	    x0,y0,u0,w0=0,y0+h*t,lerp(u0,u1*w1,t),lerp(w0,w1,t)
+	  end
+ 
+   for x=x0,min(x1,127) do	
+		  local u=flr(n*u0/w0)
+	   if(prevu!=u) pset(x,y0)
+		  y0+=h/w
+		  u0+=du
+		  w0+=dw
+		  prevu=u
+	  end
+	end
 end
 
 -->8
@@ -1484,9 +1522,10 @@ function unpack_models()
 		-- faces
 		model.f={}
 		for i=1,unpack_int() do
-			local f={unpack_int(),ei={}}
-			for k=1,unpack_int() do
-				add(f.ei,unpack_int())
+			local f={ni=i,vi={},c=unpack_int(),double_sided=unpack_int()==1 or nil}
+			-- vertex indices
+			for i=1,unpack_int() do
+				add(f.vi,unpack_int())
 			end
 			add(model.f,f)
 		end
@@ -1501,9 +1540,9 @@ function unpack_models()
 		model.cp={}
 		for i=1,#model.f do
 			local f=model.f[i]
-			add(model.cp,v_dot(model.n[i],model.v[f[1]]))
-		end
-				
+			add(model.cp,v_dot(model.n[i],model.v[f.vi[1]]))
+		end	
+    	
 		-- edges
 		model.e={}
 		for i=1,unpack_int() do
@@ -1511,13 +1550,12 @@ function unpack_models()
 				-- start
 				unpack_int(),
 				-- end
-				unpack_int(),
-				-- always visible?
-				unpack_int()==1 and true or -1
+				unpack_int()
 			}
-      -- light?
+      -- light line?
       if unpack_int()==1 then
-        e.is_light,e.c,e.n=true,unpack_int(),unpack_int()
+        -- number of lights + color
+        e.c,e.n=unpack_int(),unpack_int()
       end
 			add(model.e,e)
 		end
@@ -1594,16 +1632,19 @@ f6000000ffffffff00000000ffffffffffffffffffffffffffffffffffffffff0000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-1030c0b1f11053f38a04000407f38c04000407f38a04002405f38c04002405f38d04000407f38f04000407f38d04002405f38f04002405048004000407048204
+1030c0b1f11065f38a04000407f38c04000407f38a04002405f38c04002405f38d04000407f38f04000407f38d04002405f38f04002405048004000407048204
 000407048004002405048204002405048304000407048504000407048304002405048504002405f30104000400040f04000400f3010400d90c040f0400d90cf3
 8404000407f38604000407f38404002405f38604002405f38704000407f38904000407f38704002405f389040024050486040004070488040004070486040024
 05048804002405048904000407048b04000407048904002405048b04002405f38104000407f38304000407f38104002405f38304002405048c04000407048e04
-000407048c04002405048e0400240504000400040004000400b80004000400d90c04000400b80004000400d204f30a0400630a04060400630af3070400d20404
-090400d204a01040203040105040607080509040a0b0c090d040e0f001d051404151613191408191a171d140c1d1e1b11240021222f152404252623292408292
-a272a0080a08080a08080a08080a08080a08080a08080a08080a08080a08080a0813301000001020000020400000403000007050000050600000608000008070
-0000b090000090a00000a0c00000c0b00000f0d00000d0e00000e001000001f0000031111010700421411010700471510000516100006181000081710000b191
-000091a10000a1c10000c1b10000f1d10000d1e10000e102000002f100003212000012220000224200004232000072520000526200006282000082720000b292
-000092a20000a2c20000c2b20000d2e210106004f20310108080d213101080a02333101080a04353101080a011211010b0a03141101080500000000000000000
+000407048c04002405048e0400240504000400040004000400b80004000400d90c04000400b80004000400320ef30a0400d20404060400d204f3070400320e04
+090400320ef3010400630a040f0400630a04000400630a04000400320e040f0400730e74030400630a54450400730e544a0400733f54fd040083e2540f040083
+e774130400c41874dc0400d40274d70400d4d074340400c42d540f0400361e2507040066e214100400e53f040f0400e52a040f040016e2540f040066e2250704
+00d402f3cf0400732e04210400731904c40400737504c904007314548f0400732464840400735564380400730964490400730e64490400561b04980400f54b04
+870400f53604870400d551a0700040102040307000405060807070004090a0c0b0700040d0e001f07000405161817170004091a1c1b1700040d1e102f1700040
+122242327000405262827270004092a2c2b2a0080a08080a08080a08080a08080a08080a08080a08080a08080a08080a08923111008441107004d2e2106004f2
+0310808023331080a043531080a0112110b0a0314110805063110083931080a0d3c3101080e3d3101080f3e310108021a300b304002414101080342410108044
+f31010805494101080746400c4b410308094841010806444101080a45410108014a4101080217400d4c4103080e4d410308005f4103080150510308025151030
+80e4f41030803525103080554510308045351030806555103080a3c31010802173002184107004043410108073b3000000000000000000000000000000000000
 __label__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
