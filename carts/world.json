@@ -112,7 +112,7 @@
             "name": "tny",
             "type": "apt",
             "angle": 85,
-            "model": "runway"
+            "actor":{"model": "runway"}
         },
         {
             "lat": -66.67,
@@ -120,7 +120,7 @@
             "name": "smv",
             "type": "apt",
             "angle": 40,
-            "model": "runway"
+            "actor":{"model": "runway"}
         },
         {
             "lat": -177.78,

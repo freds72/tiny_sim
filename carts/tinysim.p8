@@ -8,111 +8,94 @@ __lua__
 local _tok={
   ['true']=true,
   ['false']=false}
- function nop() return true end
- local _g={
-   print=print,
-   line=line,
-   spr=spr,
-   pset=pset,
-   rectfill=rectfill}
+function nop() return true end
+local _g={
+  print=print,
+  line=line,
+  spr=spr,
+  pset=pset,
+  rectfill=rectfill}
 
- -- json parser
- -- from: https://gist.github.com/tylerneylon/59f4bcf316be525b30ab
- local table_delims={['{']="}",['[']="]"}
- local function match(s,tokens)
-   for i=1,#tokens do
-     if(s==sub(tokens,i,i)) return true
-   end
-   return false
- end
- local function skip_delim(str, pos, delim, err_if_missing)
-  if sub(str,pos,pos)!=delim then
-   --if(err_if_missing) assert'delimiter missing'
-   return pos,false
+-- json parser
+-- from: https://gist.github.com/tylerneylon/59f4bcf316be525b30ab
+local table_delims={['{']="}",['[']="]"}
+local function match(s,tokens)
+  for i=1,#tokens do
+    if(s==sub(tokens,i,i)) return true
   end
-  return pos+1,true
- end
-
- local function parse_str_val(str, pos, val)
-   val=val or ''
-   --[[
-   if pos>#str then
-     assert'end of input found while parsing string.'
-   end
-   ]]
-   local c=sub(str,pos,pos)
-   -- lookup global refs
-  if(c=='"') return _g[val] or val,pos+1
-   return parse_str_val(str,pos+1,val..c)
- end
- local function parse_num_val(str,pos,val)
-   val=val or ''
-   --[[
-   if pos>#str then
-     assert'end of input found while parsing string.'
-   end
-   ]]
-   local c=sub(str,pos,pos)
-   -- support base 10, 16 and 2 numbers
-   if(not match(c,"-xb0123456789abcdef.")) return tonum(val),pos
-   return parse_num_val(str,pos+1,val..c)
- end
- -- public values and functions.
- 
- function json_parse(str, pos, end_delim)
-   pos=pos or 1
-   -- if(pos>#str) assert'reached unexpected end of input.'
-   local first=sub(str,pos,pos)
-   if match(first,"{[") then
-     local obj,key,delim_found={},true,true
-     pos+=1
-     while true do
-       key,pos=json_parse(str, pos, table_delims[first])
-       if(key==nil) return obj,pos
-       -- if not delim_found then assert'comma missing between table items.' end
-       if first=="{" then
-         pos=skip_delim(str,pos,':',true)  -- true -> error if missing.
-         obj[key],pos=json_parse(str,pos)
-       else
-         add(obj,key)
-       end
-       pos,delim_found=skip_delim(str, pos, ',')
-   end
-   elseif first=='"' then
-     -- parse a string (or a reference to a global object)
-     return parse_str_val(str,pos+1)
-   elseif match(first,"-0123456789") then
-     -- parse a number.
-     return parse_num_val(str, pos)
-   elseif first==end_delim then  -- end of an object or array.
-     return nil,pos+1
-   else  -- parse true, false
-     for lit_str,lit_val in pairs(_tok) do
-       local lit_end=pos+#lit_str-1
-       if sub(str,pos,lit_end)==lit_str then return lit_val,lit_end+1 end
-     end
-     -- assert'invalid json token'
-   end
- end
-
--- unpack data from gfx/map
-local mem=0x1000
-function unpack_int()
-	local i=peek(mem)
-	mem+=1
-	return i
+  return false
 end
-local itoa='_0123456789abcdefghijklmnopqrstuvwxyz !\n.,-:{}"[]'
-function unpack_string(len)
-	local s=""
-	for i=1,len do
-		local c=unpack_int()
-		s=s..sub(itoa,c,c)
-	end
-	return s
+local function skip_delim(str, pos, delim, err_if_missing)
+if sub(str,pos,pos)!=delim then
+  --if(err_if_missing) assert'delimiter missing'
+  return pos,false
+end
+return pos+1,true
 end
 
-local world=json_parse(unpack_string(5942))
+local function parse_str_val(str, pos, val)
+  val=val or ''
+  --[[
+  if pos>#str then
+    assert'end of input found while parsing string.'
+  end
+  ]]
+  local c=sub(str,pos,pos)
+  -- lookup global refs
+if(c=='"') return _g[val] or val,pos+1
+  return parse_str_val(str,pos+1,val..c)
+end
+local function parse_num_val(str,pos,val)
+  val=val or ''
+  --[[
+  if pos>#str then
+    assert'end of input found while parsing string.'
+  end
+  ]]
+  local c=sub(str,pos,pos)
+  -- support base 10, 16 and 2 numbers
+  if(not match(c,"-xb0123456789abcdef.")) return tonum(val),pos
+  return parse_num_val(str,pos+1,val..c)
+end
+-- public values and functions.
+
+function json_parse(str, pos, end_delim)
+  pos=pos or 1
+  -- if(pos>#str) assert'reached unexpected end of input.'
+  local first=sub(str,pos,pos)
+  if match(first,"{[") then
+    local obj,key,delim_found={},true,true
+    pos+=1
+    while true do
+      key,pos=json_parse(str, pos, table_delims[first])
+      if(key==nil) return obj,pos
+      -- if not delim_found then assert'comma missing between table items.' end
+      if first=="{" then
+        pos=skip_delim(str,pos,':',true)  -- true -> error if missing.
+        obj[key],pos=json_parse(str,pos)
+      else
+        add(obj,key)
+      end
+      pos,delim_found=skip_delim(str, pos, ',')
+  end
+  elseif first=='"' then
+    -- parse a string (or a reference to a global object)
+    return parse_str_val(str,pos+1)
+  elseif match(first,"-0123456789") then
+    -- parse a number.
+    return parse_num_val(str, pos)
+  elseif first==end_delim then  -- end of an object or array.
+    return nil,pos+1
+  else  -- parse true, false
+    for lit_str,lit_val in pairs(_tok) do
+      local lit_end=pos+#lit_str-1
+      if sub(str,pos,lit_end)==lit_str then return lit_val,lit_end+1 end
+    end
+    -- assert'invalid json token'
+  end
+end
+
+local world=json_parse'{"scenarios":[{"name":"visual approach","lat":-417,"lon":326.3,"hdg":85,"alt":600,"pitch":-1,"bank":0,"throttle":25,"gps":3,"nav1":2,"nav2":1},{"name":"final approach","lat":-408.89,"lon":230.77,"hdg":85,"alt":1000,"pitch":1,"bank":0,"throttle":75,"gps":3,"nav1":2,"nav2":1},{"name":"full approach","lat":-222.22,"lon":461.54,"hdg":313,"alt":3000,"pitch":0,"bank":0,"throttle":91,"gps":3,"nav1":2,"nav2":1},{"name":"engine failure!","lat":-244.44,"lon":261.54,"hdg":50,"alt":3500,"pitch":0,"bank":0,"throttle":0,"gps":4,"nav1":2,"nav2":5},{"name":"unusual attitude","lat":-222.22,"lon":461.54,"hdg":330,"alt":450,"pitch":99,"bank":99,"throttle":100,"gps":3,"nav1":2,"nav2":1}],"wx":[{"name":"clear, calm","wind":[0,0],"ceiling":20000},{"name":"clouds, breezy","wind":[60,10],"ceiling":500},{"name":"low clouds, stormy","wind":[10,45],"ceiling":200}],"db":[{"lat":-251.11,"lon":430.77,"name":"pco","type":"vor"},{"lat":-422.2,"lon":370,"name":"itn","type":"ils","angle":85},{"lat":-422.2,"lon":384.6,"name":"tny","type":"apt","angle":85,"actor":{"model":"runway"}},{"lat":-66.67,"lon":153.85,"name":"smv","type":"apt","angle":40,"actor":{"model":"runway"}},{"lat":-177.78,"lon":246.15,"name":"wee","type":"vor"}],"hsic":[64,111],"bp":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124]],"e":[[1,2],[1,3],[1,4],[5,6]]},"nesw":[[64,99,52],[52,111,53],[64,123,36],[76,111,37]],"cdii":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124],[64,104],[64,118]],"e":[[1,2],[1,3],[1,4],[5,6],[7,8]]},"cockpit":[{"fn":"rectfill","args":[10,36,127,42,0]},{"fn":"print","args":["nav1",11,37,7]},{"fn":"line","args":[43,36,43,42,7]},{"fn":"spr","args":[7,47,37]},{"fn":"print","args":["dis",75,37,7]},{"fn":"print","args":["gs",107,37]},{"fn":"rectfill","args":[0,115,8,127,0]},{"fn":"line","args":[4,90,4,110,5]},{"fn":"line","args":[5,90,5,110,13]},{"fn":"line","args":[5,90,5,110,13]},{"fn":"rectfill","args":[11,97,33,119,0]},{"fn":"line","args":[40,71,45,71,10]},{"fn":"line","args":[83,71,88,71]},{"fn":"rectfill","args":[57,88,71,94,0]},{"fn":"pset","args":[70,89,7]},{"fn":"rectfill","args":[107,121,127,127,0]},{"fn":"line","args":[45,111,47,111,7]},{"fn":"line","args":[81,111,83,111,7]},{"fn":"spr","args":[18,71,120,1,1,true,false]},{"fn":"spr","args":[34,79,115,1,1,true,false]},{"fn":"rectfill","args":[87,115,100,127,0]},{"fn":"rectfill","args":[79,123,86,127]},{"fn":"spr","args":[35,79,122,1,1,true,false]},{"fn":"rectfill","args":[40,95,45,100,0]}],"models":{"runway":{"c":6,"v":[[15,0,0],[15,0,-1500],[-15,0,0],[-15,0,-1500],[20,0,-1500],[-20,0,-1500],[15,0,-1550],[-15,0,-1550],[0,0,-1500],[0,0,-1600],[-2,0,-1600],[-2,0,-1800],[2,0,-1600],[2,0,-1800],[0,0,0],[0,0,-1500],[-5,0,-1550],[5,0,-1550],[-8,0,-1600],[8,0,-1600],[-10,0,-1700],[10,0,-1700],[-20,0,-1800],[20,0,-1800]],"e":[[1,2,1],[3,4,1],[1,2,7,128],[3,4,7,128],[1,3,8,10],[5,6,11,20],[2,7,8,5],[4,8,8,5],[9,10,10,10],[11,12,10,10],[13,14,10,10],[15,16,6,128],[17,18,7,8],[19,20,7,8],[21,22,7,10],[23,24,7,10]]}}}'
 
 --scenarios (name,lat,lon,hdg,alt,pitch,bank,throttle,gps dto,nav1,nav2)
 --weather (name,wind,ceiling)
@@ -1248,9 +1231,9 @@ function make_actor(src,p,angle)
 	local a=clone(src,{
 		pos=v_clone(p),
 		-- north is up
-		q=make_q(v_up,angle-0.25)
+		q=make_q(v_up,angle+0.25)
 	})
- a.model=all_models[a.model]
+ a.model=world.models[a.model]
 	a.draw=a.draw or draw_actor
 	a.update=a.update or nop
 	-- init orientation
@@ -1385,7 +1368,7 @@ function lightline(x0,y0,x1,y1,c,u1,w0,w1,n)
   if(y0<0) x0,y0,u0=x0-y0*w/h,0,-u0*y0/h
   
   local du,dw=(u1*w1-u0*w0)/h,(w1-w0)/h
-  for y=y0,min(y1,127) do	
+  for y=y0,min(y1,40) do	
    -- perspective correction
    local u=flr(n*u0/w0)
    if(prevu!=u) pset(x0,y)
