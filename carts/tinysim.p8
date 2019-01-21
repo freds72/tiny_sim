@@ -1340,8 +1340,8 @@ local sky_fillp={0xffff,0xffff,0xffff}
 function draw_ground(self)
 
 	-- draw horizon
-	local zfar=-256
-	local x,y=-64*zfar/64,64*zfar/64
+	local zfar=-2048
+	local x,y=-zfar,zfar
 	local farplane={
 			{x,y,zfar},
 			{x,-y,zfar},
@@ -1353,7 +1353,7 @@ function draw_ground(self)
 
 	for k=0,#sky_gradient-1 do
 		-- ground location in cam space
-		local p={0,cam.pos[2]-8*k*k,0}
+		local p={0,cam.pos[2]-48*k*k,0}
 		m_x_v(cam.m,p)
 
 		local v0=farplane[#farplane]
