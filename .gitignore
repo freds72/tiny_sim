@@ -5,4 +5,6 @@ config.txt
 /carts/demos
 /cdata
 /.vscode/
+*.blend1
+
 
