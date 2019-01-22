@@ -2,74 +2,80 @@
     "scenarios": [
         {
             "name": "visual approach",
-            "lat": -417,
-            "lon": 326.3,
-            "hdg": 85,
-            "alt": 600,
-            "pitch": -1,
-            "bank": 0,
-            "throttle": 25,
-            "gps": 3,
-            "nav1": 2,
-            "nav2": 1,
-            "msg":[
-                {"cmd":"print","args":["remain on runway axis. extend the\nflaps and keep speed at 65-70\nknots by using pitch and\nthrottle. at 50 feet, smoothly\nclose throttle and raise the\nnose to gently touch down\nbelow 65 knots.\ntoo easy? add some wind!\n",8,30,6]}
+            "args":[
+             -417,
+             326.3,
+             85,
+             600,
+             -1,
+             0,
+             25,
+             3,
+             2,
+             1
+            ],
+            "briefing":[
+                {"fn":"print","args":["remain on runway axis. extend the\nflaps and keep speed at 65-70\nknots by using pitch and\nthrottle. at 50 feet, smoothly\nclose throttle and raise the\nnose to gently touch down\nbelow 65 knots.\ntoo easy? add some wind!\n",8,30,6]}
             ]
         },
         {
             "name": "final approach",
-            "lat": -408.89,
-            "lon": 230.77,
-            "hdg": 85,
-            "alt": 1000,
-            "pitch": 1,
-            "bank": 0,
-            "throttle": 75,
-            "gps": 3,
-            "nav1": 2,
-            "nav2": 1,
-            "msg":[
-                {"cmd":"print","args":["fly heading of approx. 085\nkeep localizer (  ) centered\n(the wind might push you away)\nmaintain 1000 ft\nintercept glide slope ( )\nreduce power and extend flaps\nstart 500 ft/min descent\nkeep localizer centered\nkeep glideslope centered\nat 200 ft reduce power & land\n"]}
-            ]
+            "args":[
+             -408.89,
+             230.77,
+             85,
+             1000,
+             1,
+             0,
+             75,
+             3,
+             2,
+             1],
+             "briefing":[
+                 {"fn":"print","args":["fly heading of approx. 085\nkeep localizer (  ) centered\n(the wind might push you away)\nmaintain 1000 ft\nintercept glide slope ( )\nreduce power and extend flaps\nstart 500 ft/min descent\nkeep localizer centered\nkeep glideslope centered\nat 200 ft reduce power & land\n",8,30,6]},
+                 {"fn":"spr","args":[20,71,36]},
+                 {"fn":"spr","args":[38,100,55]}
+             ]
         },
         {
             "name": "full approach",
-            "lat": -222.22,
-            "lon": 461.54,
-            "hdg": 313,
-            "alt": 3000,
-            "pitch": 0,
-            "bank": 0,
-            "throttle": 91,
-            "gps": 3,
-            "nav1": 2,
-            "nav2": 1
+             "args":[-222.22,
+             461.54,
+             313,
+             3000,
+             0,
+             0,
+             91,
+             3,
+             2,
+             1]
         },
         {
             "name": "engine failure!",
-            "lat": -244.44,
-            "lon": 261.54,
-            "hdg": 50,
-            "alt": 3500,
-            "pitch": 0,
-            "bank": 0,
-            "throttle": 0,
-            "gps": 4,
-            "nav1": 2,
-            "nav2": 5
+             "args":[-244.44,
+             261.54,
+             50,
+             3500,
+             0,
+             0,
+             0,
+             4,
+             2,
+             5]
         },
         {
             "name": "unusual attitude",
-            "lat": -222.22,
-            "lon": 461.54,
-            "hdg": 330,
-            "alt": 450,
-            "pitch": 99,
-            "bank": 99,
-            "throttle": 100,
-            "gps": 3,
-            "nav1": 2,
-            "nav2": 1
+            "args":[
+             -222.22,
+             461.54,
+             330,
+             450,
+             99,
+             99,
+             100,
+             3,
+             2,
+             1]
         }
     ],
     "wx": [
@@ -117,16 +123,14 @@
             "lon": 384.6,
             "name": "tny",
             "type": "apt",
-            "angle": 85,
-            "model": "runway"
+            "angle": 85
         },
         {
             "lat": -66.67,
             "lon": 153.85,
             "name": "smv",
             "type": "apt",
-            "angle": 40,
-            "model": "runway"
+            "angle": 40
         },
         {
             "lat": -177.78,
@@ -503,448 +507,18 @@
             ]
         }
     ],
-    "models": {
-        "runway": {
-            "c": 6,
-            "v": [
-                [
-                    15,
-                    0,
-                    0
-                ],
-                [
-                    15,
-                    0,
-                    -1500
-                ],
-                [
-                    -15,
-                    0,
-                    0
-                ],
-                [
-                    -15,
-                    0,
-                    -1500
-                ],
-                [
-                    20,
-                    0,
-                    -1500
-                ],
-                [
-                    -20,
-                    0,
-                    -1500
-                ],
-                [
-                    15,
-                    0,
-                    -1550
-                ],
-                [
-                    -15,
-                    0,
-                    -1550
-                ],
-                [
-                    0,
-                    0,
-                    -1500
-                ],
-                [
-                    0,
-                    0,
-                    -1600
-                ],
-                [
-                    -2,
-                    0,
-                    -1600
-                ],
-                [
-                    -2,
-                    0,
-                    -1800
-                ],
-                [
-                    2,
-                    0,
-                    -1600
-                ],
-                [
-                    2,
-                    0,
-                    -1800
-                ],
-                [
-                    0,
-                    0,
-                    0
-                ],
-                [
-                    0,
-                    0,
-                    -1500
-                ],
-                [
-                    -5,
-                    0,
-                    -1550
-                ],
-                [
-                    5,
-                    0,
-                    -1550
-                ],
-                [
-                    -8,
-                    0,
-                    -1600
-                ],
-                [
-                    8,
-                    0,
-                    -1600
-                ],
-                [
-                    -10,
-                    0,
-                    -1700
-                ],
-                [
-                    10,
-                    0,
-                    -1700
-                ],
-                [
-                    -20,
-                    0,
-                    -1800
-                ],
-                [
-                    20,
-                    0,
-                    -1800
-                ]
-            ],
-            "e": [
-                [
-                    1,
-                    2,
-                    1
-                ],
-                [
-                    3,
-                    4,
-                    1
-                ],
-                [
-                    1,
-                    2,
-                    7,
-                    128
-                ],
-                [
-                    3,
-                    4,
-                    7,
-                    128
-                ],
-                [
-                    1,
-                    3,
-                    8,
-                    10
-                ],
-                [
-                    5,
-                    6,
-                    11,
-                    20
-                ],
-                [
-                    2,
-                    7,
-                    8,
-                    5
-                ],
-                [
-                    4,
-                    8,
-                    8,
-                    5
-                ],
-                [
-                    9,
-                    10,
-                    10,
-                    10
-                ],
-                [
-                    11,
-                    12,
-                    10,
-                    10
-                ],
-                [
-                    13,
-                    14,
-                    10,
-                    10
-                ],
-                [
-                    15,
-                    16,
-                    6,
-                    128
-                ],
-                [
-                    17,
-                    18,
-                    7,
-                    8
-                ],
-                [
-                    19,
-                    20,
-                    7,
-                    8
-                ],
-                [
-                    21,
-                    22,
-                    7,
-                    10
-                ],
-                [
-                    23,
-                    24,
-                    7,
-                    10
-                ]
-            ]
-        },
-        "runway2": {
-            "c": 6,
-            "v": [
-                [
-                    15,
-                    0,
-                    0
-                ],
-                [
-                    15,
-                    0,
-                    -1500
-                ],
-                [
-                    -15,
-                    0,
-                    0
-                ],
-                [
-                    -15,
-                    0,
-                    -1500
-                ],
-                [
-                    20,
-                    0,
-                    -1500
-                ],
-                [
-                    -20,
-                    0,
-                    -1500
-                ],
-                [
-                    15,
-                    0,
-                    -1550
-                ],
-                [
-                    -15,
-                    0,
-                    -1550
-                ],
-                [
-                    0,
-                    0,
-                    -1500
-                ],
-                [
-                    0,
-                    0,
-                    -1600
-                ],
-                [
-                    -2,
-                    0,
-                    -1600
-                ],
-                [
-                    -2,
-                    0,
-                    -1800
-                ],
-                [
-                    2,
-                    0,
-                    -1600
-                ],
-                [
-                    2,
-                    0,
-                    -1800
-                ],
-                [
-                    0,
-                    0,
-                    0
-                ],
-                [
-                    0,
-                    0,
-                    -1500
-                ],
-                [
-                    -5,
-                    0,
-                    -1550
-                ],
-                [
-                    5,
-                    0,
-                    -1550
-                ],
-                [
-                    -8,
-                    0,
-                    -1600
-                ],
-                [
-                    8,
-                    0,
-                    -1600
-                ],
-                [
-                    -10,
-                    0,
-                    -1700
-                ],
-                [
-                    10,
-                    0,
-                    -1700
-                ],
-                [
-                    -20,
-                    0,
-                    -1800
-                ],
-                [
-                    20,
-                    0,
-                    -1800
-                ]
-            ],
-            "e": [
-                [
-                    1,
-                    2,
-                    1
-                ],
-                [
-                    3,
-                    4,
-                    1
-                ],
-                [
-                    1,
-                    2,
-                    7,
-                    128
-                ],
-                [
-                    3,
-                    4,
-                    7,
-                    128
-                ],
-                [
-                    1,
-                    3,
-                    8,
-                    10
-                ],
-                [
-                    5,
-                    6,
-                    11,
-                    20
-                ],
-                [
-                    2,
-                    7,
-                    8,
-                    5
-                ],
-                [
-                    4,
-                    8,
-                    8,
-                    5
-                ],
-                [
-                    9,
-                    10,
-                    10,
-                    10
-                ],
-                [
-                    11,
-                    12,
-                    10,
-                    10
-                ],
-                [
-                    13,
-                    14,
-                    10,
-                    10
-                ],
-                [
-                    15,
-                    16,
-                    6,
-                    128
-                ],
-                [
-                    17,
-                    18,
-                    7,
-                    8
-                ],
-                [
-                    19,
-                    20,
-                    7,
-                    8
-                ],
-                [
-                    21,
-                    22,
-                    7,
-                    10
-                ],
-                [
-                    23,
-                    24,
-                    7,
-                    10
-                ]
-            ]
-        }
-    }
+    "transcolors":{
+        "0xc":"0x6",
+        "0x4":"0x5",
+        "0x7":"0xd",
+        "0xcc":"0x66",
+        "0x44":"0x55",
+        "0x4c":"0x56",
+        "0xc4":"0x55",
+        "0x77":"0xdd",
+        "0xc7":"0x6d",
+        "0x7c":"0xd6",
+        "0x47":"0x5d",
+        "0x74":"0xd5"        
+    }    
 }

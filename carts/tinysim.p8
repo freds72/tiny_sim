@@ -8,111 +8,95 @@ __lua__
 local _tok={
   ['true']=true,
   ['false']=false}
- function nop() return true end
- local _g={
-   print=print,
-   line=line,
-   spr=spr,
-   pset=pset,
-   rectfill=rectfill}
+function nop() return true end
+local _g={
+  print=print,
+  line=line,
+  spr=spr,
+  pset=pset,
+  rectfill=rectfill}
 
- -- json parser
- -- from: https://gist.github.com/tylerneylon/59f4bcf316be525b30ab
- local table_delims={['{']="}",['[']="]"}
- local function match(s,tokens)
-   for i=1,#tokens do
-     if(s==sub(tokens,i,i)) return true
-   end
-   return false
- end
- local function skip_delim(str, pos, delim, err_if_missing)
-  if sub(str,pos,pos)!=delim then
-   --if(err_if_missing) assert'delimiter missing'
-   return pos,false
+-- json parser
+-- from: https://gist.github.com/tylerneylon/59f4bcf316be525b30ab
+local table_delims={['{']="}",['[']="]"}
+local function match(s,tokens)
+  for i=1,#tokens do
+    if(s==sub(tokens,i,i)) return true
   end
-  return pos+1,true
- end
-
- local function parse_str_val(str, pos, val)
-   val=val or ''
-   --[[
-   if pos>#str then
-     assert'end of input found while parsing string.'
-   end
-   ]]
-   local c=sub(str,pos,pos)
-   -- lookup global refs
-  if(c=='"') return _g[val] or val,pos+1
-   return parse_str_val(str,pos+1,val..c)
- end
- local function parse_num_val(str,pos,val)
-   val=val or ''
-   --[[
-   if pos>#str then
-     assert'end of input found while parsing string.'
-   end
-   ]]
-   local c=sub(str,pos,pos)
-   -- support base 10, 16 and 2 numbers
-   if(not match(c,"-xb0123456789abcdef.")) return tonum(val),pos
-   return parse_num_val(str,pos+1,val..c)
- end
- -- public values and functions.
- 
- function json_parse(str, pos, end_delim)
-   pos=pos or 1
-   -- if(pos>#str) assert'reached unexpected end of input.'
-   local first=sub(str,pos,pos)
-   if match(first,"{[") then
-     local obj,key,delim_found={},true,true
-     pos+=1
-     while true do
-       key,pos=json_parse(str, pos, table_delims[first])
-       if(key==nil) return obj,pos
-       -- if not delim_found then assert'comma missing between table items.' end
-       if first=="{" then
-         pos=skip_delim(str,pos,':',true)  -- true -> error if missing.
-         obj[key],pos=json_parse(str,pos)
-       else
-         add(obj,key)
-       end
-       pos,delim_found=skip_delim(str, pos, ',')
-   end
-   elseif first=='"' then
-     -- parse a string (or a reference to a global object)
-     return parse_str_val(str,pos+1)
-   elseif match(first,"-0123456789") then
-     -- parse a number.
-     return parse_num_val(str, pos)
-   elseif first==end_delim then  -- end of an object or array.
-     return nil,pos+1
-   else  -- parse true, false
-     for lit_str,lit_val in pairs(_tok) do
-       local lit_end=pos+#lit_str-1
-       if sub(str,pos,lit_end)==lit_str then return lit_val,lit_end+1 end
-     end
-     -- assert'invalid json token'
-   end
- end
-
--- unpack data from gfx/map
-local mem=0x1000
-function unpack_int()
-	local i=peek(mem)
-	mem+=1
-	return i
+  return false
 end
-local itoa='_0123456789abcdefghijklmnopqrstuvwxyz !\n.,-:{}"[]'
-function unpack_string(len)
-	local s=""
-	for i=1,len do
-		local c=unpack_int()
-		s=s..sub(itoa,c,c)
-	end
-	return s
+local function skip_delim(str, pos, delim, err_if_missing)
+if sub(str,pos,pos)!=delim then
+  --if(err_if_missing) assert'delimiter missing'
+  return pos,false
+end
+return pos+1,true
 end
 
-local world=json_parse(unpack_string(5942))
+local function parse_str_val(str, pos, val)
+  val=val or ''
+  --[[
+  if pos>#str then
+    assert'end of input found while parsing string.'
+  end
+  ]]
+  local c=sub(str,pos,pos)
+  -- lookup global refs
+if(c=='"') return _g[val] or val,pos+1
+  return parse_str_val(str,pos+1,val..c)
+end
+local function parse_num_val(str,pos,val)
+  val=val or ''
+  --[[
+  if pos>#str then
+    assert'end of input found while parsing string.'
+  end
+  ]]
+  local c=sub(str,pos,pos)
+  -- support base 10, 16 and 2 numbers
+  if(not match(c,"-xb0123456789abcdef.")) return tonum(val),pos
+  return parse_num_val(str,pos+1,val..c)
+end
+-- public values and functions.
+
+function json_parse(str, pos, end_delim)
+  pos=pos or 1
+  -- if(pos>#str) assert'reached unexpected end of input.'
+  local first=sub(str,pos,pos)
+  if match(first,"{[") then
+    local obj,key,delim_found={},true,true
+    pos+=1
+    while true do
+      key,pos=json_parse(str, pos, table_delims[first])
+      if(key==nil) return obj,pos
+      -- if not delim_found then assert'comma missing between table items.' end
+      if first=="{" then
+        pos=skip_delim(str,pos,':',true)  -- true -> error if missing.
+        obj[key],pos=json_parse(str,pos)
+      else
+        add(obj,key)
+      end
+      pos,delim_found=skip_delim(str, pos, ',')
+  end
+  elseif first=='"' then
+    -- parse a string (or a reference to a global object)
+    return parse_str_val(str,pos+1)
+  elseif match(first,"-0123456789") then
+    -- parse a number.
+    return parse_num_val(str, pos)
+  elseif first==end_delim then  -- end of an object or array.
+    return nil,pos+1
+  else  -- parse true, false
+    for lit_str,lit_val in pairs(_tok) do
+      local lit_end=pos+#lit_str-1
+      if sub(str,pos,lit_end)==lit_str then return lit_val,lit_end+1 end
+    end
+    -- assert'invalid json token'
+  end
+end
+
+local world=json_parse'{"scenarios":[{"name":"visual approach","args":[-417,326.3,85,600,-1,0,25,3,2,1],"briefing":[{"fn":"print","args":["remain on runway axis. extend the\nflaps and keep speed at 65-70\nknots by using pitch and\nthrottle. at 50 feet, smoothly\nclose throttle and raise the\nnose to gently touch down\nbelow 65 knots.\ntoo easy? add some wind!\n",8,30,6]}]},{"name":"final approach","args":[-408.89,230.77,85,1000,1,0,75,3,2,1],"briefing":[{"fn":"print","args":["fly heading of approx. 085\nkeep localizer (  ) centered\n(the wind might push you away)\nmaintain 1000 ft\nintercept glide slope ( )\nreduce power and extend flaps\nstart 500 ft/min descent\nkeep localizer centered\nkeep glideslope centered\nat 200 ft reduce power & land\n",8,30,6]},{"fn":"spr","args":[20,71,36]},{"fn":"spr","args":[38,100,55]}]},{"name":"full approach","args":[-222.22,461.54,313,3000,0,0,91,3,2,1]},{"name":"engine failure!","args":[-244.44,261.54,50,3500,0,0,0,4,2,5]},{"name":"unusual attitude","args":[-222.22,461.54,330,450,99,99,100,3,2,1]}],"wx":[{"name":"clear, calm","wind":[0,0],"ceiling":20000},{"name":"clouds, breezy","wind":[60,10],"ceiling":500},{"name":"low clouds, stormy","wind":[10,45],"ceiling":200}],"db":[{"lat":-251.11,"lon":430.77,"name":"pco","type":"vor"},{"lat":-422.2,"lon":370,"name":"itn","type":"ils","angle":85},{"lat":-422.2,"lon":384.6,"name":"tny","type":"apt","angle":85},{"lat":-66.67,"lon":153.85,"name":"smv","type":"apt","angle":40},{"lat":-177.78,"lon":246.15,"name":"wee","type":"vor"}],"hsic":[64,111],"bp":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124]],"e":[[1,2],[1,3],[1,4],[5,6]]},"nesw":[[64,99,52],[52,111,53],[64,123,36],[76,111,37]],"cdii":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124],[64,104],[64,118]],"e":[[1,2],[1,3],[1,4],[5,6],[7,8]]},"cockpit":[{"fn":"rectfill","args":[10,36,127,42,0]},{"fn":"print","args":["nav1",11,37,7]},{"fn":"line","args":[43,36,43,42,7]},{"fn":"spr","args":[7,47,37]},{"fn":"print","args":["dis",75,37,7]},{"fn":"print","args":["gs",107,37]},{"fn":"rectfill","args":[0,115,8,127,0]},{"fn":"line","args":[4,90,4,110,5]},{"fn":"line","args":[5,90,5,110,13]},{"fn":"line","args":[5,90,5,110,13]},{"fn":"rectfill","args":[11,97,33,119,0]},{"fn":"line","args":[40,71,45,71,10]},{"fn":"line","args":[83,71,88,71]},{"fn":"rectfill","args":[57,88,71,94,0]},{"fn":"pset","args":[70,89,7]},{"fn":"rectfill","args":[107,121,127,127,0]},{"fn":"line","args":[45,111,47,111,7]},{"fn":"line","args":[81,111,83,111,7]},{"fn":"spr","args":[18,71,120,1,1,true,false]},{"fn":"spr","args":[34,79,115,1,1,true,false]},{"fn":"rectfill","args":[87,115,100,127,0]},{"fn":"rectfill","args":[79,123,86,127]},{"fn":"spr","args":[35,79,122,1,1,true,false]},{"fn":"rectfill","args":[40,95,45,100,0]}],"transcolors":{"0xc":"0x6","0x4":"0x5","0x7":"0xd","0xcc":"0x66","0x44":"0x55","0x4c":"0x56","0xc4":"0x55","0x77":"0xdd","0xc7":"0x6d","0x7c":"0xd6","0x47":"0x5d","0x74":"0xd5"}}'
+local all_models={}
 
 --scenarios (name,lat,lon,hdg,alt,pitch,bank,throttle,gps dto,nav1,nav2)
 --weather (name,wind,ceiling)
@@ -131,7 +115,7 @@ local brg,dist,crs,cdi={},{},0,0
 --instruments
 --ai
 local aic={64,71} --center
-local ai={{-87,72},{215,72},{64,-79},{64,223}}
+local ai=json_parse'[[-87,72],[215,72],[64,-79],[64,223]]'
 local aipitch={60,141}
 local aistep=10
 local aiwidth=8
@@ -182,25 +166,17 @@ function _init()
  -- create live actors from db
  actors={}
  for _,l in pairs(world.db) do
-  if l.actor then
-			add(actors,make_actor(l.actor,{l.lat,0,l.lon},85/360)) -- tny
+  if all_models[l.type] then
+			add(actors,make_actor(l.type,{l.lat,0,l.lon},l.angle and l.angle/360 or 0))
 		end
 	end
 end
 
 function scenario(s)
-  s=world.scenarios[s]
+  s=world.scenarios[s]  
   name=s.name
-  lat=s.lat
-  lon=s.lon
-  heading=s.hdg
-  alt=s.alt
-  pitch=s.pitch
-  bank=s.bank
-  throttle=s.throttle
-  dto=s.gps
-  nav1=s.nav1
-  nav2=s.nav2
+  lat,lon,heading,alt,pitch,bank,throttle,dto,nav1,nav2=munpack(s.args)
+
   wind=world.wx[wnd].wind
   ceiling=world.wx[wnd].ceiling
   if(pitch==99) bank,pitch=unusual()
@@ -716,89 +692,27 @@ function drawbriefing()
   cls()
   print("flight briefing:",8,10,6)
   print(name,8,17,7)
-  if scen==1 then
-    local msg=[[
-remain on runway axis. extend the
-flaps and keep speed at 65-70
-knots by using pitch and
-throttle. at 50 feet, smoothly
-close throttle and raise the
-nose to gently touch down
-below 65 knots.
-too easy? add some wind!]]
-    print(msg,8,30,6)
-  elseif scen==2 then
-    local msg=[[
-fly heading of approx. 085
-keep localizer (  ) centered
-(the wind might push you away)
-maintain 1000 ft
-intercept glide slope ( )
-reduce power and extend flaps
-start 500 ft/min descent
-keep localizer centered
-keep glideslope centered
-at 200 ft reduce power & land]]
-    print(msg,8,30,6)
-    -- icons
-			spr(20,71,36)
-			spr(38,100,55)
-  elseif scen==3 then
-    local msg=[[      
-cross pco (  ) on heading 313
-intercept localizer (  )
-turn left heading 265
-descend to 2000 ft
-turn right heading 310
-fly 1 minute
-turn left heading 130
-intercept localizer
-turn left heading 085
-fly final approach and land]]
-    print(msg,8,30,6)
-    -- icons
-    spr(35,51,36)
-    spr(20,91,42)
-  elseif scen==4 then
-    local msg=[[
-you are enroute to tinyville
-when the engine suddenly quits
-fly best glide speed 65 knots
-turn towards wee vor (  )
-leave wee vor on heading 220
-head towards smallville
-glide to airport and land
-good luck!]]
-    print(msg,8,30,6)
-    -- icons
-    spr(35,95,51)
-    spr(55,104,64)
-  else
-    local msg=[[
-while checking the map you did
-not pay attention to your
-attitude. when you look up,
-the airplane is out of control
-at low altitude. oops!
-can you recover?
-hint: bank first, then pull up]]
-    print(msg,8,30,6)
-  end
+  
+  -- 
+  drawstatic(world.scenarios[scen].briefing)
+
   print("press ❎ to   fly",8,112,7)
   spr(2,54,112)
   spr(3,77,112)
   print("z: back to menu",8,119,6)
 end
 
+-- trick from: https://gist.github.com/josefnpat/bfe4aaa5bbb44f572cd0
 function munpack(t, from, to)
   local from,to=from or 1,to or #t
   if(from<=to) return t[from], munpack(t, from+1, to)
 end
 
-function drawstatic()
+-- execute the given draw commands from a table
+function drawstatic(cmds)
   -- call native pico function from list of instructions
-  for i=1,#world.cockpit do
-    local drawcmd=world.cockpit[i]  
+  for i=1,#cmds do
+    local drawcmd=cmds[i]  
     drawcmd.fn(munpack(drawcmd.args))
   end
 end
@@ -860,7 +774,7 @@ function _update()
     calcgs()
     calccdi()
     checklanded()
-				flaps()
+		flaps()
     blackbox()
     --3d
   	zbuf_clear()
@@ -895,7 +809,7 @@ function _draw()
 	   drawbriefing()
 	 else
     dispai()
-    drawstatic()
+    drawstatic(world.cockpit)
     disphsi()
     disprpm()
     dispspeed()
@@ -933,6 +847,9 @@ end
 -- ground constants
 local ground_shift,ground_colors,ground_level=2,{1,13,6}
 
+local dither_pat=json_parse'[0b1111111111111111,0b0111111111111111,0b0111111111011111,0b0101111111011111,0b0101111101011111,0b0101101101011111,0b0101101101011110,0b0101101001011110,0b0101101001011010,0b0001101001011010,0b0001101001001010,0b0000101001001010,0b0000101000001010,0b0000001000001010,0b0000001000001000,0b0000000000000000]'
+
+
 -- zbuffer (kind of)
 local drawables={}
 function zbuf_clear()
@@ -941,19 +858,17 @@ end
 function zbuf_draw()
 	local objs={}
 	for _,d in pairs(drawables) do
-		local p=d.pos
-		local x,y,z,w=cam:project(p[1],p[2],p[3])
-		-- cull objects too far
- --	if z>-3 then
-			add(objs,{obj=d,key=z,x=x,y=y,z=z,w=w})
-	--	end
+  if d.model then
+   collect_drawables(d.model,d.m,objs)
+  end
 	end
 	-- z-sorting
-	-- sort(objs)
+	sort(objs)
+	
 	-- actual draw
 	for i=1,#objs do
 		local d=objs[i]
-		d.obj:draw(d.x,d.y,d.z,d.w)
+		-- todo
 	end
 end
 
@@ -977,6 +892,23 @@ end
 
 function lerp(a,b,t)
 	return a*(1-t)+b*t
+end
+function lerparray(a,t)
+	return a[mid(flr((#a-1)*t+0.5),1,#a)]
+end
+
+-- https://github.com/morgan3d/misc/tree/master/p8sort
+function sort(data)
+ for num_sorted=1,#data-1 do 
+  local new_val=data[num_sorted+1]
+  local new_val_key,i=new_val.key,num_sorted+1
+
+  while i>1 and new_val_key>data[i-1].key do
+   data[i]=data[i-1]   
+   i-=1
+  end
+  data[i]=new_val
+ end
 end
 
 -- edge cases:
@@ -1114,19 +1046,14 @@ function m_right(m)
 	return {m[1],m[2],m[3]}
 end
 
-function draw_actor(self,x,y,z,w)
-	-- distance culling
-	draw_model(self.model,self.m,x,y,z,w)
-end
-
 local znear,zdir=0.25,-1
-function draw_model(model,m,x,y,z,w)
+function collect_drawables(model,m,out)
   -- edges
 	local p={}
 	for i=1,#model.e do
 		local e=model.e[i]
 		-- edges indices
-		local ak,bk,c=e[1],e[2],e[3] or model.c
+		local ak,bk,c=e[1],e[2],e.c or 1
 		-- edge positions
 		local a,b=p[ak],p[bk]
 		-- not in cache?
@@ -1150,6 +1077,7 @@ function draw_model(model,m,x,y,z,w)
 			m_x_v(cam.m,v)
 			b,p[bk]=v,v
 		end
+
 		-- line clipping aginst near cam plane
 		-- swap end points
 		-- simplified sutherland-atherton
@@ -1173,15 +1101,15 @@ function draw_model(model,m,x,y,z,w)
 	 end
 	 
 		-- draw line
-		if viz==true then
- 		local x0,y0,z0,w0=cam:project2d(a)
- 		local x1,y1,z1,w1=cam:project2d(b)
- 		-- is it a light line?
- 		if e[4] then
- 			lightline(x0,y0,x1,y1,c,t,w0,w1,e[4])
- 		else
- 			line(x0,y0,x1,y1,c)
- 		end
+ 	if viz==true then
+   local x0,y0,z0,w0=cam:project2d(a)
+   local x1,y1,z1,w1=cam:project2d(b)
+   -- is it a light line?
+   if e.n then
+    collect_lights(x0,y0,x1,y1,c,0,t,w0,w1,e.n,out)
+   else
+    line(x0,y0,x1,y1,c)
+   end
 		end
 	end
 end
@@ -1243,14 +1171,14 @@ function plane_poly_clip(n,p,v)
 	return res
 end
 
-function make_actor(src,p,angle)
+function make_actor(model,p,angle)
 	-- instance
-	local a=clone(src,{
+	local a={
 		pos=v_clone(p),
 		-- north is up
 		q=make_q(v_up,angle-0.25)
-	})
- a.model=all_models[a.model]
+	}
+  a.model=all_models[model]
 	a.draw=a.draw or draw_actor
 	a.update=a.update or nop
 	-- init orientation
@@ -1261,6 +1189,15 @@ function make_actor(src,p,angle)
 end
 
 function make_cam(x0,y0,focal)
+	-- clip planes
+	local znear,zfar=0.25,32
+	local z_planes={
+		{0,0,zfar},
+		{0,0,znear}}
+	local z_normals={
+		{0,0,1},
+		{0,0,-1}}
+
 	local c={
 		pos={0,0,3},
 		q=make_q(v_up,0),
@@ -1285,10 +1222,20 @@ function make_cam(x0,y0,focal)
  		  return x0+x*w,y0-y*w,z,w
 		end,
 		-- project cam-space points into 2d
-  project2d=function(self,v)
-  	-- view to screen
-  	local w=focal/v[3]
-  	return x0+v[1]*w,y0-v[2]*w,v[3],w
+    project2d=function(self,v)
+    	-- view to screen
+    	local w=focal/v[3]
+  	  return x0+v[1]*w,y0-v[2]*w,v[3],w
+		end,
+		-- draw the given vertices using function fn
+		-- performs cam space clipping
+		draw=function(self,fn,v,c)
+ 		  -- clip loop
+			for i=1,#z_planes do
+			  local pp,pn=z_planes[i],z_normals[i]
+			  v=plane_poly_clip(pn,pp,v)
+			end
+			fn(v,c)
 		end
 	}
 	return c
@@ -1358,60 +1305,67 @@ end
 
 -- draw a light line
 -- note: u0 is assumed to be zero
-function lightline(x0,y0,x1,y1,c,u1,w0,w1,n)
- local w,h=abs(x1-x0),abs(y1-y0)
- 
- -- adjust remaining number of points
- n=flr(n*u1)
- if(n<1) return
+function collect_lights(x0,y0,x1,y1,c,u0,u1,w0,w1,n,out)
+	local w,h=abs(x1-x0),abs(y1-y0)
 
- color(c)
+  -- scale number of points
+  n=flr(n*abs(u1-u0))
+  if(n<1) return
 
- -- too small?
- if h<n and w<n then
-  line(x0,y0,x1,y1)
-  return
- end
+	color(c)
+	-- too small?
+	if h<n and w<n then
+		line(x0,y0,x1,y1)
+		return
+	end
  
- local u0,prevu=0,-1
-   
+ local prevu=-1
  if h>w then
-
   -- order points on y
   if(y0>y1) x0,y0,x1,y1,u0,u1,w0,w1=x1,y1,x0,y0,u1,u0,w1,w0
-  w=x1-x0
-
-  -- y-major
-  if(y0<0) x0,y0,u0=x0-y0*w/h,0,-u0*y0/h
-  
-  local du,dw=(u1*w1-u0*w0)/h,(w1-w0)/h
-  for y=y0,min(y1,127) do	
-   -- perspective correction
-   local u=flr(n*u0/w0)
-   if(prevu!=u) pset(x0,y)
-   x0+=w/h
-			u0+=du
-			w0+=dw
-   prevu=u
-  end
+  w,h=x1-x0,y1-y0
+	  local du,dw=(u1*w1-u0*w0)/h,(w1-w0)/h
+	 	
+   -- y-major
+  u0*=w0
+	  if y0<0 then
+		  local t=-y0/h
+		  x0,y0,u0,w0=x0+w*t,0,lerp(u0,u1*w0,t),lerp(w0,w1,t)
+   end
+	 
+   for y=y0,min(y1,40) do	
+		  local u=flr(n*u0/w0)
+    if(prevu!=u) pset(x0,y)
+    x0+=w/h
+    u0+=du
+    w0+=dw
+    prevu=u
+   end
  else
-  -- x-major
-  if(x0>x1) x0,y0,x1,y1,u0,u1,w0,w1=x1,y1,x0,y0,u1,u0,w1,w0
-  h=y1-y0
+   -- x-major
+	  if(x0>x1) x0,y0,x1,y1,u0,u1,w0,w1=x1,y1,x0,y0,u1,u0,w1,w0
+	w,h=x1-x0,y1-y0
+	  local du,dw=(u1*w1-u0*w0)/w,(w1-w0)/w
 
-  if(x0<0) x0,y0,u0=0,y0-x0*h/w,-u0*x0/w
-  
-  local du,dw=(u1*w1-u0*w0)/w,(w1-w0)/w
-  for x=x0,min(x1,127) do
-   local u=flr(n*u0/w0)
-   if(prevu!=u) pset(x,y0)
-   y0+=h/w
-   u0+=du
-   w0+=dw
-   prevu=u
-  end
- end
+	  u0*=w0
+	  if x0<0 then
+	    local t=-x0/w
+	    -- u is not linear
+	    -- u*w is
+	    x0,y0,u0,w0=0,y0+h*t,lerp(u0,u1*w1,t),lerp(w0,w1,t)
+	  end
+ 
+   for x=x0,min(x1,127) do	
+		  local u=flr(n*u0/w0)
+	   if(prevu!=u) pset(x,y0)
+		  y0+=h/w
+		  u0+=du
+		  w0+=dw
+		  prevu=u
+	  end
+	end
 end
+
 -->8
 -- trifill
 -- by @p01
@@ -1471,19 +1425,7 @@ end
 -- init transparent colors
 
 -- hardcoded colors
-local shades={
-	[0xc]=0x6,
-	[0x4]=0x5,
-	[0x7]=0xd,
-	[0xcc]=0x66,
-	[0x44]=0x55,
-	[0x4c]=0x56,
-	[0xc4]=0x55,
-	[0x77]=0xdd,
-	[0xc7]=0x6d,
-	[0x7c]=0xd6,
-	[0x47]=0x5d,
-	[0x74]=0xd5}
+local shades=world.transcolors
 
 function rectfillt(x0,y0,x1,y1)
 	x0,x1=max(flr(x0)),min(flr(x1),127)
@@ -1538,6 +1480,93 @@ function linet(x0,y0,x1)
 	 mem+=1
 	end
 end
+-->8
+-- unpack models
+local mem=0x1000
+-- number of bytes
+function unpack_int(w)
+ w=w or 1
+	local i=w==1 and peek(mem) or bor(shl(peek(mem),8),peek(mem+1))
+	mem+=w
+	return i
+end
+function unpack_float(scale)
+	local f=shr(unpack_int()-128,5)
+	return f*(scale or 1)
+end
+function unpack_double(scale)
+	local f=shr(unpack_int(2)-0x4000,4)
+	return f*(scale or 1)
+end
+-- valid chars for model names
+local itoa='_0123456789abcdefghijklmnopqrstuvwxyz'
+function unpack_string()
+	local s=""
+	for i=1,unpack_int() do
+		local c=unpack_int()
+		s=s..sub(itoa,c,c)
+	end
+	return s
+end
+function unpack_models()
+	-- for all models
+	for m=1,unpack_int() do
+		local model,name,scale={},unpack_string(),unpack_int()
+		
+		-- vertices
+		model.v={}
+		for i=1,unpack_int() do
+			add(model.v,{unpack_double(scale),unpack_double(scale),unpack_double(scale)})
+		end
+		
+		-- faces
+		model.f={}
+		for i=1,unpack_int() do
+			local f={ni=i,vi={},c=unpack_int(),double_sided=unpack_int()==1 or nil}
+			-- vertex indices
+			for i=1,unpack_int() do
+				add(f.vi,unpack_int())
+			end
+			add(model.f,f)
+		end
+ 
+		-- normals
+		model.n={}
+		for i=1,unpack_int() do
+			add(model.n,{unpack_float(),unpack_float(),unpack_float()})			
+		end
+		
+		-- n.p cache	
+		model.cp={}
+		for i=1,#model.f do
+			local f=model.f[i]
+			add(model.cp,v_dot(model.n[i],model.v[f.vi[1]]))
+		end	
+    	
+		-- edges
+		model.e={}
+		for i=1,unpack_int() do
+      local e={
+				-- start
+				unpack_int(),
+				-- end
+				unpack_int()
+			}
+      -- light line?
+      if unpack_int()==1 then
+        -- number of lights + color
+        e.c,e.n=unpack_int(),unpack_int()
+      end
+			add(model.e,e)
+		end
+
+		-- merge with existing model
+		all_models[name]=clone(model,all_models[name])
+	end
+end
+-- do it
+unpack_models()
+
 __gfx__
 00000000fff7777f49777777777777e25fffffff7fffffff77ff777fffffffff0000000000000000000000000000000000000000000000000000000000000000
 00000000ff7fffffffffffffffffffff55fffffff7f7ffff7f7f777ffffffeff0000000000000000000000000000000000000000000000000000000000000000
@@ -1603,53 +1632,19 @@ f6000000ffffffff00000000ffffffffffffffffffffffffffffffffffffffff0000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-d2f2e1e00191c0d141a1e1f2c203d2f291c08101f2c2f21241e102c07162c0b1b1d1a1c0e031f2a2f271c0f1f2c2b2603090a2f271a191f2c25040809250a2f2
-31f021f2c2a070a2f2c071f1f2c2802020a2f2b141f1e031f2c2b230a2f2d0c09161f2c220a2f2f131d1a1f1f17101f2c24070a2f221b1e1f2c250a2f291c012
-30f2c240a2f291c01240f2c230e2a2d2f291c08101f2c2f2114191c07162c0b1b1d1a1c0e031f2a2f271c0f1f2c2b26020a092a0b0a2f271a191f2c240502092
-9090a2f231f021f2c2a070a2f2c071f1f2c230202020a2f2b141f1e031f2c230a2f2d0c09161f2c220a2f2f131d1a1f1f17101f2c29070a2f221b1e1f2c250a2
-f291c01230f2c240a2f291c01240f2c230e2a2d2f291c08101f2c2f21102717162c0b1b1d1a1c0e031f2a2f271c0f1f2c2b2404040924040a2f271a191f2c260
-8030927060a2f231f021f2c2503050a2f2c071f1f2c250202020a2f2b141f1e031f2c220a2f2d0c09161f2c220a2f2f131d1a1f1f17101f2c2b030a2f221b1e1
-f2c250a2f291c01230f2c240a2f291c01240f2c230e2a2d2f291c08101f2c2f20191214191016211c0417102d10172f2a2f271c0f1f2c2b2406060926060a2f2
-71a191f2c2408030927060a2f231f021f2c27020a2f2c071f1f2c250702020a2f2b141f1e031f2c220a2f2d0c09161f2c220a2f2f131d1a1f1f17101f2c220a2
-f221b1e1f2c260a2f291c01230f2c240a2f291c01240f2c270e2a2d2f291c08101f2c2f2029102e102c07162c0f1f141f102f001f2a2f271c0f1f2c2b2404040
-924040a2f271a191f2c2608030927060a2f231f021f2c2505020a2f2c071f1f2c2607020a2f2b141f1e031f2c2b0b0a2f2d0c09161f2c2b0b0a2f2f131d1a1f1
-f17101f2c2302020a2f221b1e1f2c250a2f291c01230f2c240a2f291c01240f2c230e213a2f22232f2c203d2f291c08101f2c2f2e07101c0d1a262e0c07181f2
-a2f2224191f0f2c20320a22013a2f2e0014171419121f2c24020202020e2a2d2f291c08101f2c2f2e071a102f0e1a262d0d101015242f2a2f2224191f0f2c203
-8020a2302013a2f2e0014171419121f2c2702020e2a2d2f291c08101f2c2f271a12262e071a102f0e1a262e1f1a1d18142f2a2f2224191f0f2c2033020a26070
-13a2f2e0014171419121f2c2402020e213a2f2f0d0f2c203d2f271c0f1f2c2b2407030923030a2f271a191f2c2605020929090a2f291c08101f2c2f2b1e0a1f2
-a2f2f142b101f2c2f212a1d1f2e2a2d2f271c0f1f2c2b26040409240a2f271a191f2c2509020a2f291c08101f2c2f241f191f2a2f2f142b101f2c2f24171e1f2
-a2f2c091217101f2c2a070e2a2d2f271c0f1f2c2b26040409240a2f271a191f2c250a0609280a2f291c08101f2c2f2f19142f2a2f2f142b101f2c2f2c0b1f1f2
-a2f2c091217101f2c2a070a2f281a1f00171f2c2f2d1029122c042f2e2a2d2f271c0f1f2c2b28080928090a2f271a191f2c230705092a070a2f291c08101f2c2
-f2e18112f2a2f2f142b101f2c2f2c0b1f1f2a2f2c091217101f2c26020a2f281a1f00171f2c2f2d1029122c042f2e2a2d2f271c0f1f2c2b23090909290a0a2f2
-71a191f2c2406080923070a2f291c08101f2c2f2220101f2a2f2f142b101f2c2f212a1d1f2e213a2f231e141e0f2c2038060a230303013a2f2d0b1f2c2d2f212
-f2c203038060a2b0a013a2038060a230204013a2038040a230202013a2038080a230202013a2038060a230402013a2038060a23040601313a2f201f2c2030330
-a24013a20330a25013a20330a26013a20370a2801313e2a2f29101e122f2c203038060a2b0b0a2704013a2037040a2303030a2705013a2038060a2304050a250
-8013a2039080a2303030a250901313a2f2e0f04141f2c2d2f212f2c203038060a2b0a013a2038060a230204013a2038040a230202013a2038080a230202013a2
-038060a230402013a2038060a230406013a2038060a230206013a2038060a23030a01313a2f201f2c2030330a24013a20330a25013a20330a26013a20370a280
-13a20390a2a01313e2a2f2e0a1e061b141f1f2c203d2f21191f2c2f2d101e0f111417171f2a2f2c0d121e1f2c2033020a25080a2304090a26040a22013e2a2d2
-f21191f2c2f2b1d14191f1f2a2f2c0d121e1f2c203f291c01230f2a23030a25090a29013e2a2d2f21191f2c2f271419101f2a2f2c0d121e1f2c2036050a25080
-a26050a26040a29013e2a2d2f21191f2c2f2e1b1d1f2a2f2c0d121e1f2c20390a26090a2509013e2a2d2f21191f2c2f2b1d14191f1f2a2f2c0d121e1f2c203f2
-f041e1f2a29070a25090a29013e2a2d2f21191f2c2f2b1d14191f1f2a2f2c0d121e1f2c203f221e1f2a2302090a2509013e2a2d2f21191f2c2f2d101e0f11141
-7171f2a2f2c0d121e1f2c20320a2303070a2a0a2304090a22013e2a2d2f21191f2c2f271419101f2a2f2c0d121e1f2c20360a2b020a260a2303020a27013e2a2
-d2f21191f2c2f271419101f2a2f2c0d121e1f2c20370a2b020a270a2303020a2305013e2a2d2f21191f2c2f271419101f2a2f2c0d121e1f2c20370a2b020a270
-a2303020a2305013e2a2d2f21191f2c2f2d101e0f111417171f2a2f2c0d121e1f2c2033030a2b090a25050a23030b0a22013e2a2d2f21191f2c2f271419101f2
-a2f2c0d121e1f2c2036020a29030a26070a29030a2302013e2a2d2f21191f2c2f271419101f2a2f2c0d121e1f2c203a050a29030a2a0a0a2903013e2a2d2f211
-91f2c2f2d101e0f111417171f2a2f2c0d121e1f2c2037090a2a0a0a29030a2b060a22013e2a2d2f21191f2c2f2b1e101f1f2a2f2c0d121e1f2c2039020a2a0b0
-a29013e2a2d2f21191f2c2f2d101e0f111417171f2a2f2c0d121e1f2c203302090a2304030a2304090a2304090a22013e2a2d2f21191f2c2f271419101f2a2f2
-c0d121e1f2c2036070a2303030a26090a2303030a29013e2a2d2f21191f2c2f271419101f2a2f2c0d121e1f2c203a030a2303030a2a050a2303030a29013e2a2
-d2f21191f2c2f2e1b1d1f2a2f2c0d121e1f2c20330a0a29030a2304020a230a230a2f1d10201a211c071e10113e2a2d2f21191f2c2f2e1b1d1f2a2f2c0d121e1
-f2c2035060a290b0a2303070a230a230a2f1d10201a211c071e10113e2a2d2f21191f2c2f2d101e0f111417171f2a2f2c0d121e1f2c203a090a2303070a23020
-20a2304090a22013e2a2d2f21191f2c2f2d101e0f111417171f2a2f2c0d121e1f2c20390b0a2304050a2a080a230409013e2a2d2f21191f2c2f2e1b1d1f2a2f2
-c0d121e1f2c2035070a290b0a2304040a230a230a2f1d10201a211c071e10113e2a2d2f21191f2c2f2d101e0f111417171f2a2f2c0d121e1f2c2036020a2b070
-a26070a2302020a22013e213a2f281a1f00171e1f2c2d2f2d1029122c042f2c2d2f2e0f2c280a2f212f2c203033070a220a22013a2033070a220a2b230702020
-13a203b23070a220a22013a203b23070a220a2b23070202013a2034020a220a2b23070202013a203b24020a220a2b23070202013a2033070a220a2b230707020
-13a203b23070a220a2b23070702013a20320a220a2b23070202013a20320a220a2b23080202013a203b240a220a2b23080202013a203b240a220a2b230a02020
-13a20340a220a2b23080202013a20340a220a2b230a0202013a20320a220a22013a20320a220a2b23070202013a203b270a220a2b23070702013a20370a220a2
-b23070702013a203b2a0a220a2b23080202013a203a0a220a2b23080202013a203b23020a220a2b23090202013a2033020a220a2b23090202013a203b24020a2
-20a2b230a0202013a2034020a220a2b230a020201313a2f201f2c2030330a240a23013a20350a260a23013a20330a240a290a23040a013a20350a260a290a230
-40a013a20330a250a2a0a2302013a20370a280a23030a2402013a20340a290a2a0a27013a20360a2a0a2a0a27013a203b0a23020a23020a2302013a2033030a2
-3040a23020a2302013a2033050a23060a23020a2302013a2033070a23080a280a23040a013a2033090a230a0a290a2a013a20330b0a24020a290a2a013a20340
-30a24040a290a2302013a2034050a24060a290a230201313e2e2e200000000000000000000000000000000000000000000000000000000000000000000000000
+1030c0b1f11065f38a04000407f38c04000407f38a04002405f38c04002405f38d04000407f38f04000407f38d04002405f38f04002405048004000407048204
+000407048004002405048204002405048304000407048504000407048304002405048504002405f30104000400040f04000400f3010400d90c040f0400d90cf3
+8404000407f38604000407f38404002405f38604002405f38704000407f38904000407f38704002405f389040024050486040004070488040004070486040024
+05048804002405048904000407048b04000407048904002405048b04002405f38104000407f38304000407f38104002405f38304002405048c04000407048e04
+000407048c04002405048e0400240504000400040004000400b80004000400d90c04000400b80004000400320ef30a0400d20404060400d204f3070400320e04
+090400320ef3010400630a040f0400630a04000400630a04000400320e040f0400730e74030400630a54450400730e544a0400733f54fd040083e2540f040083
+e774130400c41874dc0400d40274d70400d4d074340400c42d540f0400361e2507040066e214100400e53f040f0400e52a040f040016e2540f040066e2250704
+00d402f3cf0400732e04210400731904c40400737504c904007314548f0400732464840400735564380400730964490400730e64490400561b04980400f54b04
+870400f53604870400d551a0700040102040307000405060807070004090a0c0b0700040d0e001f07000405161817170004091a1c1b1700040d1e102f1700040
+122242327000405262827270004092a2c2b2a0080a08080a08080a08080a08080a08080a08080a08080a08080a08080a08923111008441107004d2e2106004f2
+0310808023331080a043531080a0112110b0a0314110805063110083931080a0d3c3101080e3d3101080f3e310108021a300b304002414101080342410108044
+f31010805494101080746400c4b410308094841010806444101080a45410108014a4101080217400d4c4103080e4d410308005f4103080150510308025151030
+80e4f41030803525103080554510308045351030806555103080a3c31010802173002184107004043410108073b3000000000000000000000000000000000000
 __label__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
