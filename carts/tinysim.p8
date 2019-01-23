@@ -161,7 +161,7 @@ function _init()
  flight={}
 
  --3d
- cam=make_cam(64,12,64)
+ cam=make_cam(64,12,2)
 
  -- create live actors from db
  actors={}
@@ -1060,32 +1060,31 @@ function collect_drawables(model,pos,m,out)
   -- > avoid costly evaluation
 	for i=1,#model.f do
   local f,n=model.f[i],model.n[i]
-  -- face vertices (for clipping)
-		if v_dot(n,cam_pos)>model.cp[i] or f.double_sided then
-			local vertices={}
-   -- project vertices
-   local z,visi=0,false
+    -- early clipping
+    if f.z>-30 and f.z<30 and v_dot(n,cam_pos)>model.cp[i] or f.double_sided then
+      -- face vertices (for clipping)
+      local vertices={}
+      -- project vertices
+      local z,visi=0,false
 			for k=1,#f.vi do
 				local vi=f.vi[k]
 				local v=p[vi]
-    if not v then
-     v=v_clone(model.v[vi])
-     -- relative to world
-     m_x_v(m,v)
-     -- world to cam
-     v_add(v,cam.pos,-1)
-     m_x_v(cam.m,v)
-					p[vi]=v
-    end
-    -- face 'center'
-    z+=v[3]
-    --
-    if(v[3]>0 and v[3]<16) visi=true
-				add(vertices,v)
-			end
+        if not v then
+          v=v_clone(model.v[vi])
+          -- relative to world
+          m_x_v(m,v)
+          -- world to cam
+          v_add(v,cam.pos,-1)
+          m_x_v(cam.m,v)
+          p[vi]=v
+        end
+        --
+        if(v[3]>0 and v[3]<16) visi=true
+			  add(vertices,v)
+		  end
 			-- at least one vertice visible?
 			-- todo: clip here
-			if(visi==true) add(out,{key=z/#vertices,v=vertices,c=f.c})
+			if(visi==true) add(out,{key=f.z,v=vertices,c=f.c})
 		end
 	end
 
@@ -1135,19 +1134,19 @@ function collect_drawables(model,pos,m,out)
 			end
 			viz=true
 		elseif bz>znear then
-	 	viz=true
-	 end
+	 	  viz=true
+	  end
 	 
 		-- draw line
- 	if viz==true then
-   local x0,y0,z0,w0=cam:project2d(a)
-   local x1,y1,z1,w1=cam:project2d(b)
-   -- is it a light line?
-   if e.n then
-    collect_lights(x0,y0,x1,y1,c,0,t,w0,w1,e.n,out)
-   else
-    line(x0,y0,x1,y1,c)
-   end
+ 	  if viz==true then
+      local x0,y0,z0,w0=cam:project2d(a)
+      local x1,y1,z1,w1=cam:project2d(b)
+      -- is it a light line?
+      if e.n then
+        collect_lights(x0,y0,x1,y1,c,0,t,w0,w1,e.n,out)
+      else
+        line(x0,y0,x1,y1,c)
+      end
 		end
 	end
 end
@@ -1227,7 +1226,8 @@ end
 
 function make_cam(x0,y0,focal)
 	-- clip planes
-	local znear,zfar=0.25,32
+  local znear,zfar=0.25,32
+  local zlen=zfar-znear
 	local z_planes={
 		{0,0,zfar},
 		{0,0,znear}}
@@ -1255,13 +1255,13 @@ function make_cam(x0,y0,focal)
 			x,y,z=m_x_xyz(self.m,x,y,z)
 
 			-- view to screen
-	 	  local w=focal/z
+	 	  local w=focal*zlen/z
  		  return x0+x*w,y0-y*w,z,w
 		end,
 		-- project cam-space points into 2d
     project2d=function(self,v)
     	-- view to screen
-    	local w=focal/v[3]
+    	local w=focal*zlen/v[3]
   	  return x0+v[1]*w,y0-v[2]*w,v[3],w
 		end,
 		-- draw the given vertices using function fn
@@ -1345,34 +1345,28 @@ end
 function collect_lights(x0,y0,x1,y1,c,u0,u1,w0,w1,n,out)
 	local w,h=abs(x1-x0),abs(y1-y0)
 
-  -- scale number of points
-  n=flr(n*abs(u1-u0))
-  if(n<1) return
-
-	color(c)
-	-- too small?
-	if h<n and w<n then
-		line(x0,y0,x1,y1)
-		return
-	end
+ -- scale number of points
+ n=flr(n*abs(u1-u0))
+ if(n<1) return
  
  local prevu=-1
  if h>w then
   -- order points on y
   if(y0>y1) x0,y0,x1,y1,u0,u1,w0,w1=x1,y1,x0,y0,u1,u0,w1,w0
   w,h=x1-x0,y1-y0
-	  local du,dw=(u1*w1-u0*w0)/h,(w1-w0)/h
+	 local du,dw=(u1*w1-u0*w0)/h,(w1-w0)/h
 	 	
    -- y-major
   u0*=w0
-	  if y0<0 then
-		  local t=-y0/h
-		  x0,y0,u0,w0=x0+w*t,0,lerp(u0,u1*w1,t),lerp(w0,w1,t)
-   end
+	 if y0<0 then
+		 local t=-y0/h
+		 -- todo: unroll lerp
+	  x0,y0,u0,w0=x0+w*t,0,lerp(u0,u1*w1,t),lerp(w0,w1,t)
+  end
 	 
-   for y=y0,min(y1,40) do	
+   for y=y0,min(y1,40) do
 		  local u=flr(n*u0/w0)
-    if(prevu!=u) pset(x0,y)
+    if(prevu!=u) pset(x0,y,sget(64+3*w0,c))
     x0+=w/h
     u0+=du
     w0+=dw
@@ -1394,7 +1388,7 @@ function collect_lights(x0,y0,x1,y1,c,u0,u1,w0,w1,n,out)
  
    for x=x0,min(x1,127) do	
 		  local u=flr(n*u0/w0)
-	   if(prevu!=u) pset(x,y0)
+	   if(prevu!=u) pset(x,y0,sget(64+3*w0,c))
 		  y0+=h/w
 		  u0+=du
 		  w0+=dw
@@ -1559,7 +1553,7 @@ function unpack_models(scale)
 		-- faces
 		model.f={}
 		for i=1,unpack_int() do
-			local f={ni=i,vi={},c=unpack_int(),double_sided=unpack_int()==1 or nil}
+			local f={ni=i,vi={},c=unpack_int(),double_sided=unpack_int()==1 or nil,z=unpack_double()}
 			-- vertex indices
 			for i=1,unpack_int() do
 				add(f.vi,unpack_int())
@@ -1611,14 +1605,14 @@ __gfx__
 000000007fffffffffffffffffffffff55fffffff777fffffffffffffffffeff0000000000000000000000000000000000000000000000000000000000000000
 00000000ffffffffffff1c7777c1ffff5fffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
 00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
-00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
-00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
-0000000070707070ffffffff77777fffffbfffff00000000ff222fffffffffff0000000000000000000000000000000000000000000000000000000000000000
+00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff12d6000000000000000000000000000000000000000000000000000000000000
+00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff2d67000000000000000000000000000000000000000000000000000000000000
+0000000070707070ffffffff77777fffffbfffff00000000ff222fffffffffff2288000000000000000000000000000000000000000000000000000000000000
 1d00000007000700fffffffff777fffffbffffff00000000f2e7e2ffff0fffff0000000000000000000000000000000000000000000000000000000000000000
-2e00000070700700ffffffffff7fffffbbbbbbbb000000002ee7ee2ff00fffff0000000000000000000000000000000000000000000000000000000000000000
-3b000000000000000ffffffffffffffffbffffff000000002ee7ee2f000fffff0000000000000000000000000000000000000000000000000000000000000000
-450000000000777000ffffffffffffffffbfffff000000002ee7ee2ff00fffff0000000000000000000000000000000000000000000000000000000000000000
-5600000000007700000fffffffffffffffffffff00000000f2e7e2ffff0fffff0000000000000000000000000000000000000000000000000000000000000000
+2e00000070700700ffffffffff7fffffbbbbbbbb000000002ee7ee2ff00fffff049a000000000000000000000000000000000000000000000000000000000000
+3b000000000000000ffffffffffffffffbffffff000000002ee7ee2f000fffff153b000000000000000000000000000000000000000000000000000000000000
+450000000000777000ffffffffffffffffbfffff000000002ee7ee2ff00fffff001c000000000000000000000000000000000000000000000000000000000000
+5600000000007700000fffffffffffffffffffff00000000f2e7e2ffff0fffff001d000000000000000000000000000000000000000000000000000000000000
 670000000000707000000fffffffffffffffffff00000000ff222fffffffffff0000000000000000000000000000000000000000000000000000000000000000
 770000000000000000000000ffffffffffffffff00000000ffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
 8e000000ff7fffff00000fffffcfffff777fffff777ffffffbffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
@@ -1676,11 +1670,11 @@ f6000000ffffffff00000000ffffffffffffffffffffffffffffffffffffffff0000000000000000
 000407048c04002405048e0400240504000400040004000400b80004000400d90c04000400b80004000400320ef30a0400d20404060400d204f3070400320e04
 090400320ef3010400630a040f0400630a04000400630a04000400320e040f0400730e74030400630a54450400730e540f040083e774130400c41874dc0400d4
 02540f0400361e2507040066e2040ff3bfe58e040f040016e2540f040066e225070400d402f3cf0400732ef3cf0400930c04c904007314548f04007324644904
-00730e64490400461e0487f3aff58a548e046156d004870400d551644504f15602a0700040102040307000405060807070004090a0c0b0700040d0e001f07000
-405161817170004091a1c1b1700040d1e102f1700040122242327000405262827270004092a2c2b2a0080a08080a08080a08080a08080a08080a08080a08080a
-08080a08080a082231111070043441107004d2e2106004f20310808023331080a043531080a0112110b0a0314110805063110083931080a0c3d310108021a300
-b3e30004d31010801444101080443410108024041010805414101080f354101080e4c410308074641030808494103080b4a4103080f4b4103080c4d4103080a3
-c31010802173002134107004e3f310108073b30021240094a41030806484103080d4f41030800000000000000000000000000000000000000000000000000000
+00730e64490400461e0487f3aff58a548e046156d004870400d551644504f15602a0700004004010204030700004004050608070700004004090a0c0b0700004
+0040d0e001f0700004004051618171700004004091a1c1b17000040040d1e102f1700004004012224232700004004052628272700004004092a2c2b2a0080a08
+080a08080a08080a08080a08080a08080a08080a08080a08080a082231111070043441107004d2e2106004f20310808023331080a043531080a0112110b0a031
+4110805063110083931080a0c3d310c08021a300b3e30004d310c080144410c080443410c080240410c080541410c080f35410c080e4c410b080746410b08084
+9410b080b4a410b080f4b410b080c4d410b080a3c310c0802173002134107004e3f310c08073b30021240094a410b080648410b080d4f410b080000000000000
 __label__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
