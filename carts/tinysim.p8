@@ -867,10 +867,10 @@ function zbuf_draw()
 	-- actual draw
 	for i=1,#objs do
 		local o=objs[i]
-		fillp(lerparray(dither_pat,1-o.key/16))
-		cam:draw(polyfill,o.v,o.c)
+		-- fillp(lerparray(dither_pat,1-o.key/16))
+    cam:draw(o.draw,o.v,o.c)
 	end
-	fillp()
+	-- fillp()
 end
 
 function zbuf_filter(array)
@@ -1070,12 +1070,7 @@ function collect_drawables(model,pos,m,out)
 				local vi=f.vi[k]
 				local v=p[vi]
         if not v then
-          v=v_clone(model.v[vi])
-          -- relative to world
-          m_x_v(m,v)
-          -- world to cam
-          v_add(v,cam.pos,-1)
-          m_x_v(cam.m,v)
+          v=cam:modelview(m,model.v[vi])
           p[vi]=v
         end
         --
@@ -1084,70 +1079,34 @@ function collect_drawables(model,pos,m,out)
 		  end
 			-- at least one vertice visible?
 			-- todo: clip here
-			if(visi==true) add(out,{key=f.z,v=vertices,c=f.c})
+			if(visi==true) add(out,{key=f.z,v=vertices,c=f.c,draw=project_poly})
 		end
 	end
 
-  -- edges
+ -- edges
 	for i=1,#model.e do
 		local e=model.e[i]
 		-- edges indices
-		local ak,bk,c=e[1],e[2],e.c or 1
+		local ak,bk=e[1],e[2]
 		-- edge positions
 		local a,b=p[ak],p[bk]
 		-- not in cache?
 		if not a then
-			local v=v_clone(model.v[ak])
-			-- relative to world
-			m_x_v(m,v)
-			-- world to cam
-			v_add(v,cam.pos,-1)
-			m_x_v(cam.m,v)
+			local v=cam:modelview(m,model.v[ak])
 			a,p[ak]=v,v
 		end
 		if not b then
-			local v=v_clone(model.v[bk])
-			-- relative to world
-			m_x_v(m,v)
-			-- world to cam
-			v_add(v,cam.pos,-1)
-			m_x_v(cam.m,v)
+			local v=cam:modelview(m,model.v[bk])
 			b,p[bk]=v,v
 		end
 
-		-- line clipping aginst near cam plane
-		-- swap end points
-		-- simplified sutherland-atherton
-		local az,bz=a[3],b[3]
-		if(az<bz) a,b,az,bz=b,a,bz,az
-		local den=zdir*(bz-az)
-		local t,viz=1,false
-		if az>znear and bz<znear then
-			t=zdir*(znear-az)/den
-			if t>=0 and t<=1 then
-				-- intersect pos
-				local s=make_v(a,b)
-				v_scale(s,t)
-				v_add(s,a)
-				-- in-place
-				b=s
-			end
-			viz=true
-		elseif bz>znear then
-	 	  viz=true
-	  end
-	 
-		-- draw line
- 	  if viz==true then
-      local x0,y0,z0,w0=cam:project2d(a)
-      local x1,y1,z1,w1=cam:project2d(b)
-      -- is it a light line?
-      if e.n then
-        collect_lights(x0,y0,x1,y1,c,0,t,w0,w1,e.n,out)
-      else
-        line(x0,y0,x1,y1,c)
-      end
-		end
+		local edge={a,b}
+		if e.n then
+			a[4],b[4]=0,e.n
+   add(out,{key=-100,v=edge,c=e.c,draw=project_lightline})
+  else
+   --add(out,{key=-100,v=edge,c=e.c,draw=project_line})
+  end
 	end
 end
 
@@ -1191,16 +1150,18 @@ function plane_poly_clip(n,p,v)
 		local v1,d1=v[i],dist[i]
 		if d1>0 then
 			if d0<=0 then
-				local r=make_v(v0,v1)
-				v_scale(r,d0/(d0-d1))
+				local r,t=make_v(v0,v1),d0/(d0-d1)
+				v_scale(r,t)
 				v_add(r,v0)
+				if(v0[4]) r[4]=lerp(v0[4],v1[4],t)
 				add(res,r)
 			end
 			add(res,v1)
 		elseif d0>0 then
-			local r=make_v(v0,v1)
-			v_scale(r,d0/(d0-d1))
+			local r,t=make_v(v0,v1),d0/(d0-d1)
+			v_scale(r,t)
 			v_add(r,v0)
+			if(v0[4]) r[4]=lerp(v0[4],v1[4],t)
 			add(res,r)
 		end
 		v0,d0=v1,d1
@@ -1257,12 +1218,22 @@ function make_cam(x0,y0,focal)
 			-- view to screen
 	 	  local w=focal*zlen/z
  		  return x0+x*w,y0-y*w,z,w
-		end,
+    end,
+    -- to camera space
+    modelview=function(self,m,v)
+     v=v_clone(v)
+     -- relative to world
+     m_x_v(m,v)
+     -- world to cam
+     v_add(v,self.pos,-1)
+     m_x_v(self.m,v)
+     return v
+    end,
 		-- project cam-space points into 2d
-    project2d=function(self,v)
-    	-- view to screen
-    	local w=focal*zlen/v[3]
-  	  return x0+v[1]*w,y0-v[2]*w,v[3],w
+  project2d=function(self,v)
+  	-- view to screen
+   local w=focal*zlen/v[3]
+  	return x0+v[1]*w,y0-v[2]*w,v[3],w,v[4]
 		end,
 		-- draw the given vertices using function fn
 		-- performs cam space clipping
@@ -1311,7 +1282,7 @@ function draw_ground(self)
 		local sky=plane_poly_clip(n,p,farplane)
 		-- complete line?
 		fillp(sky_fillp[k+1])
-		polyfill(sky,sky_gradient[k+1])
+		project_poly(sky,sky_gradient[k+1])
 	end
  fillp()
 
@@ -1341,13 +1312,9 @@ function draw_ground(self)
 end
 
 -- draw a light line
--- note: u0 is assumed to be zero
-function collect_lights(x0,y0,x1,y1,c,u0,u1,w0,w1,n,out)
-	local w,h=abs(x1-x0),abs(y1-y0)
+function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1)
 
- -- scale number of points
- n=flr(n*abs(u1-u0))
- if(n<1) return
+ local w,h=abs(x1-x0),abs(y1-y0)
  
  local prevu=-1
  if h>w then
@@ -1365,8 +1332,9 @@ function collect_lights(x0,y0,x1,y1,c,u0,u1,w0,w1,n,out)
   end
 	 
    for y=y0,min(y1,40) do
-		  local u=flr(n*u0/w0)
-    if(prevu!=u) pset(x0,y,sget(64+3*w0,c))
+		  local u=flr(u0/w0)
+    --if(prevu!=u) pset(x0,y,sget(64+3*w0,c))
+    pset(x0,y,c)
     x0+=w/h
     u0+=du
     w0+=dw
@@ -1387,8 +1355,9 @@ function collect_lights(x0,y0,x1,y1,c,u0,u1,w0,w1,n,out)
 	  end
  
    for x=x0,min(x1,127) do	
-		  local u=flr(n*u0/w0)
-	   if(prevu!=u) pset(x,y0,sget(64+3*w0,c))
+		  local u=flr(u0/w0)
+	   --if(prevu!=u) pset(x,y0,sget(64+3*w0,c))
+	   if(prevu!=u) pset(x,y0,c)
 		  y0+=h/w
 		  u0+=du
 		  w0+=dw
@@ -1438,7 +1407,7 @@ function trifill(x0,y0,x1,y1,x2,y2,col)
  end
 end
 
-function polyfill(p,c)
+function project_poly(p,c)
 	if #p>2 then
 		local x0,y0=cam:project2d(p[1])
 		local x1,y1=cam:project2d(p[2])
@@ -1448,6 +1417,20 @@ function polyfill(p,c)
 			x1,y1=x2,y2
 		end
 	end
+end
+
+function project_lightline(p,c)
+  if(#p!=2) return
+  local x0,y0,z0,w0,u0=cam:project2d(p[1])
+	local x1,y1,z1,w1,u1=cam:project2d(p[2])
+  lightline(x0,y0,x1,y1,c,u0,w0,u1,w1)
+end
+
+function project_line(p,c)
+  if(#p!=2) return
+	local x0,y0=cam:project2d(p[1])
+	local x1,y1=cam:project2d(p[2])
+	line(x0,y0,x1,y1,c)
 end
 
 -->8
