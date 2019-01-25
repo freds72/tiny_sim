@@ -11,14 +11,13 @@ local scenarios={
  {"full approach",-222.22,461.54,313,3000,0,0,91,112,3,2,1},
 	{"engine failure!",-422.2,408,85,500,10,0,0,65,4,2,5},
  {"unusual attitude",-222.22,461.54,330,450,99,99,100,112,3,2,1},
-	--{"free flight",-422.2,384.6,85,0,0,0,0,0,3,2,1}}
 	{"free flight",-421,370,85,0,0,0,0,0,3,2,1}}
 
 --weather (name,wind,ceiling)
 local wx={
 	{"clear, calm",{0,0},20000},
  {"clouds, breezy",{60,10},500},
- {"low clouds, stormy",{10,45},200}}
+ {"low clouds, stormy",{10,30},200}}
 
 --airport and navaid database (rwy hdg < 180)
 local db={
@@ -269,7 +268,7 @@ function movebank()
   if(abs(bank)>160) pitch-=0.15
   if(bank>180) bank-=360
   if(bank<-180) bank+=360
-		if(alt==0) bank/=1.3
+		if(alt==0) bank/=1.3 --level off at ground contact
 end
 
 function dispai()
@@ -322,7 +321,7 @@ function calcalt()
   local coeff=88
   if(vs<0) coeff=74
   vs=tas*-(sin((pitch-aoa)/360))*coeff
-	if(alt==0) vs=max(vs)
+	 if(alt==0) vs=max(vs)
   alt=max(alt+vs/1800,0)
 end
 
@@ -331,11 +330,11 @@ function dispalt()
 		clip(95,50,16,41)
 		local n=alt>199 and flr(alt/100) or 2
 	 for i=n-2,n+2 do
-			 print(i*100,96,70-(i*20)+dy,6)
+			 local x=i<100 and 96 or 92
+			 print(i*100,x,70-(i*20)+dy,6)
 			 line(95,62-(i*20)+dy,97,62-(i*20)+dy,6)
 	 end
 	 clip()
-
 		rectfill(95,68,111,74,0)
   rectfill(103,65,111,77)
   local _y=alt/10
@@ -380,7 +379,7 @@ function dispheading()
 end
 
 function calcspeed()
-  local targetspeed=38.67+rpm/30-3.8*pitch --3.6
+  local targetspeed=38.67+rpm/30-3.8*pitch
   targetspeed=mid(targetspeed,-30,200)
   if(flps==1) targetspeed-=10
 		if(alt==0) targetspeed-=40
@@ -389,13 +388,13 @@ function calcspeed()
 end
 
 function dispspeed()
-  local dy=(ias-100)*3
+	 local dy=ias*3
 		clip(22,50,32,41)
 		local n=ias>20 and flr(ias/10) or 2
   for i=n,n+2 do
-    local dx=i*10>99 and 22 or 26
-				print(i*10,dx,370-(i*30)+dy,6)
-				line(31,372-(i*30)-15+dy,33,372-(i*30)-15+dy)
+    local x=i*10>99 and 22 or 26
+				print(i*10,x,70-(i*30)+dy,6)
+				line(31,72-(i*30)-15+dy,33,72-(i*30)-15+dy)
   end
 		clip()
 		-- red or black
@@ -422,10 +421,10 @@ end
 function dispv()
 	 clip(34,50,7,41)
 	 for v in all(vspeeds) do
-	   local dy=(ias-v[1])*3+69
-			 spr(23,34,dy)
-				rectfill(37,dy,41,dy+6,0)
-				print(v[2],37,dy+1,12)
+	   local y=(ias-v[1])*3+69
+			 spr(23,34,y)
+				rectfill(37,y,41,y+6,0)
+				print(v[2],37,y+1,12)
   end
   clip()
 end
@@ -463,7 +462,7 @@ function dispmap()
   lonmin=lon-93.75 --187.5/2
   for l in all(db) do
 				local p=disppoint(l)
-    if(checkonmap(p)) pset(p[1]+0.5,p[2],mapclr[l[4]]) --x+0.5 necessary?
+    if(checkonmap(p)) pset(p[1]+0.5,p[2],mapclr[l[4]])
   end
   spr(33,20,110) --map plane symbol
 end
@@ -519,6 +518,7 @@ function polyliner(m,c,angle,col)
     line(x1,y1,x2,y2)
   end
 end
+
 function rotatepoint(p,c,angle)
   local x,y=p[1]-c[1],p[2]-c[2]
   local cs,ss=cos(angle/360),sin(angle/360)
