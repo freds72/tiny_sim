@@ -56,8 +56,8 @@ lights_db = {
     "RWL-Right": { "color": 7, "n": 64 },
     "RWY-CLL": { "color": 6, "n": 64 },
     "RWY-CLL-End": { "color": 8, "n": 8 },
-    "TAXI": { "color": 1, "n": 8 },
-    "TAXI-CLL": { "color": 3, "n": 8 }
+    "TAXI": { "color": 12, "n": 8 },
+    "TAXI-CLL": { "color": 11, "n": 8 }
 }
 
 # group data
@@ -100,6 +100,9 @@ for f in obdata.polygons:
         s = s + "{:02x}".format(0 if mat.game_settings.use_backface_culling else 1)
     else:
         s = s + "{:02x}{:02x}".format(1,0)
+    # face center (only z needed)
+    v = f.center
+    s = s + "{}".format(pack_double(v[2]))
     # + vertex count
     s = s + "{:02x}".format(len(f.loop_indices))
     # + vertex id (= edge loop)
