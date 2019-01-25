@@ -9,16 +9,15 @@ local scenarios={
 	{"visual approach",-417,326.3,85,600,-1,0,25,112,3,2,1},
  {"final approach",-408.89,230.77,85,1000,1,0,75,112,3,2,1},
  {"full approach",-222.22,461.54,313,3000,0,0,91,112,3,2,1},
-	--{"engine failure!",-244.44,261.54,50,3500,0,0,0,112,4,2,5},
 	{"engine failure!",-422.2,408,85,500,10,0,0,65,4,2,5},
  {"unusual attitude",-222.22,461.54,330,450,99,99,100,112,3,2,1},
- {"free flight",-422.2,384.6,85,0,0,0,0,0,3,2,1}}
+	{"free flight",-421,370,85,0,0,0,0,0,3,2,1}}
 
 --weather (name,wind,ceiling)
 local wx={
 	{"clear, calm",{0,0},20000},
  {"clouds, breezy",{60,10},500},
- {"low clouds, stormy",{10,45},200}}
+ {"low clouds, stormy",{10,30},200}}
 
 --airport and navaid database (rwy hdg < 180)
 local db={
@@ -43,6 +42,9 @@ local ai={{-87,72},{215,72},{64,-79},{64,223}}
 local aipitch={60,141}
 local aistep=10
 local aiwidth=8
+
+--asi
+local vspeeds={{55,"r"},{60,"x"},{65,"g"},{79,"y"}}
 
 --hsi
 local hsic={64,111} --center
@@ -245,14 +247,14 @@ end
 function movebank()
   if btn(0) then
     if onground and tas<30 then --nosewheel steering <30 knots
-					 heading-=0.4
+					 heading-=0.6
 				else
 				  blag=max(blag-1,-50)
       bank-=1.8-tas/250
 				end
   elseif btn(1) then
     if onground and tas<30 then
-					 heading+=0.4
+					 heading+=0.6
 				else
 				  blag=min(blag+1,50)
       bank+=1.8-tas/250
@@ -266,7 +268,7 @@ function movebank()
   if(abs(bank)>160) pitch-=0.15
   if(bank>180) bank-=360
   if(bank<-180) bank+=360
-		if(alt==0) bank/=1.3
+		if(alt==0) bank/=1.3 --level off at ground contact
 end
 
 function dispai()
@@ -319,12 +321,21 @@ function calcalt()
   local coeff=88
   if(vs<0) coeff=74
   vs=tas*-(sin((pitch-aoa)/360))*coeff
-	if(alt==0) vs=max(vs)
+	 if(alt==0) vs=max(vs)
   alt=max(alt+vs/1800,0)
 end
 
 function dispalt()
-  rectfill(95,68,111,74,0)
+	 local dy=alt/5
+		clip(95,50,16,41)
+		local n=alt>199 and flr(alt/100) or 2
+	 for i=n-2,n+2 do
+			 local x=i<100 and 96 or 92
+			 print(i*100,x,70-(i*20)+dy,6)
+			 line(95,62-(i*20)+dy,97,62-(i*20)+dy,6)
+	 end
+	 clip()
+		rectfill(95,68,111,74,0)
   rectfill(103,65,111,77)
   local _y=alt/10
   local y=_y-flr(_y/10)*10
@@ -368,7 +379,7 @@ function dispheading()
 end
 
 function calcspeed()
-  local targetspeed=38.67+rpm/30-3.8*pitch --3.6
+  local targetspeed=38.67+rpm/30-3.8*pitch
   targetspeed=mid(targetspeed,-30,200)
   if(flps==1) targetspeed-=10
 		if(alt==0) targetspeed-=40
@@ -377,7 +388,16 @@ function calcspeed()
 end
 
 function dispspeed()
-  -- red or black
+	 local dy=ias*3
+		clip(22,50,32,41)
+		local n=ias>20 and flr(ias/10) or 2
+  for i=n,n+2 do
+    local x=i*10>99 and 22 or 26
+				print(i*10,x,70-(i*30)+dy,6)
+				line(31,72-(i*30)-15+dy,33,72-(i*30)-15+dy)
+  end
+		clip()
+		-- red or black
   local c=ias>=163 and 8 or 0
   rectfill(21,68,33,74,c)
   rectfill(29,65,33,77)
@@ -397,6 +417,18 @@ function dispspeed()
 		end
   print(groundspeed,116,37,14)
 end
+
+function dispv()
+	 clip(34,50,7,41)
+	 for v in all(vspeeds) do
+	   local y=(ias-v[1])*3+69
+			 spr(23,34,y)
+				rectfill(37,y,41,y+6,0)
+				print(v[2],37,y+1,12)
+  end
+  clip()
+end
+
 
 function calcaoa()
   if ias>=71.1 then
@@ -430,7 +462,7 @@ function dispmap()
   lonmin=lon-93.75 --187.5/2
   for l in all(db) do
 				local p=disppoint(l)
-    if(checkonmap(p)) pset(p[1]+0.5,p[2],mapclr[l[4]]) --x+0.5 necessary?
+    if(checkonmap(p)) pset(p[1]+0.5,p[2],mapclr[l[4]])
   end
   spr(33,20,110) --map plane symbol
 end
@@ -486,6 +518,7 @@ function polyliner(m,c,angle,col)
     line(x1,y1,x2,y2)
   end
 end
+
 function rotatepoint(p,c,angle)
   local x,y=p[1]-c[1],p[2]-c[2]
   local cs,ss=cos(angle/360),sin(angle/360)
@@ -801,8 +834,8 @@ function drawstatic()
   line(5,90,5,110,13)
   line(5,90,5,110,13)
   rectfill(11,97,33,119,0) --map
-  line(40,71,45,71,10) --level
-  line(83,71,88,71)
+  line(41,71,45,71,10) --level
+  line(83,71,87,71)
   rectfill(57,88,71,94,0) --hdg
   pset(70,89,7)
   rectfill(107,121,127,127,0) --timer
@@ -912,6 +945,7 @@ function _draw()
     disphsi()
     disprpm()
     dispspeed()
+				dispv()
     dispalt()
     dispvs()
     dispheading()
@@ -1564,13 +1598,13 @@ __gfx__
 00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
 00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
 00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
-0000000070707070ffffffff77777fffffbfffff00000000ff222fffffffffff0000000000000000000000000000000000000000000000000000000000000000
-1d00000007000700fffffffff777fffffbffffff00000000f2e7e2ffff0fffff0000000000000000000000000000000000000000000000000000000000000000
-2e00000070700700ffffffffff7fffffbbbbbbbb000000002ee7ee2ff00fffff0000000000000000000000000000000000000000000000000000000000000000
+0000000000000000ffffffff77777fffffbfffff00000000ff222fffffffffff0000000000000000000000000000000000000000000000000000000000000000
+1d00000000000000fffffffff777fffffbffffff00000000f2e7e2ffff0fffff0000000000000000000000000000000000000000000000000000000000000000
+2e00000000000000ffffffffff7fffffbbbbbbbb000000002ee7ee2ff00fffff0000000000000000000000000000000000000000000000000000000000000000
 3b000000000000000ffffffffffffffffbffffff000000002ee7ee2f000fffff0000000000000000000000000000000000000000000000000000000000000000
-450000000000777000ffffffffffffffffbfffff000000002ee7ee2ff00fffff0000000000000000000000000000000000000000000000000000000000000000
-5600000000007700000fffffffffffffffffffff00000000f2e7e2ffff0fffff0000000000000000000000000000000000000000000000000000000000000000
-670000000000707000000fffffffffffffffffff00000000ff222fffffffffff0000000000000000000000000000000000000000000000000000000000000000
+450000000000000000ffffffffffffffffbfffff000000002ee7ee2ff00fffff0000000000000000000000000000000000000000000000000000000000000000
+5600000000000000000fffffffffffffffffffff00000000f2e7e2ffff0fffff0000000000000000000000000000000000000000000000000000000000000000
+670000000000000000000fffffffffffffffffff00000000ff222fffffffffff0000000000000000000000000000000000000000000000000000000000000000
 770000000000000000000000ffffffffffffffff00000000ffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
 8e000000ff7fffff00000fffffcfffff777fffff777ffffffbffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
 9a00000077777fff00000ffffcffffff7fffffff77ffffffbbbfffffffcccfff0000000000000000000000000000000000000000000000000000000000000000
