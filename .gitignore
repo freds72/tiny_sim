@@ -4,4 +4,7 @@ config.txt
 /bbs/
 /carts/demos
 /cdata
+/.vscode/
 *.blend1
+
+
