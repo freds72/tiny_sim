@@ -1142,6 +1142,7 @@ function plane_poly_clip(n,p,v)
 		allin=band(allin,dist[i]>0)
 	end
 	-- early exit
+	
 	if(allin==true) return v
 
 	local res={}
@@ -1187,7 +1188,7 @@ end
 
 function make_cam(x0,y0,focal)
 	-- clip planes
-  local znear,zfar=0.25,32
+  local znear,zfar=0.25,64
   local zlen=zfar-znear
 	local z_planes={
 		{0,0,zfar},
@@ -1232,16 +1233,16 @@ function make_cam(x0,y0,focal)
 		-- project cam-space points into 2d
   project2d=function(self,v)
   	-- view to screen
-   local w=focal*zlen/v[3]
-  	return x0+v[1]*w,y0-v[2]*w,v[3],w,v[4]
+    local w=zlen/v[3]
+  	return x0+focal*v[1]*w,y0-focal*v[2]*w,v[3],w,v[4]
 		end,
 		-- draw the given vertices using function fn
 		-- performs cam space clipping
 		draw=function(self,fn,v,c)
- 		  -- clip loop
+ 		-- clip loop
 			for i=1,#z_planes do
-			  local pp,pn=z_planes[i],z_normals[i]
-			  v=plane_poly_clip(pn,pp,v)
+			 local pp,pn=z_planes[i],z_normals[i]
+			 v=plane_poly_clip(pn,pp,v)
 			end
 			fn(v,c)
 		end
@@ -1324,7 +1325,7 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1)
 	 local du,dw=(u1*w1-u0*w0)/h,(w1-w0)/h
 	 	
    -- y-major
-  u0*=w0
+    u0*=w0
 	 if y0<0 then
 		 local t=-y0/h
 		 -- todo: unroll lerp
@@ -1333,17 +1334,16 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1)
 	 
    for y=y0,min(y1,40) do
 		  local u=flr(u0/w0)
-    --if(prevu!=u) pset(x0,y,sget(64+3*w0,c))
-    pset(x0,y,c)
-    x0+=w/h
-    u0+=du
-    w0+=dw
-    prevu=u
-   end
- else
+      if(prevu!=u) pset(x0,y,sget(64+3*w0,c))
+      x0+=w/h
+      u0+=du
+      w0+=dw
+      prevu=u
+    end
+  else
    -- x-major
 	  if(x0>x1) x0,y0,x1,y1,u0,u1,w0,w1=x1,y1,x0,y0,u1,u0,w1,w0
-	w,h=x1-x0,y1-y0
+	  w,h=x1-x0,y1-y0
 	  local du,dw=(u1*w1-u0*w0)/w,(w1-w0)/w
 
 	  u0*=w0
@@ -1356,8 +1356,7 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1)
  
    for x=x0,min(x1,127) do	
 		  local u=flr(u0/w0)
-	   --if(prevu!=u) pset(x,y0,sget(64+3*w0,c))
-	   if(prevu!=u) pset(x,y0,c)
+	    if(prevu!=u) pset(x,y0,sget(64+3*w0,c))
 		  y0+=h/w
 		  u0+=du
 		  w0+=dw
