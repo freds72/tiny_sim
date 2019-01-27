@@ -966,7 +966,7 @@ function _draw()
   	spr(50,-4,29)
 		 sspr(15,24,1,8,12,26,116,8)
 		 dispmessage()
-
+			
     -- perf monitor!
     local cpu=flr(100*stat(1)).."%"
     print(cpu,2,3,2)
@@ -980,8 +980,34 @@ end
 -- register json context here
 function nop() return true end
 
+-- https://github.com/morgan3d/misc/tree/master/p8sort
+function sort(data)
+ for num_sorted=1,#data-1 do 
+  local new_val=data[num_sorted+1]
+  local new_val_key,i=new_val.key,num_sorted+1
+
+  while i>1 and new_val_key>data[i-1].key do
+   data[i]=data[i-1]   
+   i-=1
+  end
+  data[i]=new_val
+ end
+end
+
 -- ground constants
 local ground_shift,ground_colors,ground_level=2,{1,13,6}
+
+local light_shades={}
+for c=0,15 do
+	local shades={}
+	sset(74,0,sget(72,c))
+	for i=0,15 do
+		for j=0,15 do
+			shades[i+shl(j,4)]=sget(74,i)+shl(sget(74,j),4)
+	 end
+	end
+	light_shades[c]=shades
+end
 
 -- zbuffer (kind of)
 local drawables={}
@@ -991,19 +1017,18 @@ end
 function zbuf_draw()
 	local objs={}
 	for _,d in pairs(drawables) do
-		local p=d.pos
-		local x,y,z,w=cam:project(p[1],p[2],p[3])
-		-- cull objects too far
- --	if z>-3 then
-			add(objs,{obj=d,key=z,x=x,y=y,z=z,w=w})
+			-- cull objects too far
+ 		--	if z>-3 then
+			if(d.model) collect_drawables(d.model,d.m,objs)		
 	--	end
 	end
 	-- z-sorting
-	-- sort(objs)
+	sort(objs)
 	-- actual draw
 	for i=1,#objs do
 		local d=objs[i]
-		d.obj:draw(d.x,d.y,d.z,d.w)
+		local r=min(3,-24/d.key)
+		if(r>1) circfillt(d.x,d.y,r,light_shades[d.c])
 	end
 end
 
@@ -1164,13 +1189,8 @@ function m_right(m)
 	return {m[1],m[2],m[3]}
 end
 
-function draw_actor(self,x,y,z,w)
-	-- distance culling
-	draw_model(self.model,self.m,x,y,z,w)
-end
-
-local znear,zdir=0.25,-1
-function draw_model(model,m,x,y,z,w)
+local znear,zdir=1,-1
+function collect_drawables(model,m,out)
   -- edges
 	local p={}
 	for i=1,#model.e do
@@ -1228,7 +1248,7 @@ function draw_model(model,m,x,y,z,w)
  		local x1,y1,z1,w1=cam:project2d(b)
  		-- is it a light line?
  		if e[4] then
- 			lightline(x0,y0,x1,y1,c,t,w0,w1,e[4])
+ 			lightline(x0,y0,x1,y1,c,0,w0,t*e[4],w1,out)
  		else
  			line(x0,y0,x1,y1,c)
  		end
@@ -1408,60 +1428,68 @@ function draw_ground(self)
 end
 
 -- draw a light line
--- note: u0 is assumed to be zero
-function lightline(x0,y0,x1,y1,c,u1,w0,w1,n)
+function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,out)
+
  local w,h=abs(x1-x0),abs(y1-y0)
-
- -- adjust remaining number of points
- n=flr(n*u1)
- if(n<1) return
-
- color(c)
-
- -- too small?
- if h<n and w<n then
-  line(x0,y0,x1,y1)
-  return
- end
-
- local u0,prevu=0,-1
-
+ 
+ local prevu=-1
  if h>w then
-
   -- order points on y
   if(y0>y1) x0,y0,x1,y1,u0,u1,w0,w1=x1,y1,x0,y0,u1,u0,w1,w0
-  w=x1-x0
-
-  -- y-major
-  if(y0<0) x0,y0,u0=x0-y0*w/h,0,-u0*y0/h
-
-  local du,dw=(u1*w1-u0*w0)/h,(w1-w0)/h
-  for y=y0,min(y1,127) do
-   -- perspective correction
-   local u=flr(n*u0/w0)
-   if(prevu!=u) pset(x0,y)
-   x0+=w/h
-			u0+=du
-			w0+=dw
-   prevu=u
+  w,h=x1-x0,y1-y0
+	 local du,dw=(u1*w1-u0*w0)/h,(w1-w0)/h
+	 	
+   -- y-major
+    u0*=w0
+	 if y0<0 then
+		 local t=-y0/h
+		 -- todo: unroll lerp
+	  x0,y0,u0,w0=x0+w*t,0,lerp(u0,u1*w1,t),lerp(w0,w1,t)
   end
- else
-  -- x-major
-  if(x0>x1) x0,y0,x1,y1,u0,u1,w0,w1=x1,y1,x0,y0,u1,u0,w1,w0
-  h=y1-y0
+	 
+   for y=y0,min(y1,40) do
+		  local u=flr(u0/w0)
+    if prevu!=u then
+     pset(x0,y,sget(64+3*mid(w0/16,0,1),c))
+					-- avoid too many lights!
+					if w0>12 then     
+						add(out,{key=-w0,x=x0,y=y,c=c})
+					end
+				end						
+     x0+=w/h
+     u0+=du
+     w0+=dw
+     prevu=u
+    end
+  else
+   -- x-major
+	  if(x0>x1) x0,y0,x1,y1,u0,u1,w0,w1=x1,y1,x0,y0,u1,u0,w1,w0
+	  w,h=x1-x0,y1-y0
+	  local du,dw=(u1*w1-u0*w0)/w,(w1-w0)/w
 
-  if(x0<0) x0,y0,u0=0,y0-x0*h/w,-u0*x0/w
-
-  local du,dw=(u1*w1-u0*w0)/w,(w1-w0)/w
-  for x=x0,min(x1,127) do
-   local u=flr(n*u0/w0)
-   if(prevu!=u) pset(x,y0)
-   y0+=h/w
-   u0+=du
-   w0+=dw
-   prevu=u
-  end
- end
+	  u0*=w0
+	  if x0<0 then
+	    local t=-x0/w
+	    -- u is not linear
+	    -- u*w is
+	    x0,y0,u0,w0=0,y0+h*t,lerp(u0,u1*w1,t),lerp(w0,w1,t)
+	  end
+ 
+ 		
+   for x=x0,min(x1,127) do	
+		  local u=flr(u0/w0)
+    if prevu!=u then
+     pset(x,y0,sget(64+3*mid(w0/16,0,1),c))
+					if w0>12 then     
+			   add(out,{key=-w0,x=x,y=y0,c=c})
+			  end
+			 end
+		  y0+=h/w
+		  u0+=du
+		  w0+=dw
+		  prevu=u
+	  end
+	end
 end
 -->8
 -- trifill
@@ -1522,30 +1550,26 @@ end
 -- init transparent colors
 
 -- hardcoded colors
-local shades={
-	[0xc]=0xd,
-	[0x4]=0x5,
-	[0x7]=0x6,
-	[0xcc]=0xdd,
-	[0x44]=0x55,
-	[0x4c]=0x5d,
-	[0xc4]=0x55,
-	[0x77]=0x66,
-	[0xc7]=0xd6,
-	[0x7c]=0x6d,
-	[0x47]=0x56,
-	[0x74]=0x65}
+local shades={}
+for i=0,15 do
+	for j=0,15 do
+		shades[i+shl(j,4)]=sget(1,8+i)+shl(sget(1,8+j),4)
+ end
+end
 
 function rectfillt(x0,y0,x1,y1)
 	x0,x1=max(flr(x0)),min(flr(x1),127)
 
 	for j=max(y0),min(y1,127) do
-		linet(x0,j,x1)
+		linet(x0,j,x1,shades)
  end
 end
-function circfillt(x0,y0,r)
+function circfillt(x0,y0,r,ramp)
 	if(r==0) return
- local x,y,dx,dy=flr(r),0,1,1
+	x0,y0=flr(x0),flr(y0)
+	-- default ramp or provided?
+	ramp=ramp or shades
+	local x,y,dx,dy=flr(r),0,1,1
  r*=2
  local err=dx-r
 
@@ -1566,46 +1590,50 @@ function circfillt(x0,y0,r)
 		end
 	end
 	for k,v in pairs(strips) do
-		linet(x0-v,y0+k,x0+v)
-	 if(k!=0)linet(x0-v,y0-k,x0+v)
+		linet(x0-v,y0+k,x0+v,ramp)
+	 if(k!=0)linet(x0-v,y0-k,x0+v,ramp)
 	end
 end
 
-function linet(x0,y0,x1)
+function linet(x0,y0,x1,ramp)
+ if(y0>127) return
+ if(y0<0) return
+ x0,x1=mid(x0,0,127),mid(x1,0,127)
+ 
  if band(x0,0x1)==1 then
- 	pset(x0,y0,shades[pget(x0,y0)])
+ 	pset(x0,y0,ramp[pget(x0,y0)])
  	-- move to even boundary
  	x0+=1
  end
  if x1%2==0 then
- 	pset(x1,y0,shades[pget(x1,y0)])
+ 	pset(x1,y0,ramp[pget(x1,y0)])
  	-- move to odd boundary
  	x1-=1
  end
 
 	local mem=0x6000+shl(y0,6)+shr(x0,1)
 	for i=1,shr(x1-x0+1,1) do
-		poke(mem,shades[peek(mem)])
+		poke(mem,ramp[peek(mem)])
 	 mem+=1
 	end
 end
 __gfx__
 00000000fff7777f49777777777777e25fffffff7fffffff77ff777fffffffff0000000000000000000000000000000000000000000000000000000000000000
-00000000ff7fffffffffffffffffffff55fffffff7f7ffff7f7f777ffffffeff0000000000000000000000000000000000000000000000000000000000000000
-00000000f7ffffffff3b77777777d5ff555fffffff77ffff7f7f7f7feeeeeeef0000000000000000000000000000000000000000000000000000000000000000
-000000007fffffffffffffffffffffff55fffffff777fffffffffffffffffeff0000000000000000000000000000000000000000000000000000000000000000
-00000000ffffffffffff1c7777c1ffff5fffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
-00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
-00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
-00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
-0000000000000000ffffffff77777fffffbfffff00000000ff222fffffffffff0000000000000000000000000000000000000000000000000000000000000000
-1d00000000000000fffffffff777fffffbffffff00000000f2e7e2ffff0fffff0000000000000000000000000000000000000000000000000000000000000000
-2e00000000000000ffffffffff7fffffbbbbbbbb000000002ee7ee2ff00fffff0000000000000000000000000000000000000000000000000000000000000000
-3b000000000000000ffffffffffffffffbffffff000000002ee7ee2f000fffff0000000000000000000000000000000000000000000000000000000000000000
-450000000000000000ffffffffffffffffbfffff000000002ee7ee2ff00fffff0000000000000000000000000000000000000000000000000000000000000000
-5600000000000000000fffffffffffffffffffff00000000f2e7e2ffff0fffff0000000000000000000000000000000000000000000000000000000000000000
-670000000000000000000fffffffffffffffffff00000000ff222fffffffffff0000000000000000000000000000000000000000000000000000000000000000
-770000000000000000000000ffffffffffffffff00000000ffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
+00000000ff7fffffffffffffffffffff55fffffff7f7ffff7f7f777ffffffeff0000000011c00000000000000000000000000000000000000000000000000000
+00000000f7ffffffff3b77777777d5ff555fffffff77ffff7f7f7f7feeeeeeef0000000022800000000000000000000000000000000000000000000000000000
+000000007fffffffffffffffffffffff55fffffff777fffffffffffffffffeff0000000053b00000000000000000000000000000000000000000000000000000
+00000000ffffffffffff1c7777c1ffff5fffffffffffffffffffffffffffffff0000000024900000000000000000000000000000000000000000000000000000
+00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000055600000000000000000000000000000000000000000000000000000
+00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff1556000056700000000000000000000000000000000000000000000000000000
+00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff5677000057700000000000000000000000000000000000000000000000000000
+0500000000000000ffffffff77777fffffbfffff00000000ff222fffffffffff1288000028700000000000000000000000000000000000000000000000000000
+1d00000000000000fffffffff777fffffbffffff00000000f2e7e2ffff0fffff0000000029a00000000000000000000000000000000000000000000000000000
+2e00000000000000ffffffffff7fffffbbbbbbbb000000002ee7ee2ff00fffff29aa00004a700000000000000000000000000000000000000000000000000000
+3b000000000000000ffffffffffffffffbffffff000000002ee7ee2f000fffff33bb00003b700000000000000000000000000000000000000000000000000000
+450000000000000000ffffffffffffffffbfffff000000002ee7ee2ff00fffff011c00001c700000000000000000000000000000000000000000000000000000
+5600000000000000000fffffffffffffffffffff00000000f2e7e2ffff0fffff000000005d600000000000000000000000000000000000000000000000000000
+670000000000000000000fffffffffffffffffff00000000ff222fffffffffff000000002e800000000000000000000000000000000000000000000000000000
+7d0000000000000000000000ffffffffffffffff00000000ffffffffffffffff000000005f700000000000000000000000000000000000000000000000000000
 8e000000ff7fffff00000fffffcfffff777fffff777ffffffbffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
 9a00000077777fff00000ffffcffffff7fffffff77ffffffbbbfffffffcccfff0000000000000000000000000000000000000000000000000000000000000000
 a7000000ff7fffff000000ffccccccccff7fffff7ffffffffbfffffffcfffcff0000000000000000000000000000000000000000000000000000000000000000
