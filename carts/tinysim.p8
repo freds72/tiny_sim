@@ -241,7 +241,6 @@ function dispai()
   rectfillt(95,50,111,90)
   rectfill(0,33,127,42,6)
   rectfill(0,33,9,127)
-  rectfill(0,0,127,25,0)
   line(48,75,aic[1],aic[2],10) --aircraft symbol
   line(80,75,aic[1],aic[2])
 end
@@ -789,6 +788,12 @@ function drawstatic()
   rectfill(79,123,86,127)
   spr(35,79,122,1,1,true,false) --nav2 arrow
   rectfill(40,95,45,100,0) --wind
+
+  			-- glareshield
+  	spr(49,4,27)
+  	spr(50,-4,29)
+		 sspr(15,24,1,8,12,26,116,8)
+
 end
 
 function _update()
@@ -882,6 +887,12 @@ function _draw()
 	 elseif menu==3 then
 	   drawbriefing()
 	 else
+	 	cls()
+ 		clip()
+   -- 3d
+	  draw_ground()
+	  zbuf_draw()
+
     dispai()
     drawstatic()
     disphsi()
@@ -897,16 +908,6 @@ function _draw()
     dispgs()
     dispflaps()
     dispwind()
-   -- 3d
-	  clip(0,0,128,31)
-	  rectfill(0,0,128,31,0)
-	  draw_ground()
-	  zbuf_draw()
-	  clip()
-			-- glareshield
-  	spr(49,4,27)
-  	spr(50,-4,29)
-		 sspr(15,24,1,8,12,26,116,8)
 		 dispmessage()
 			
     -- perf monitor!
@@ -1538,8 +1539,8 @@ function circfillt(x0,y0,r,ramp)
 end
 
 function linet(x0,y0,x1,ramp)
- if(y0>127) return
- if(y0<0) return
+ if(band(y0,0xff80)!=0) return
+ if(x0>127 or x1<0) return
  x0,x1=mid(x0,0,127),mid(x1,0,127)
  
  if band(x0,0x1)==1 then
