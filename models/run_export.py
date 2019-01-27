@@ -13,7 +13,7 @@ def call(args):
     #
     return exitcode, out, err
 
-file_list = ['landing_strip','tower']
+file_list = ['landing_strip']
 s = "{:02x}".format(len(file_list))
 for blend_file in file_list:
     print("Exporting: {}.blend".format(blend_file))
@@ -23,7 +23,7 @@ for blend_file in file_list:
         exitcode, out, err = call([os.path.join(blender_dir,"blender.exe"),os.path.join(local_dir,blend_file + ".blend"),"--background","--python",os.path.join(local_dir,"blender_export.py"),"--","--out",path])
         if err:
             raise Exception('Unable to loadt: {}. Exception: {}'.format(blend_file,err))
-        #print("exit: {} \n out:{}\n err: {}\n".format(exitcode,out,err))
+        print("exit: {} \n out:{}\n err: {}\n".format(exitcode,out,err))
         with open(path, 'r') as outfile:
             s = s + outfile.read()
     finally:

@@ -72,63 +72,8 @@ local v_fwd,v_right,v_up={0,0,1},{1,0,0},{0,1,0}
 local m_scale=0.0202
 
 -- models & actors
-local all_models={
-	runway={
-		c=6,
-		v={
-		 {15,0,0}, --points
-			{15,0,-1500},
-			{-15,0,0},
-			{-15,0,-1500},
-			{20,0,-1500},
-			{-20,0,-1500},
-			{15,0,-1550},
-			{-15,0,-1550},
-			{0,0,-1500},
-			{0,0,-1600},
-			{-2,0,-1600},
-			{-2,0,-1800},
-			{2,0,-1600},
-			{2,0,-1800},
-			-- central line
-			{0,0,0},
-			{0,0,-1500},
-			-- landing lights
-			{-5,0,-1550},
-			{5,0,-1550},
-			{-8,0,-1600},
-			{8,0,-1600},
-			{-10,0,-1700},
-			{10,0,-1700},
-			{-20,0,-1800},
-			{20,0,-1800},
-			},
-		e={
-			{1,2,1}, -- lines + color + number of lights (optional = solid line)
-			{3,4,1}, -- note: lines are draw in declared order (allow for lines + lights)
-			{1,2,7,128},
-			{3,4,7,128},
-			{1,3,8,10},
-			{5,6,11,20},
-		 {2,7,8,5},
-		 {4,8,8,5},
-		 {9,10,10,10},
-		 {11,12,10,10},
-		 {13,14,10,10},
-		 {15,16,6,128},
-		 {17,18,7,8},
-		 {19,20,7,8},
-		 {21,22,7,10},
-		 {23,24,7,10},
-		}
-	}
-}
+local all_models={}
 local actors={}
-local all_actors={
-	runway={
-		model="runway"
-  }
-}
 
 function _init()
  menu=1
@@ -159,15 +104,12 @@ function _init()
 
  --
  actors={}
-	add(actors,make_actor(all_actors.runway,{-422.2,0,384.6},85/360)) -- tny
-
-	--[[
-	add(actors,make_actor(all_actors.runway,{-422.2,0,384.6},85/360)) -- tny
-  add(actors,make_actor(all_actors.papi,{-412.2,0,345.6}))
-	add(actors,make_actor(all_actors.papi,{-412.2,0,346.6}))
-  add(actors,make_actor(all_actors.papi,{-412.2,0,347.6}))
-  ]]
-	add(actors,make_actor(all_actors.runway,{-66.7,0,153.8},40/360)) -- smv
+ for _,l in pairs(db) do
+  -- registered model?
+  if all_models[l[4]] then
+			add(actors,make_actor(l[4],{l[1],0,l[2]},l[5]))
+		end
+	end
 end
 
 function scenario(s)
@@ -299,7 +241,6 @@ function dispai()
   rectfillt(95,50,111,90)
   rectfill(0,33,127,42,6)
   rectfill(0,33,9,127)
-  rectfill(0,0,127,25,0)
   line(48,75,aic[1],aic[2],10) --aircraft symbol
   line(80,75,aic[1],aic[2])
 end
@@ -847,6 +788,12 @@ function drawstatic()
   rectfill(79,123,86,127)
   spr(35,79,122,1,1,true,false) --nav2 arrow
   rectfill(40,95,45,100,0) --wind
+
+  			-- glareshield
+  	spr(49,4,27)
+  	spr(50,-4,29)
+		 sspr(15,24,1,8,12,26,116,8)
+
 end
 
 function _update()
@@ -940,6 +887,12 @@ function _draw()
 	 elseif menu==3 then
 	   drawbriefing()
 	 else
+	 	cls()
+ 		clip()
+   -- 3d
+	  draw_ground()
+	  zbuf_draw()
+
     dispai()
     drawstatic()
     disphsi()
@@ -955,18 +908,8 @@ function _draw()
     dispgs()
     dispflaps()
     dispwind()
-   -- 3d
-	  clip(0,0,128,31)
-	  rectfill(0,0,128,31,0)
-	  draw_ground()
-	  zbuf_draw()
-	  clip()
-			-- glareshield
-  	spr(49,4,27)
-  	spr(50,-4,29)
-		 sspr(15,24,1,8,12,26,116,8)
 		 dispmessage()
-
+			
     -- perf monitor!
     local cpu=flr(100*stat(1)).."%"
     print(cpu,2,3,2)
@@ -980,8 +923,38 @@ end
 -- register json context here
 function nop() return true end
 
--- ground constants
-local ground_shift,ground_colors,ground_level=2,{1,13,6}
+-- https://github.com/morgan3d/misc/tree/master/p8sort
+function sort(data)
+ for num_sorted=1,#data-1 do 
+  local new_val=data[num_sorted+1]
+  local new_val_key,i=new_val.key,num_sorted+1
+
+  while i>1 and new_val_key>data[i-1].key do
+   data[i]=data[i-1]   
+   i-=1
+  end
+  data[i]=new_val
+ end
+end
+
+-- light blooms
+local light_shades={}
+function unpack_ramp(x,y)
+ local shades={}
+  -- brightness pairs
+	for i=0,15 do
+		for j=0,15 do
+			shades[i+shl(j,4)]=sget(x,y+i)+shl(sget(x,y+j),4)
+	 end
+	end
+	return shades
+end
+
+for c=0,15 do
+ -- set base color
+ sset(74,0,sget(72,c))
+	light_shades[c]=unpack_ramp(74,0)
+end
 
 -- zbuffer (kind of)
 local drawables={}
@@ -991,19 +964,19 @@ end
 function zbuf_draw()
 	local objs={}
 	for _,d in pairs(drawables) do
-		local p=d.pos
-		local x,y,z,w=cam:project(p[1],p[2],p[3])
 		-- cull objects too far
- --	if z>-3 then
-			add(objs,{obj=d,key=z,x=x,y=y,z=z,w=w})
-	--	end
+		-- todo: fix sqr_dist
+  if sqr_dist(cam.pos,d.pos)<6000 then		
+		 collect_drawables(d.model,d.m,objs)		
+  end
 	end
 	-- z-sorting
-	-- sort(objs)
+	sort(objs)
 	-- actual draw
 	for i=1,#objs do
 		local d=objs[i]
-		d.obj:draw(d.x,d.y,d.z,d.w)
+		local r=min(3,-24/d.key)
+		if(r>1) circfillt(d.x,d.y,r,light_shades[d.c])
 	end
 end
 
@@ -1164,42 +1137,27 @@ function m_right(m)
 	return {m[1],m[2],m[3]}
 end
 
-function draw_actor(self,x,y,z,w)
-	-- distance culling
-	draw_model(self.model,self.m,x,y,z,w)
-end
-
-local znear,zdir=0.25,-1
-function draw_model(model,m,x,y,z,w)
-  -- edges
-	local p={}
-	for i=1,#model.e do
+local znear,zdir=1,-1
+function collect_drawables(model,m,out)
+  -- project point cache
+  local p={}
+ -- edges
+ for i=1,#model.e do
 		local e=model.e[i]
 		-- edges indices
-		local ak,bk,c=e[1],e[2],e[3] or model.c
+		local ak,bk,c=e[1],e[2],e.c or model.c
 		-- edge positions
 		local a,b=p[ak],p[bk]
 		-- not in cache?
 		if not a then
-			local v=v_clone(model.v[ak])
-			v_scale(v,m_scale)
-			-- relative to world
-			m_x_v(m,v)
-			-- world to cam
-			v_add(v,cam.pos,-1)
-			m_x_v(cam.m,v)
+			local v=cam:modelview(m,model.v[ak])
 			a,p[ak]=v,v
 		end
 		if not b then
-			local v=v_clone(model.v[bk])
-			v_scale(v,m_scale)
-			-- relative to world
-			m_x_v(m,v)
-			-- world to cam
-			v_add(v,cam.pos,-1)
-			m_x_v(cam.m,v)
+			local v=cam:modelview(m,model.v[bk])
 			b,p[bk]=v,v
 		end
+		
 		-- line clipping aginst near cam plane
 		-- swap end points
 		-- simplified sutherland-atherton
@@ -1227,8 +1185,8 @@ function draw_model(model,m,x,y,z,w)
  		local x0,y0,z0,w0=cam:project2d(a)
  		local x1,y1,z1,w1=cam:project2d(b)
  		-- is it a light line?
- 		if e[4] then
- 			lightline(x0,y0,x1,y1,c,t,w0,w1,e[4])
+   if e.n then
+ 		 lightline(x0,y0,x1,y1,c,0,w0,t*e.n,w1,out)
  		else
  			line(x0,y0,x1,y1,c)
  		end
@@ -1293,15 +1251,15 @@ function plane_poly_clip(n,p,v)
 	return res
 end
 
-function make_actor(src,p,angle)
+function make_actor(model,p,angle)
+  angle=angle and angle/360 or 0
 	-- instance
-	local a=clone(src,{
+	local a={
 		pos=v_clone(p),
 		-- north is up
 		q=make_q(v_up,angle-0.25)
-	})
- a.model=all_models[a.model]
-	a.draw=a.draw or draw_actor
+  }
+  a.model=all_models[model]
 	a.update=a.update or nop
 	-- init orientation
 	local m=m_from_q(a.q)
@@ -1333,12 +1291,22 @@ function make_cam(x0,y0,focal)
 			-- view to screen
 	 	  local w=focal/z
  		  return x0+x*w,y0-y*w,z,w
-		end,
+    end,
+    -- to camera space
+    modelview=function(self,m,v)
+      v=v_clone(v)
+      -- relative to world
+      m_x_v(m,v)
+      -- world to cam
+      v_add(v,self.pos,-1)
+      m_x_v(self.m,v)
+      return v
+    end,
 		-- project cam-space points into 2d
-  project2d=function(self,v)
-  	-- view to screen
-  	local w=focal/v[3]
-  	return x0+v[1]*w,y0-v[2]*w,v[3],w
+    project2d=function(self,v)
+  	  -- view to screen
+  	  local w=focal/v[3]
+  	  return x0+v[1]*w,y0-v[2]*w,v[3],w
 		end
 	}
 	return c
@@ -1408,60 +1376,68 @@ function draw_ground(self)
 end
 
 -- draw a light line
--- note: u0 is assumed to be zero
-function lightline(x0,y0,x1,y1,c,u1,w0,w1,n)
+function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,out)
+
  local w,h=abs(x1-x0),abs(y1-y0)
-
- -- adjust remaining number of points
- n=flr(n*u1)
- if(n<1) return
-
- color(c)
-
- -- too small?
- if h<n and w<n then
-  line(x0,y0,x1,y1)
-  return
- end
-
- local u0,prevu=0,-1
-
+ 
+ local prevu=-1
  if h>w then
-
   -- order points on y
   if(y0>y1) x0,y0,x1,y1,u0,u1,w0,w1=x1,y1,x0,y0,u1,u0,w1,w0
-  w=x1-x0
-
-  -- y-major
-  if(y0<0) x0,y0,u0=x0-y0*w/h,0,-u0*y0/h
-
-  local du,dw=(u1*w1-u0*w0)/h,(w1-w0)/h
-  for y=y0,min(y1,127) do
-   -- perspective correction
-   local u=flr(n*u0/w0)
-   if(prevu!=u) pset(x0,y)
-   x0+=w/h
-			u0+=du
-			w0+=dw
-   prevu=u
+  w,h=x1-x0,y1-y0
+	 local du,dw=(u1*w1-u0*w0)/h,(w1-w0)/h
+	 	
+   -- y-major
+    u0*=w0
+	 if y0<0 then
+		 local t=-y0/h
+		 -- todo: unroll lerp
+	  x0,y0,u0,w0=x0+w*t,0,lerp(u0,u1*w1,t),lerp(w0,w1,t)
   end
- else
-  -- x-major
-  if(x0>x1) x0,y0,x1,y1,u0,u1,w0,w1=x1,y1,x0,y0,u1,u0,w1,w0
-  h=y1-y0
+	 
+   for y=y0,min(y1,40) do
+		  local u=flr(u0/w0)
+    if prevu!=u then
+     pset(x0,y,sget(64+3*mid(w0/16,0,1),c))
+					-- avoid too many lights!
+					if w0>12 then     
+						add(out,{key=-w0,x=x0,y=y,c=c})
+					end
+				end						
+     x0+=w/h
+     u0+=du
+     w0+=dw
+     prevu=u
+    end
+  else
+   -- x-major
+	  if(x0>x1) x0,y0,x1,y1,u0,u1,w0,w1=x1,y1,x0,y0,u1,u0,w1,w0
+	  w,h=x1-x0,y1-y0
+	  local du,dw=(u1*w1-u0*w0)/w,(w1-w0)/w
 
-  if(x0<0) x0,y0,u0=0,y0-x0*h/w,-u0*x0/w
-
-  local du,dw=(u1*w1-u0*w0)/w,(w1-w0)/w
-  for x=x0,min(x1,127) do
-   local u=flr(n*u0/w0)
-   if(prevu!=u) pset(x,y0)
-   y0+=h/w
-   u0+=du
-   w0+=dw
-   prevu=u
-  end
- end
+	  u0*=w0
+	  if x0<0 then
+	    local t=-x0/w
+	    -- u is not linear
+	    -- u*w is
+	    x0,y0,u0,w0=0,y0+h*t,lerp(u0,u1*w1,t),lerp(w0,w1,t)
+	  end
+ 
+ 		
+   for x=x0,min(x1,127) do	
+		  local u=flr(u0/w0)
+    if prevu!=u then
+     pset(x,y0,sget(64+3*mid(w0/16,0,1),c))
+					if w0>12 then     
+			   add(out,{key=-w0,x=x,y=y0,c=c})
+			  end
+			 end
+		  y0+=h/w
+		  u0+=du
+		  w0+=dw
+		  prevu=u
+	  end
+	end
 end
 -->8
 -- trifill
@@ -1522,30 +1498,21 @@ end
 -- init transparent colors
 
 -- hardcoded colors
-local shades={
-	[0xc]=0xd,
-	[0x4]=0x5,
-	[0x7]=0x6,
-	[0xcc]=0xdd,
-	[0x44]=0x55,
-	[0x4c]=0x5d,
-	[0xc4]=0x55,
-	[0x77]=0x66,
-	[0xc7]=0xd6,
-	[0x7c]=0x6d,
-	[0x47]=0x56,
-	[0x74]=0x65}
+local shades=unpack_ramp(1,8)
 
 function rectfillt(x0,y0,x1,y1)
 	x0,x1=max(flr(x0)),min(flr(x1),127)
 
 	for j=max(y0),min(y1,127) do
-		linet(x0,j,x1)
+		linet(x0,j,x1,shades)
  end
 end
-function circfillt(x0,y0,r)
+function circfillt(x0,y0,r,ramp)
 	if(r==0) return
- local x,y,dx,dy=flr(r),0,1,1
+	x0,y0=flr(x0),flr(y0)
+	-- default ramp or provided?
+	ramp=ramp or shades
+	local x,y,dx,dy=flr(r),0,1,1
  r*=2
  local err=dx-r
 
@@ -1566,51 +1533,142 @@ function circfillt(x0,y0,r)
 		end
 	end
 	for k,v in pairs(strips) do
-		linet(x0-v,y0+k,x0+v)
-	 if(k!=0)linet(x0-v,y0-k,x0+v)
+		linet(x0-v,y0+k,x0+v,ramp)
+	 if(k!=0)linet(x0-v,y0-k,x0+v,ramp)
 	end
 end
 
-function linet(x0,y0,x1)
+function linet(x0,y0,x1,ramp)
+ if(band(y0,0xff80)!=0) return
+ if(x0>127 or x1<0) return
+ x0,x1=mid(x0,0,127),mid(x1,0,127)
+ 
  if band(x0,0x1)==1 then
- 	pset(x0,y0,shades[pget(x0,y0)])
+ 	pset(x0,y0,ramp[pget(x0,y0)])
  	-- move to even boundary
  	x0+=1
  end
  if x1%2==0 then
- 	pset(x1,y0,shades[pget(x1,y0)])
+ 	pset(x1,y0,ramp[pget(x1,y0)])
  	-- move to odd boundary
  	x1-=1
  end
 
 	local mem=0x6000+shl(y0,6)+shr(x0,1)
 	for i=1,shr(x1-x0+1,1) do
-		poke(mem,shades[peek(mem)])
+		poke(mem,ramp[peek(mem)])
 	 mem+=1
 	end
 end
+
+-->8
+-- unpack models
+local mem=0x1000
+-- number of bytes
+function unpack_int(w)
+ w=w or 1
+	local i=w==1 and peek(mem) or bor(shl(peek(mem),8),peek(mem+1))
+	mem+=w
+	return i
+end
+function unpack_float(scale)
+	local f=shr(unpack_int()-128,5)
+	return f*(scale or 1)
+end
+function unpack_double(scale)
+	local f=shr(unpack_int(2)-0x4000,4)
+	return f*(scale or 1)
+end
+-- valid chars for model names
+local itoa='_0123456789abcdefghijklmnopqrstuvwxyz'
+function unpack_string()
+	local s=""
+	for i=1,unpack_int() do
+		local c=unpack_int()
+		s=s..sub(itoa,c,c)
+	end
+	return s
+end
+function unpack_models(scale)
+	-- for all models
+	for m=1,unpack_int() do
+		local model,name,_={},unpack_string(),unpack_int()
+		
+		-- vertices
+		model.v={}
+		for i=1,unpack_int() do
+			add(model.v,{unpack_double(scale),unpack_double(scale),unpack_double(scale)})
+		end
+		
+		-- faces
+		model.f={}
+		for i=1,unpack_int() do
+			local f={ni=i,vi={},c=unpack_int(),double_sided=unpack_int()==1 or nil,z=unpack_double()}
+			-- vertex indices
+			for i=1,unpack_int() do
+				add(f.vi,unpack_int())
+			end
+			add(model.f,f)
+		end
+ 
+		-- normals
+		model.n={}
+		for i=1,unpack_int() do
+			add(model.n,{unpack_float(),unpack_float(),unpack_float()})			
+		end
+		
+		-- n.p cache	
+		model.cp={}
+		for i=1,#model.f do
+			local f=model.f[i]
+			add(model.cp,v_dot(model.n[i],model.v[f.vi[1]]))
+		end	
+    	
+		-- edges
+		model.e={}
+		for i=1,unpack_int() do
+      local e={
+				-- start
+				unpack_int(),
+				-- end
+				unpack_int()
+			}
+      -- light line?
+      if unpack_int()==1 then
+        -- number of lights + color
+        e.c,e.n=unpack_int(),unpack_int()
+      end
+			add(model.e,e)
+		end
+
+		-- merge with existing model
+		all_models[name]=clone(model,all_models[name])
+	end
+end
+-- do it
+unpack_models(m_scale)
 __gfx__
 00000000fff7777f49777777777777e25fffffff7fffffff77ff777fffffffff0000000000000000000000000000000000000000000000000000000000000000
-00000000ff7fffffffffffffffffffff55fffffff7f7ffff7f7f777ffffffeff0000000000000000000000000000000000000000000000000000000000000000
-00000000f7ffffffff3b77777777d5ff555fffffff77ffff7f7f7f7feeeeeeef0000000000000000000000000000000000000000000000000000000000000000
-000000007fffffffffffffffffffffff55fffffff777fffffffffffffffffeff0000000000000000000000000000000000000000000000000000000000000000
-00000000ffffffffffff1c7777c1ffff5fffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
-00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
-00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
-00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
-0000000000000000ffffffff77777fffffbfffff00000000ff222fffffffffff0000000000000000000000000000000000000000000000000000000000000000
-1d00000000000000fffffffff777fffffbffffff00000000f2e7e2ffff0fffff0000000000000000000000000000000000000000000000000000000000000000
-2e00000000000000ffffffffff7fffffbbbbbbbb000000002ee7ee2ff00fffff0000000000000000000000000000000000000000000000000000000000000000
-3b000000000000000ffffffffffffffffbffffff000000002ee7ee2f000fffff0000000000000000000000000000000000000000000000000000000000000000
-450000000000000000ffffffffffffffffbfffff000000002ee7ee2ff00fffff0000000000000000000000000000000000000000000000000000000000000000
-5600000000000000000fffffffffffffffffffff00000000f2e7e2ffff0fffff0000000000000000000000000000000000000000000000000000000000000000
-670000000000000000000fffffffffffffffffff00000000ff222fffffffffff0000000000000000000000000000000000000000000000000000000000000000
-770000000000000000000000ffffffffffffffff00000000ffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
+00000000ff7fffffffffffffffffffff55fffffff7f7ffff7f7f777ffffffeff0000000011c00000000000000000000000000000000000000000000000000000
+00000000f7ffffffff3b77777777d5ff555fffffff77ffff7f7f7f7feeeeeeef0000000022800000000000000000000000000000000000000000000000000000
+000000007fffffffffffffffffffffff55fffffff777fffffffffffffffffeff0000000053b00000000000000000000000000000000000000000000000000000
+00000000ffffffffffff1c7777c1ffff5fffffffffffffffffffffffffffffff0000000024900000000000000000000000000000000000000000000000000000
+00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000055600000000000000000000000000000000000000000000000000000
+00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff1556000056700000000000000000000000000000000000000000000000000000
+00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff5677000057700000000000000000000000000000000000000000000000000000
+0000000000000000ffffffff77777fffffbfffff00000000ff222fffffffffff1288000028700000000000000000000000000000000000000000000000000000
+1d00000000000000fffffffff777fffffbffffff00000000f2e7e2ffff0fffff0000000029a00000000000000000000000000000000000000000000000000000
+2e00000000000000ffffffffff7fffffbbbbbbbb000000002ee7ee2ff00fffff29aa00004a700000000000000000000000000000000000000000000000000000
+3b000000000000000ffffffffffffffffbffffff000000002ee7ee2f000fffff33bb00003b700000000000000000000000000000000000000000000000000000
+450000000000000000ffffffffffffffffbfffff000000002ee7ee2ff00fffff011c00001c700000000000000000000000000000000000000000000000000000
+5600000000000000000fffffffffffffffffffff00000000f2e7e2ffff0fffff000000005d600000000000000000000000000000000000000000000000000000
+6d0000000000000000000fffffffffffffffffff00000000ff222fffffffffff000000002e800000000000000000000000000000000000000000000000000000
+760000000000000000000000ffffffffffffffff00000000ffffffffffffffff000000005f700000000000000000000000000000000000000000000000000000
 8e000000ff7fffff00000fffffcfffff777fffff777ffffffbffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
 9a00000077777fff00000ffffcffffff7fffffff77ffffffbbbfffffffcccfff0000000000000000000000000000000000000000000000000000000000000000
 a7000000ff7fffff000000ffccccccccff7fffff7ffffffffbfffffffcfffcff0000000000000000000000000000000000000000000000000000000000000000
 b6000000ff7fffff000000fffcffffff777fffff777ffffffffffffffcfcfcff0000000000000000000000000000000000000000000000000000000000000000
-c6000000f777ffff000000ffffcffffffffffffffffffffffffffffffcfffcff0000000000000000000000000000000000000000000000000000000000000000
+cd000000f777ffff000000ffffcffffffffffffffffffffffffffffffcfffcff0000000000000000000000000000000000000000000000000000000000000000
 d6000000ffffffff0000000fffffffffffffffffffffffffffffffffffcccfff0000000000000000000000000000000000000000000000000000000000000000
 ef000000ffffffff0000000fffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
 f6000000ffffffff00000000ffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
@@ -1622,6 +1680,50 @@ f6000000ffffffff00000000ffffffffffffffffffffffffffffffffffffffff0000000000000000
 0000000000000000ffff0000070ffffffffffffffffffffff2eee2fff2eee2ff0000000000000000000000000000000000000000000000000000000000000000
 0000000000000000ffff0000000fffffffffffffffffffffff222fffff222fff0000000000000000000000000000000000000000000000000000000000000000
 00000000000fffffffff00ffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1030c0b1f110f4f38a04000407f38c04000407f38a04002405f38c04002405f38d04000407f38f04000407f38d04002405f38f04002405048004000407048204
+000407048004002405048204002405048304000407048504000407048304002405048504002405f30104000400040f04000400f3010400d90c040f0400d90cf3
+8404000407f38604000407f38404002405f38604002405f38704000407f38904000407f38704002405f389040024050486040004070488040004070486040024
+05048804002405048904000407048b04000407048904002405048b04002405f38104000407f38304000407f38104002405f38304002405048c04000407048e04
+000407048c04002405048e0400240504000400040004000400b80004000400d90c04000400b80004000400320ef30a0400d20404060400d204f3070400320e04
+090400320ef3010400630a040f0400630a04000400630a04000400320e040f0400730e74030400630a54450400730e540f040083e774130400c41874dc0400d4
+02540f0400361e2507040066e2040ff3bfe58e040f040016e2540f040066e225070400d402f3cf0400732ef3cf0400930c04c904007314548f04007324644904
+00730e64490400461e0487f3aff58a548e046156d004870400d551644504f15602a0700004004010204030700004004050608070700004004090a0c0b0700004
+0040d0e001f0700004004051618171700004004091a1c1b17000040040d1e102f1700004004012224232700004004052628272700004004092a2c2b2a0080a08
+080a08080a08080a08080a08080a08080a08080a08080a08080a082231111070043441107004d2e2106004f20310808023331080a043531080a0112110b0a031
+4110805063110083931080a0c3d310c08021a300b3e30004d310c080144410c080443410c080240410c080541410c080f35410c080e4c410b080746410b08084
+9410b080b4a410b080f4b410b080c4d410b080a3c310c0802173002134107004e3f310c08073b30021240094a410b080648410b080d4f410b080000000000000
 __label__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000

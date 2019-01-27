@@ -22,10 +22,10 @@ end
 
 function _draw()
 	cls(1)
-	circfill(64,64,20,6)
+	circfill(64,64,3,20)
 	
 	--rectfillt(33+x,56+y,67+x,89+y)
- circfillt(33+x,56+y,33)
+ circfillt(33+x,56+y,3)
  
 	fillp(0xa5a5)
 	--rect(33+x,56+y,67+x,89+y,0x87)
@@ -57,8 +57,8 @@ function circfillt(x0,y0,r)
  r*=2
  local err=dx-r
 
+	local strips={}
 	-- avoid overdraw
-	local strips={}	
  while x>=y do
 		strips[y]=x
 		strips[x]=y
@@ -80,7 +80,37 @@ function circfillt(x0,y0,r)
 	end
 end
 
+function circfillt(x0,y0,r)
+	if(r==0) return
+ local x,y=0,r
+ local d=3-shl(r,1)
+
+	local strips={}
+	-- avoid overdraw
+ while y>=x do
+		strips[y]=x
+		strips[x]=y
+		
+		x+=1
+		if(d>0) then
+			y-=1
+			d+=shl(x-y,2)+10
+		else
+			d+=shl(x,2)+6
+		end
+	end
+	for k,v in pairs(strips) do
+		linet(x0-v,y0+k,x0+v)
+	 if(k!=0)linet(x0-v,y0-k,x0+v)
+	end
+end
+
+
 function linet(x0,y0,x1)
+ if(band(y0,0xff80)!=0) return
+ if(x0>127 or x1<0) return
+ x0,x1=mid(x0,0,127),mid(x1,0,127)
+
  -- odd?
  if band(x0,0x1)==1 then
  	pset(x0,y0,shades[pget(x0,y0)])
