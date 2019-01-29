@@ -4,25 +4,25 @@ __lua__
 --tiny sim 0.60
 --@yellowbaron, 3d engine @freds72
 
---scenarios (name,lat,lon,hdg,alt,pitch,bank,throttle,tas,gps dto,nav1,nav2)
+--scenarios (name,lat,lon,hdg,alt,pitch,bank,throttle,tas,gps dto,nav1,nav2,wx)
 local scenarios={
-	{"visual approach",-417,326.3,85,600,-1,0,25,112,3,2,1},
- {"final approach",-408.89,230.77,85,1000,1,0,75,112,3,2,1},
- {"full approach",-222.22,461.54,313,3000,0,0,91,112,3,2,1},
-	{"engine failure!",-422.2,408,85,500,10,0,0,65,4,2,5},
- {"unusual attitude",-222.22,461.54,330,450,99,99,100,112,3,2,1},
-	{"free flight",-422.2,384.6,85,0,0,0,0,0,3,2,1}}
+	{"visual approach",-417,326.3,85,600,-1,0,25,112,3,2,1,1},
+ {"final approach",-408.89,230.77,85,1000,1,0,75,112,3,2,1,2},
+ {"full approach",-222.22,461.54,313,3000,0,0,91,112,3,2,1,3},
+	{"engine failure!",-422.2,408,85,500,10,0,0,65,4,2,5,1},
+ {"unusual attitude",-222.22,461.54,330,450,99,99,100,112,3,2,1,1},
+	{"free flight",-422.2,384.6,85,0,0,0,0,0,3,2,1,1}}
 
 --weather (name,wind,ceiling)
 local wx={
-	{"clear, calm",{0,0},20000},
- {"clouds, breezy",{60,10},500},
- {"low clouds, stormy",{10,30},200}}
+	{"clear / calm",{0,0},20000},
+ {"clouds / breezy",{60,10},500},
+ {"low clouds / stormy",{10,30},200}}
 
 --airport and navaid database (rwy hdg < 180)
 local db={
 	{-251.11,430.77,"pco","vor"},
- {-422.2,384.6,"itn","ils",85}, --370
+ {-422.2,384.6,"itn","ils",85},
  {-422.2,384.6,"tny","apt",85},
  {-66.67,153.85,"smv","apt",40},
  {-177.78,246.15,"wee","vor"}}
@@ -80,7 +80,7 @@ function _init()
  item=0
  scen=1
  wnd=1
- --
+ --flight
  rpm=2200
  vs=0
  aoa=0
@@ -89,12 +89,12 @@ function _init()
  blag=0 --bank lag
  plag=0 --pitch lag
  slag=0 --stall lag
- --
+ --navigation
  brg={}
  dist={}
  crs=0
  cdi=0
- --
+ --other
 	onground=false
 	hardlanding=0 --0: soft, 1: hard, 2:crash
  flight={}
@@ -609,9 +609,9 @@ end
 function drawmenu()
   local c = frame%16<8 and 7 or 9
   cls()
-  spr(2,25,10)
-  spr(3,92,10)
-  print("tiny sim v0.60",35,10,7)
+  spr(2,34,10)
+  spr(3,78,10)
+  print("tiny sim",44,10,7)
   print("the world's smallest flight sim",2,20,6)
   print("flight:",8,37,item==0 and c or 7)
   print(scenarios[scen][1],44,37,7)
@@ -619,10 +619,10 @@ function drawmenu()
   print(wx[wnd][1],44,47,7)
   print("press ❎ for briefing",8,57,7)
   print("x/z: throttle",8,80,6)
-  print("q: toggle flaps",8,87,6)
+  print("q:   toggle flaps",8,87,6)
   print("tab: toggle map / pause",8,94,6)
   rect(5,77,101,101,6)
-  rectfill(70,88,75,89,7) --flaps
+  rectfill(78,88,83,89,7) --flaps
   spr(4,62,80) --throttle
   print("@yellowbaron | 3d by @freds72",7,123,6)
 end
@@ -637,8 +637,8 @@ function drawmap(message)
     --navaids
     if l[4]=="vor" then
       spr(39,x,y)
-      print(l[3],x+9,y+1,7)
-    elseif l[4]=="ils" then
+      if(zoom<8) print(l[3],x+9,y+1,7)
+    elseif l[4]=="ils" and zoom<8 then
       local a=(l[5]-3)/360
       local b=(l[5]+3)/360
       local _x=sin(a)
@@ -670,9 +670,13 @@ function drawmap(message)
 			 rectfill(0,9,127,15,5)
 				print("pause",10,10,c)
 		end
-  print(zoom.." nm",112,110,7)
-  spr(21,112,107)
-		print("tab: cockpit, z: menu, \131\148: zoom",0,123,6)
+  print(zoom.." nm",105,110,7)
+  spr(21,105,107)
+  if hardlanding==2 then
+		  print("z: back to menu  \131\148:zoom",0,123,6)
+		else
+		  print("tab: fly  z: menu  \131\148:zoom",0,123,6)
+		end
 end
 
 function scalemap(_x,_y)
@@ -813,6 +817,7 @@ function _update()
       if item==0 then
         scen+=1
         if(scen==#scenarios+1) scen=1
+								wnd=scenarios[scen][13]
       elseif item==1 then
         wnd+=1
         if(wnd==#wx+1) wnd=1
@@ -821,6 +826,7 @@ function _update()
       if item==0 then
         scen-=1
         if(scen==0) scen=#scenarios
+								wnd=scenarios[scen][13]
       elseif item==1 then
         wnd-=1
         if(wnd==0) wnd=#wx
@@ -831,10 +837,10 @@ function _update()
       _init()
     elseif btnp(2) then --up
 					 zoom*=2
-						zoom=mid(0.5,zoom,4)
+						zoom=mid(0.5,zoom,8)
 				elseif btnp(3) then --down
 					 zoom/=2
-						zoom=mid(0.5,zoom,4)
+						zoom=mid(0.5,zoom,8)
 				elseif btnp(4,1) then --tab
 						menu=0
     end
