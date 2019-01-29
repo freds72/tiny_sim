@@ -11,7 +11,7 @@ local scenarios={
  {"full approach",-222.22,461.54,313,3000,0,0,91,112,3,2,1},
 	{"engine failure!",-422.2,408,85,500,10,0,0,65,4,2,5},
  {"unusual attitude",-222.22,461.54,330,450,99,99,100,112,3,2,1},
-	{"free flight",-421,370,85,0,0,0,0,0,3,2,1}}
+	{"free flight",-422.2,384.6,85,0,0,0,0,0,3,2,1}}
 
 --weather (name,wind,ceiling)
 local wx={
@@ -98,6 +98,7 @@ function _init()
 	onground=false
 	hardlanding=0 --0: soft, 1: hard, 2:crash
  flight={}
+	zoom=1
 
  --3d
  cam=make_cam(64,12,64)
@@ -422,10 +423,10 @@ end
 function calcdistbrg()
   local j=1
   for l in all(db) do
-    local dy,dx=-(l[1]-lat)*16/600,(l[2]-lon)*16/600
-    brg[j]=90+(atan2(dx,dy)*360)-heading
+    local dy,dx=-(l[1]-lat)*0.01,(l[2]-lon)*0.01 --/100: avoid overflow issue
+				brg[j]=90+(atan2(dx,dy)*360)-heading
     brg[j]-=flr(brg[j]/360)*360
-    dist[j]=sqrt(dx*dx+dy*dy)
+    dist[j]=max(sqrt(dx*dx+dy*dy))*2.6667 --*100*16/600
     j+=1
   end
 end
@@ -669,14 +670,14 @@ function drawmap(message)
 			 rectfill(0,9,127,15,5)
 				print("pause",10,10,c)
 		end
-  print("1 nm",112,110,7)
-  line(112,108,120,108,7)
-  print("tab: cockpit, z: exit to menu",0,123,6)
+  print(zoom.." nm",112,110,7)
+  spr(21,112,107)
+		print("tab: cockpit, z: menu, \131\148: zoom",0,123,6)
 end
 
 function scalemap(_x,_y)
-  --based on 16nm per 128px
-  return (_x/600)*128,128+(_y/600)*128
+  --based on 16nm*zoom per 128px
+  return ((_x-lon)/600)*128/zoom+64,128+((_y-lat)/600)*128/zoom-64
 end
 
 function drawbriefing()
@@ -828,7 +829,13 @@ function _update()
   elseif menu==2 then --pause/map screen
     if btnp(4) then --z
       _init()
-    elseif btnp(4,1) then --tab
+    elseif btnp(2) then --up
+					 zoom*=2
+						zoom=mid(0.5,zoom,4)
+				elseif btnp(3) then --down
+					 zoom/=2
+						zoom=mid(0.5,zoom,4)
+				elseif btnp(4,1) then --tab
 						menu=0
     end
   elseif menu==3 then --briefing
@@ -909,7 +916,7 @@ function _draw()
     dispflaps()
     dispwind()
 		 dispmessage()
-			
+
     -- perf monitor!
     local cpu=flr(100*stat(1)).."%"
     print(cpu,2,3,2)
@@ -925,12 +932,12 @@ function nop() return true end
 
 -- https://github.com/morgan3d/misc/tree/master/p8sort
 function sort(data)
- for num_sorted=1,#data-1 do 
+ for num_sorted=1,#data-1 do
   local new_val=data[num_sorted+1]
   local new_val_key,i=new_val.key,num_sorted+1
 
   while i>1 and new_val_key>data[i-1].key do
-   data[i]=data[i-1]   
+   data[i]=data[i-1]
    i-=1
   end
   data[i]=new_val
@@ -966,8 +973,8 @@ function zbuf_draw()
 	for _,d in pairs(drawables) do
 		-- cull objects too far
 		-- todo: fix sqr_dist
-  if sqr_dist(cam.pos,d.pos)<6000 then		
-		 collect_drawables(d.model,d.m,objs)		
+  if sqr_dist(cam.pos,d.pos)<6000 then
+		 collect_drawables(d.model,d.m,objs)
   end
 	end
 	-- z-sorting
@@ -1157,7 +1164,7 @@ function collect_drawables(model,m,out)
 			local v=cam:modelview(m,model.v[bk])
 			b,p[bk]=v,v
 		end
-		
+
 		-- line clipping aginst near cam plane
 		-- swap end points
 		-- simplified sutherland-atherton
@@ -1379,14 +1386,14 @@ end
 function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,out)
 
  local w,h=abs(x1-x0),abs(y1-y0)
- 
+
  local prevu=-1
  if h>w then
   -- order points on y
   if(y0>y1) x0,y0,x1,y1,u0,u1,w0,w1=x1,y1,x0,y0,u1,u0,w1,w0
   w,h=x1-x0,y1-y0
 	 local du,dw=(u1*w1-u0*w0)/h,(w1-w0)/h
-	 	
+
    -- y-major
     u0*=w0
 	 if y0<0 then
@@ -1394,16 +1401,16 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,out)
 		 -- todo: unroll lerp
 	  x0,y0,u0,w0=x0+w*t,0,lerp(u0,u1*w1,t),lerp(w0,w1,t)
   end
-	 
+
    for y=y0,min(y1,40) do
 		  local u=flr(u0/w0)
     if prevu!=u then
      pset(x0,y,sget(64+3*mid(w0/16,0,1),c))
 					-- avoid too many lights!
-					if w0>12 then     
+					if w0>12 then
 						add(out,{key=-w0,x=x0,y=y,c=c})
 					end
-				end						
+				end
      x0+=w/h
      u0+=du
      w0+=dw
@@ -1422,13 +1429,13 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,out)
 	    -- u*w is
 	    x0,y0,u0,w0=0,y0+h*t,lerp(u0,u1*w1,t),lerp(w0,w1,t)
 	  end
- 
- 		
-   for x=x0,min(x1,127) do	
+
+
+   for x=x0,min(x1,127) do
 		  local u=flr(u0/w0)
     if prevu!=u then
      pset(x,y0,sget(64+3*mid(w0/16,0,1),c))
-					if w0>12 then     
+					if w0>12 then
 			   add(out,{key=-w0,x=x,y=y0,c=c})
 			  end
 			 end
@@ -1542,7 +1549,7 @@ function linet(x0,y0,x1,ramp)
  if(band(y0,0xff80)!=0) return
  if(x0>127 or x1<0) return
  x0,x1=mid(x0,0,127),mid(x1,0,127)
- 
+
  if band(x0,0x1)==1 then
  	pset(x0,y0,ramp[pget(x0,y0)])
  	-- move to even boundary
@@ -1593,13 +1600,13 @@ function unpack_models(scale)
 	-- for all models
 	for m=1,unpack_int() do
 		local model,name,_={},unpack_string(),unpack_int()
-		
+
 		-- vertices
 		model.v={}
 		for i=1,unpack_int() do
 			add(model.v,{unpack_double(scale),unpack_double(scale),unpack_double(scale)})
 		end
-		
+
 		-- faces
 		model.f={}
 		for i=1,unpack_int() do
@@ -1610,20 +1617,20 @@ function unpack_models(scale)
 			end
 			add(model.f,f)
 		end
- 
+
 		-- normals
 		model.n={}
 		for i=1,unpack_int() do
-			add(model.n,{unpack_float(),unpack_float(),unpack_float()})			
+			add(model.n,{unpack_float(),unpack_float(),unpack_float()})
 		end
-		
-		-- n.p cache	
+
+		-- n.p cache
 		model.cp={}
 		for i=1,#model.f do
 			local f=model.f[i]
 			add(model.cp,v_dot(model.n[i],model.v[f.vi[1]]))
-		end	
-    	
+		end
+
 		-- edges
 		model.e={}
 		for i=1,unpack_int() do
@@ -1656,14 +1663,14 @@ __gfx__
 00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000055600000000000000000000000000000000000000000000000000000
 00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff1556000056700000000000000000000000000000000000000000000000000000
 00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff5677000057700000000000000000000000000000000000000000000000000000
-0000000000000000ffffffff77777fffffbfffff00000000ff222fffffffffff1288000028700000000000000000000000000000000000000000000000000000
-1d00000000000000fffffffff777fffffbffffff00000000f2e7e2ffff0fffff0000000029a00000000000000000000000000000000000000000000000000000
-2e00000000000000ffffffffff7fffffbbbbbbbb000000002ee7ee2ff00fffff29aa00004a700000000000000000000000000000000000000000000000000000
-3b000000000000000ffffffffffffffffbffffff000000002ee7ee2f000fffff33bb00003b700000000000000000000000000000000000000000000000000000
-450000000000000000ffffffffffffffffbfffff000000002ee7ee2ff00fffff011c00001c700000000000000000000000000000000000000000000000000000
-5600000000000000000fffffffffffffffffffff00000000f2e7e2ffff0fffff000000005d600000000000000000000000000000000000000000000000000000
-6d0000000000000000000fffffffffffffffffff00000000ff222fffffffffff000000002e800000000000000000000000000000000000000000000000000000
-760000000000000000000000ffffffffffffffff00000000ffffffffffffffff000000005f700000000000000000000000000000000000000000000000000000
+0000000000000000ffffffff77777fffffbfffff7ffffff7ff222fffffffffff1288000028700000000000000000000000000000000000000000000000000000
+1d00000000000000fffffffff777fffffbffffff77777777f2e7e2ffff0fffff0000000029a00000000000000000000000000000000000000000000000000000
+2e00000000000000ffffffffff7fffffbbbbbbbbffffffff2ee7ee2ff00fffff29aa00004a700000000000000000000000000000000000000000000000000000
+3b000000000000000ffffffffffffffffbffffffffffffff2ee7ee2f000fffff33bb00003b700000000000000000000000000000000000000000000000000000
+450000000000000000ffffffffffffffffbfffffffffffff2ee7ee2ff00fffff011c00001c700000000000000000000000000000000000000000000000000000
+5600000000000000000ffffffffffffffffffffffffffffff2e7e2ffff0fffff000000005d600000000000000000000000000000000000000000000000000000
+6d0000000000000000000fffffffffffffffffffffffffffff222fffffffffff000000002e800000000000000000000000000000000000000000000000000000
+760000000000000000000000ffffffffffffffffffffffffffffffffffffffff000000005f700000000000000000000000000000000000000000000000000000
 8e000000ff7fffff00000fffffcfffff777fffff777ffffffbffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
 9a00000077777fff00000ffffcffffff7fffffff77ffffffbbbfffffffcccfff0000000000000000000000000000000000000000000000000000000000000000
 a7000000ff7fffff000000ffccccccccff7fffff7ffffffffbfffffffcfffcff0000000000000000000000000000000000000000000000000000000000000000
