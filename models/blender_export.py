@@ -48,16 +48,17 @@ def diffuse_to_p8color(rgb):
         raise Exception('Unknown color: 0x{}'.format(h))
 
 # airport lights references
+# light type -> color + number of lights per meter
 lights_db = {
     "ALS": { "color": 8, "n": 10 },
-    "RWYEnd": { "color": 8, "n": 5 },
-    "RWYStart": { "color": 11, "n": 10 },
-    "RWL-Left": { "color": 7, "n": 64 },
-    "RWL-Right": { "color": 7, "n": 64 },
-    "RWY-CLL": { "color": 6, "n": 64 },
+    "RWYEnd": { "color": 8, "n": 1 },
+    "RWYStart": { "color": 11, "n": 1 },
+    "RWL-Left": { "color": 7, "n": 30 },
+    "RWL-Right": { "color": 7, "n": 30 },
+    "RWY-CLL": { "color": 6, "n": 15 },
     "RWY-CLL-End": { "color": 8, "n": 8 },
-    "TAXI": { "color": 12, "n": 8 },
-    "TAXI-CLL": { "color": 11, "n": 8 }
+    "TAXI": { "color": 12, "n": 20 },
+    "TAXI-CLL": { "color": 11, "n": 5 }
 }
 
 # group data
@@ -128,6 +129,7 @@ for e in bm.edges:
         is_light=False
         light_color_index=0
         num_lights=0
+        light_group_name=""
         if len(g0)>0 and len(g1)>0:
             # find common group (if any)
             cg = set(g0).intersection(g1)
@@ -135,14 +137,18 @@ for e in bm.edges:
                 raise Exception('Multiple vertex groups for the same edge ({},{}): {} x {} -> {}'.format(obdata.vertices[v0].co,obdata.vertices[v1].co,g0,g1,cg))
             if len(cg)==1:
                 # get light specifications
-                light=lights_db[cg.pop()]            
+                light_group_name=cg.pop()
+                light=lights_db[light_group_name]            
                 is_light=True
                 light_color_index=light['color']
-                num_lights=light['n']
+                # find out number of lights according to segment length
+                num_lights=int(round(max(e.calc_length()/light['n'],2)))
         es = es + "{:02x}{:02x}{:02x}".format(v0+1, v1+1, 1 if is_light else 0)
         if is_light:
             # light color
             # + number of lights
+            if num_lights>255:
+                raise Exception('Too many lights ({}) for edge: ({},{}) category: {}'.format(num_lights,obdata.vertices[v0].co,obdata.vertices[v1].co,light_group_name))
             es = es + "{:02x}{:02x}".format(light_color_index,num_lights)
         es_count = es_count + 1
 
