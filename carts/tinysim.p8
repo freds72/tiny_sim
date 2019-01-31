@@ -962,11 +962,8 @@ end
 function zbuf_draw()
 	local objs={}
 	for _,d in pairs(drawables) do
-		-- cull objects too far
-		-- todo: fix sqr_dist
-    if sqr_dist(cam.pos,d.pos)<6000 then		
-		 collect_drawables(d.model,d.m,d.pos,objs)		
-    end
+    -- todo: cull objects too far
+		collect_drawables(d.model,d.m,d.pos,objs)		
 	end
 	-- z-sorting
 	sort(objs)
@@ -975,20 +972,7 @@ function zbuf_draw()
 		local d=objs[i]
 		if d.kind==0 then
 			local r=min(3,-24/d.key)
-			if(r>1) circfillt(d.x,d.y,r,light_shades[d.c])
-		elseif d.kind==1 then
-  	-- get floating part
-	  --local cf=(#dither_pat-1)*(1-mid(-8*d.key,0,0.5))
-	  --fillp(dither_pat[flr(cf)+1])
-	  fillp(0xf0f0)
-	  -- or
-	  -- fillp(0xa5a5)
-	  local cf=3*mid(-2*d.key,0,1)
-	  local c=bor(shl(sget(80+cf,d.c),4),sget(80+max(cf-1),d.c))
-		 cam:draw(project_poly,d.v,c)
-		 --print(-8*d.key,2,12,8)
-   fillp()
-   --return
+			if(r>1) circfillt(d.x,d.y,r,light_shades[d.c])		
 		end
 	end
 end
@@ -1400,7 +1384,7 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,out)
    for y=y0,min(y1,40) do
 		  local u=flr(u0/w0)
     if prevu!=u then
-     pset(x0,y,sget(64+3*mid(w0/16,0,1),c))
+     pset(x0,y,sget(64+3*mid(w0/2,0,1),c))
 					-- avoid too many lights!
 					if w0>12 then     
 						add(out,{key=-w0,x=x0,y=y,c=c,kind=0})
@@ -1429,7 +1413,7 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,out)
    for x=x0,min(x1,127) do	
 		  local u=flr(u0/w0)
     if prevu!=u then
-     pset(x,y0,sget(64+3*mid(w0/16,0,1),c))
+     pset(x,y0,sget(64+3*mid(w0/2,0,1),c))
 					if w0>12 then     
 			   add(out,{key=-w0,x=x,y=y0,c=c,kind=0})
 			  end
