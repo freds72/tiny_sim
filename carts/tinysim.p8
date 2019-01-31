@@ -4,7 +4,7 @@ __lua__
 --tiny sim 0.60
 --@yellowbaron, 3d engine @freds72
 
---scenarios (name,lat,lon,hdg,alt,pitch,bank,throttle,tas,gps dto,nav1,nav2,wx)
+--name,lat,lon,hdg,alt,pitch,bank,throttle,tas,dto,nav1,nav2,wx
 local scenarios={
 	{"visual approach",-417,326.3,85,600,-1,0,25,112,3,2,1,1},
  {"final approach",-408.89,230.77,85,1000,1,0,75,112,3,2,1,2},
@@ -13,13 +13,13 @@ local scenarios={
  {"unusual attitude",-222.22,461.54,330,450,99,99,100,112,3,2,1,1},
 	{"free flight",-422.2,384.6,85,0,0,0,0,0,3,2,1,1}}
 
---weather (name,wind,ceiling)
+--name,wind,ceiling
 local wx={
 	{"clear / calm",{0,0},20000},
  {"clouds / breezy",{60,10},500},
  {"low clouds / stormy",{10,30},200}}
 
---airport and navaid database (rwy hdg < 180)
+--(rwy hdg <180)
 local db={
 	{-251.11,430.77,"pco","vor"},
  {-422.2,384.6,"itn","ils",85},
@@ -158,10 +158,8 @@ function setrpm()
 end
 
 function disprpm()
-  local drpm,c=flr(rpm/10+0.5)*10
-  if drpm<=2000 then c=7 --white
-  elseif drpm<=2400 then c=11 --green
-  end
+  local drpm=flr(rpm/10+0.5)*10
+  local c=drpm<=2000 and 7 or 11
   if drpm>=1000 then
     print(sub(drpm,1,2),1,116,c)
     print(sub(drpm,3,4),1,122,c)
@@ -173,23 +171,23 @@ function disprpm()
 end
 
 function movepitch()
-  if btn(2) then --pitch dn
+  if btn(2) then --dn
     plag=max(plag-2,-60)
     pitch-=0.25*cos(bank/360)
-  elseif btn(3) and aoa<18 then --pitch up
+  elseif btn(3) and aoa<18 then --up
     plag=min(plag+2,60)
     pitch+=0.35*cos(bank/360)
   elseif plag!=0 then
     pitch+=0.004*plag*cos(bank/360)
     plag-=plag/abs(plag)
   end
-  if(abs(pitch)>=45) pitch*=45/abs(pitch)
-		if alt==0 then pitch=max(pitch,0) end
+		pitch=mid(pitch,-45,45)
+		if(onground) pitch=max(pitch)
 end
 
 function movebank()
   if btn(0) then
-    if onground and tas<30 then --nosewheel steering <30 knots
+    if onground and tas<30 then --nosewheel steering
 					 heading-=0.6
 				else
 				  blag=max(blag-1,-50)
@@ -206,12 +204,12 @@ function movebank()
     bank+=0.03*blag
     blag-=blag/abs(blag)
   end
-  if (abs(bank)<4 and blag==0) bank/=1.1 --bank stability
+  if(abs(bank)<4 and blag==0) bank/=1.1 --bank stability
   if(abs(bank)>20) pitch-=0.3*abs(sin(bank/360))
   if(abs(bank)>160) pitch-=0.15
   if(bank>180) bank-=360
   if(bank<-180) bank+=360
-		if(alt==0) bank/=1.3 --level off at ground contact
+		if(onground) bank/=1.3 --level off on ground
 end
 
 function dispai()
@@ -226,7 +224,7 @@ function dispai()
   clip(10,36,118,96)
   trifill(ax,ay,bx,by,cx,cy,12)
   trifill(ax,ay,bx,by,dx,dy,4)
-  line(ax,ay,bx,by,7)
+  line(ax,ay,bx,by,7) --horizon
   clip(35,44,55,43)
   for j=0,15 do
     local tmp=aipitch[2]-j*aistep+pitch
@@ -234,20 +232,20 @@ function dispai()
     local x2,y2=rotatepoint({aipitch[1]+aiwidth,tmp},aic,-bank)
     if(j!=7) line(x1,y1,x2,y2,7)
   end
-  warn(-8,3)
-  warn(110,3)
+  warn(-8)
+  warn(110)
   clip()
   --transparency
   rectfillt(21,50,33,90)
   rectfillt(95,50,111,90)
   rectfill(0,33,127,42,6)
   rectfill(0,33,9,127)
-  line(48,75,aic[1],aic[2],10) --aircraft symbol
+  line(48,75,aic[1],aic[2],10) --aircraft
   line(80,75,aic[1],aic[2])
 end
 
-function warn(y,j)
-  for i=0,j do
+function warn(y)
+  for i=0,3 do
     local _y=y+i*aistep+pitch
     local j=1
     if(y>64) j=-1
@@ -263,8 +261,8 @@ function calcalt()
   local coeff=88
   if(vs<0) coeff=74
   vs=tas*-(sin((pitch-aoa)/360))*coeff
-	 if(alt==0) vs=max(vs)
-  alt=max(alt+vs/1800,0)
+	 if(onground) vs=max(vs)
+  alt=max(alt+vs/1800)
 end
 
 function dispalt()
@@ -324,7 +322,7 @@ function calcspeed()
   local targetspeed=38.67+rpm/30-3.8*pitch
   targetspeed=mid(targetspeed,-30,200)
   if(flps==1) targetspeed-=10
-		if(alt==0) targetspeed-=40
+		if(onground) targetspeed-=40
   tas+=(targetspeed-tas)/250
   ias=tas/(1+alt/1000*0.02) --2% per 1000 ft
 end
@@ -339,7 +337,6 @@ function dispspeed()
 				line(31,72-(i*30)-15+dy,33,72-(i*30)-15+dy)
   end
 		clip()
-		-- red or black
   local c=ias>=163 and 8 or 0
   rectfill(21,68,33,74,c)
   rectfill(29,65,33,77)
@@ -370,7 +367,6 @@ function dispv()
   end
   clip()
 end
-
 
 function calcaoa()
   if ias>=71.1 then
@@ -406,11 +402,11 @@ function dispmap()
 				local p=disppoint(l)
     if(checkonmap(p)) pset(p[1]+0.5,p[2],mapclr[l[4]])
   end
-  spr(33,20,110) --map plane symbol
+  spr(33,20,110)
 end
 
 function disppoint(p)
-  local mapx=11+22/187.5*(p[2]-lonmin) --scale to map
+  local mapx=11+22/187.5*(p[2]-lonmin)
   local mapy=119-22/187.5*(-p[1]+latmin)
   local rotx,roty=rotatepoint({mapx,mapy},mapc,360-heading)
   return {rotx,roty}
@@ -423,7 +419,7 @@ end
 function calcdistbrg()
   local j=1
   for l in all(db) do
-    local dy,dx=-(l[1]-lat)*0.01,(l[2]-lon)*0.01 --/100: avoid overflow issue
+    local dy,dx=-(l[1]-lat)*0.01,(l[2]-lon)*0.01 --avoid overflow
 				brg[j]=90+(atan2(dx,dy)*360)-heading
     brg[j]-=flr(brg[j]/360)*360
     dist[j]=max(sqrt(dx*dx+dy*dy))*2.6667 --*100*16/600
@@ -432,10 +428,9 @@ function calcdistbrg()
 end
 
 function disphsi()
-  --transparency
   circfillt(64,111,15)
   circ(64,111,8,7)
-  spr(19,62,95) --tick mark
+  spr(19,62,95)
   --cardinal directions
   for l in all(nesw) do
     local x,y=rotatepoint(l,hsic,-heading)
@@ -448,7 +443,7 @@ function disphsi()
   cdii.v[7][1]=cdi+64
   cdii.v[8][1]=cdi+64
   polyliner(cdii,hsic,crs,11)
-  spr(33,62,110) --heading plane symbol
+  spr(33,62,110)
 end
 
 -- draw a rotated poly line
@@ -489,13 +484,10 @@ function stall()
   if aoa>=critical then
     slag=45
     plag=0
-    if(alt>0) blag=-10
+    if(not onground) blag=-10
   end
-  if alt>0 then
-			 pitch-=slag*0.008
-		else
-			 pitch-=slag*0.003
-		end
+  if onground then pitch-=slag*0.003
+		else pitch-=slag*0.008 end
   if (slag>=1) slag-=1
 end
 
@@ -504,7 +496,7 @@ function calcgs() --glideslope
   gsy=mid(63+10/0.7*(alpha-3),50,74)
 end
 
-function dispgs() --glideslope
+function dispgs()
   if dist[nav1]<15 and alt< 9995 then
     rectfillt(91,58,93,84)
     for j=0,4 do pset(92,61+j*5,7) end
@@ -519,14 +511,13 @@ function calccdi()
   if(cdangle>180) cdangle-=360
   if cdangle>90 then cdangle=180-cdangle --backcourse
   elseif cdangle<-90 then cdangle=-180-cdangle end
-  cdi=18/10*cdangle --5 deg full deflection
-  if(abs(cdi)>9) cdi=9*cdi/abs(cdi)
+  cdi=mid(18/10*cdangle,-9,9) --5 deg full deflection
 end
 
 function checklanded()
-  if alt==0 and (onground==false) then
+  if alt==0 and onground==false then
    onground=true
-   frame2=frame+60 --message displayed for 2s
+   frame2=frame+60 --2 seconds
 			if vs>-300 and pitch>-0.5 and abs(bank)<5 then hardlanding=0
 			elseif vs>-1000 and pitch>-0.5 and abs(bank)<30 then hardlanding=1
 			else hardlanding=2 end
@@ -561,7 +552,7 @@ end
 
 function flaps()
   if btnp(5,1) then --q
-    flps=1-flps --toggle
+    flps=1-flps
     plag=flps==1 and 70 or -70
   end
 end
@@ -581,11 +572,11 @@ function calcwind()
   relwind=(relwind+180)%360-180
   relh=-wind[2]*cos(relwind/360)
   relc=wind[2]*sin(relwind/360)
-  groundspeed=sqrt((tas/10+relh/10)^2+(relc/10)^2) --/10: avoid tas^2 overflow
+  groundspeed=sqrt((tas/10+relh/10)^2+(relc/10)^2) --avoid tas^2 overflow
   groundspeed=flr(10*groundspeed+0.5)
   wca=atan2(tas+relh,relc)*360
   wca=(wca+180)%360-180
-		if(alt==0) wca=0
+		if(onground) wca=0
 		-- actual 2d velocity direction
   track=heading+wca
 end
@@ -619,8 +610,8 @@ function drawmenu()
   print(wx[wnd][1],44,47,7)
   print("press ❎ for briefing",8,57,7)
   print("x/z: throttle",8,80,6)
-  print("q:   toggle flaps",8,87,6)
-  print("tab: toggle map / pause",8,94,6)
+  print("q:   toggle flaps",8,87)
+  print("tab: toggle map / pause",8,94)
   rect(5,77,101,101,6)
   rectfill(78,88,83,89,7) --flaps
   spr(4,62,80) --throttle
@@ -634,7 +625,6 @@ function drawmap(message)
     local x,y=scalemap(l[2],l[1])
     x-=3 --correct for sprite size
     y-=3
-    --navaids
     if l[4]=="vor" then
       spr(39,x,y)
       if(zoom<8) print(l[3],x+9,y+1,7)
@@ -648,7 +638,6 @@ function drawmap(message)
       local _y=cos(b)
       line(x+3,y+3,50*_x+x+3,50*_y+y+3,11)
       print(l[3],62*_x+x+2,62*_y+y+3,7)
-    --airports
     elseif l[4]=="apt" then
       if l[5]>=0 and l[5]<23 then spr(22,x,y)
       elseif l[5]>22 and l[5]<68 then spr(55,x,y)
@@ -769,7 +758,7 @@ have fun!]]
 end
 
 function drawstatic()
-  rectfill(10,36,127,42,0) --navbar
+  rectfill(10,36,127,42,0) --nav
   print("nav1",11,37,7)
   line(43,36,43,42,7)
   spr(7,47,37) --dto arrow
@@ -787,18 +776,16 @@ function drawstatic()
   rectfill(107,121,127,127,0) --timer
   line(45,111,47,111,7)
   line(81,111,83,111,7)
-  spr(18,71,120,1,1,true,false) --bearing 2
+  spr(18,71,120,1,1,true,false) --brg 2
   spr(34,79,115,1,1,true,false)
   rectfill(87,115,100,127,0)
   rectfill(79,123,86,127)
   spr(35,79,122,1,1,true,false) --nav2 arrow
   rectfill(40,95,45,100,0) --wind
-
-  			-- glareshield
+  	-- glareshield
   	spr(49,4,27)
   	spr(50,-4,29)
 		 sspr(15,24,1,8,12,26,116,8)
-
 end
 
 function _update()
@@ -921,7 +908,7 @@ function _draw()
     dispgs()
     dispflaps()
     dispwind()
-		 dispmessage()
+		  dispmessage()
 
     -- perf monitor!
     local cpu=flr(100*stat(1)).."%"
