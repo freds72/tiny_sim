@@ -1517,8 +1517,6 @@ end
 -- transparent drawing functions
 
 -- init transparent colors
-
--- hardcoded colors
 local shades=unpack_ramp(1,8)
 
 function rectfillt(x0,y0,x1,y1)
