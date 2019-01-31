@@ -89,32 +89,6 @@ s = s + "{:02x}".format(len(obdata.vertices))
 for v in obdata.vertices:
     s = s + "{}{}{}".format(pack_double(v.co.x), pack_double(v.co.z), pack_double(v.co.y))
 
-# faces
-s = s + "{:02x}".format(len(obdata.polygons))
-for f in obdata.polygons:
-    # color
-    if len(obcontext.material_slots)>0:
-        slot = obcontext.material_slots[f.material_index]
-        mat = slot.material
-        s = s + "{:02x}".format(diffuse_to_p8color(mat.diffuse_color))
-        # + dual-sided?
-        s = s + "{:02x}".format(0 if mat.game_settings.use_backface_culling else 1)
-    else:
-        s = s + "{:02x}{:02x}".format(1,0)
-    # face center (only z needed)
-    v = f.center
-    s = s + "{}".format(pack_double(v[2]))
-    # + vertex count
-    s = s + "{:02x}".format(len(f.loop_indices))
-    # + vertex id (= edge loop)
-    for li in f.loop_indices:
-        s = s + "{:02x}".format(loop_vert[li]+1)
-
-# normals
-s = s + "{:02x}".format(len(obdata.polygons))
-for f in obdata.polygons:
-    s = s + "{}{}{}".format(pack_float(f.normal.x), pack_float(f.normal.z), pack_float(f.normal.y))
-
 # all edges (except pure edge face)
 es = ""
 es_count = 0
