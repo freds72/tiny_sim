@@ -860,11 +860,7 @@ function _update()
   	zbuf_clear()
 
 	  -- update cam
-<<<<<<< HEAD
-	  cam:track({lat,(alt+3.7)/100,lon},q2) --correction for height of pilot in airplane
-=======
 	  cam:track({lat,(alt+4.4)/120,lon},-pitch/360,heading/360-0.25,-bank/360) --correction for height of pilot in airplane
->>>>>>> master
 
 	  zbuf_filter(actors)
 
@@ -955,7 +951,7 @@ for c=0,15 do
 	light_shades[c]=unpack_ramp(74,0)
 end
 
--- 
+--
 local dither_pat={0b1111111111111111,0b0111111111111111,0b0111111111011111,0b0101111111011111,0b0101111101011111,0b0101101101011111,0b0101101101011110,0b0101101001011110,0b0101101001011010,0b0001101001011010,0b0001101001001010,0b0000101001001010,0b0000101000001010,0b0000001000001010,0b0000001000001000,0b0000000000000000}
 
 -- zbuffer (kind of)
@@ -966,16 +962,8 @@ end
 function zbuf_draw()
 	local objs={}
 	for _,d in pairs(drawables) do
-<<<<<<< HEAD
-		-- cull objects too far
-		-- todo: fix sqr_dist
-  if sqr_dist(cam.pos,d.pos)<6000 then
-		 collect_drawables(d.model,d.m,objs)
-  end
-=======
     -- todo: cull objects too far
-		collect_drawables(d.model,d.m,d.pos,objs)		
->>>>>>> master
+		collect_drawables(d.model,d.m,d.pos,objs)
 	end
 	-- z-sorting
 	sort(objs)
@@ -984,7 +972,7 @@ function zbuf_draw()
 		local d=objs[i]
 		if d.kind==0 then
 			local r=min(3,-24/d.key)
-			if(r>1) circfillt(d.x,d.y,r,light_shades[d.c])		
+			if(r>1) circfillt(d.x,d.y,r,light_shades[d.c])
 		end
 	end
 end
@@ -1117,7 +1105,7 @@ local znear,zdir=1,-1
 function collect_drawables(model,m,pos,out)
   -- vertex cache
   local p={}
-   
+
  -- edges
  for i=1,#model.e do
 		local e=model.e[i]
@@ -1247,7 +1235,7 @@ end
 function make_cam(x0,y0,focal)
 	-- clip planes
  local znear=0.25
-	
+
 	local c={
 		pos={0,0,3},
 		update=function(self)
@@ -1398,13 +1386,8 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,out)
     if prevu!=u then
      pset(x0,y,sget(64+3*mid(w0/2,0,1),c))
 					-- avoid too many lights!
-<<<<<<< HEAD
 					if w0>12 then
-						add(out,{key=-w0,x=x0,y=y,c=c})
-=======
-					if w0>12 then     
 						add(out,{key=-w0,x=x0,y=y,c=c,kind=0})
->>>>>>> master
 					end
 				end
      x0+=w/h
@@ -1430,15 +1413,9 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,out)
    for x=x0,min(x1,127) do
 		  local u=flr(u0/w0)
     if prevu!=u then
-<<<<<<< HEAD
-     pset(x,y0,sget(64+3*mid(w0/16,0,1),c))
-					if w0>12 then
-			   add(out,{key=-w0,x=x,y=y0,c=c})
-=======
      pset(x,y0,sget(64+3*mid(w0/2,0,1),c))
-					if w0>12 then     
+					if w0>12 then
 			   add(out,{key=-w0,x=x,y=y0,c=c,kind=0})
->>>>>>> master
 			  end
 			 end
 		  y0+=h/w
@@ -1594,35 +1571,7 @@ function unpack_models(scale)
 		for i=1,unpack_int() do
 			add(model.v,{unpack_double(scale),unpack_double(scale),unpack_double(scale)})
 		end
-<<<<<<< HEAD
 
-		-- faces
-		model.f={}
-		for i=1,unpack_int() do
-			local f={ni=i,vi={},c=unpack_int(),double_sided=unpack_int()==1 or nil,z=unpack_double()}
-			-- vertex indices
-			for i=1,unpack_int() do
-				add(f.vi,unpack_int())
-			end
-			add(model.f,f)
-		end
-
-		-- normals
-		model.n={}
-		for i=1,unpack_int() do
-			add(model.n,{unpack_float(),unpack_float(),unpack_float()})
-		end
-
-		-- n.p cache
-		model.cp={}
-		for i=1,#model.f do
-			local f=model.f[i]
-			add(model.cp,v_dot(model.n[i],model.v[f.vi[1]]))
-		end
-
-=======
-		
->>>>>>> master
 		-- edges
 		model.e={}
 		for i=1,unpack_int() do
@@ -1648,23 +1597,6 @@ end
 unpack_models(m_scale)
 __gfx__
 00000000fff7777f49777777777777e25fffffff7fffffff77ff777fffffffff0000000000000000000000000000000000000000000000000000000000000000
-<<<<<<< HEAD
-00000000ff7fffffffffffffffffffff55fffffff7f7ffff7f7f777ffffffeff0000000011c00000000000000000000000000000000000000000000000000000
-00000000f7ffffffff3b77777777d5ff555fffffff77ffff7f7f7f7feeeeeeef0000000022800000000000000000000000000000000000000000000000000000
-000000007fffffffffffffffffffffff55fffffff777fffffffffffffffffeff0000000053b00000000000000000000000000000000000000000000000000000
-00000000ffffffffffff1c7777c1ffff5fffffffffffffffffffffffffffffff0000000024900000000000000000000000000000000000000000000000000000
-00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000055600000000000000000000000000000000000000000000000000000
-00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff1556000056700000000000000000000000000000000000000000000000000000
-00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff5677000057700000000000000000000000000000000000000000000000000000
-0000000000000000ffffffff77777fffffbfffff7ffffff7ff222fffffffffff1288000028700000000000000000000000000000000000000000000000000000
-1d00000000000000fffffffff777fffffbffffff77777777f2e7e2ffff0fffff0000000029a00000000000000000000000000000000000000000000000000000
-2e00000000000000ffffffffff7fffffbbbbbbbbffffffff2ee7ee2ff00fffff29aa00004a700000000000000000000000000000000000000000000000000000
-3b000000000000000ffffffffffffffffbffffffffffffff2ee7ee2f000fffff33bb00003b700000000000000000000000000000000000000000000000000000
-450000000000000000ffffffffffffffffbfffffffffffff2ee7ee2ff00fffff011c00001c700000000000000000000000000000000000000000000000000000
-5600000000000000000ffffffffffffffffffffffffffffff2e7e2ffff0fffff000000005d600000000000000000000000000000000000000000000000000000
-6d0000000000000000000fffffffffffffffffffffffffffff222fffffffffff000000002e800000000000000000000000000000000000000000000000000000
-760000000000000000000000ffffffffffffffffffffffffffffffffffffffff000000005f700000000000000000000000000000000000000000000000000000
-=======
 00000000ff7fffffffffffffffffffff55fffffff7f7ffff7f7f777ffffffeff0000000011c00000000100000000000000000000000000000000000000000000
 00000000f7ffffffff3b77777777d5ff555fffffff77ffff7f7f7f7feeeeeeef0000000022800000001200000000000000000000000000000000000000000000
 000000007fffffffffffffffffffffff55fffffff777fffffffffffffffffeff0000000053b00000005300000000000000000000000000000000000000000000
@@ -1680,7 +1612,6 @@ __gfx__
 5600000000000000000fffffffffffffffffffff00000000f2e7e2ffff0fffff000000005d600000015d00000000000000000000000000000000000000000000
 6d0000000000000000000fffffffffffffffffff00000000ff222fffffffffff000000002e800000012e00000000000000000000000000000000000000000000
 760000000000000000000000ffffffffffffffff00000000ffffffffffffffff000000005f70000001df00000000000000000000000000000000000000000000
->>>>>>> master
 8e000000ff7fffff00000fffffcfffff777fffff777ffffffbffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
 9a00000077777fff00000ffffcffffff7fffffff77ffffffbbbfffffffcccfff0000000000000000000000000000000000000000000000000000000000000000
 a7000000ff7fffff000000ffccccccccff7fffff7ffffffffbfffffffcfffcff0000000000000000000000000000000000000000000000000000000000000000
