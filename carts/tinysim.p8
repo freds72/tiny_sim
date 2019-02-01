@@ -22,7 +22,7 @@ local wx={
 --(rwy hdg <180)
 local db={
 	{-251.11,430.77,"pco","vor"},
- {-422.2,384.6,"itn","ils",85},
+ {-422.46,387.59,"itn","ils",85},
  {-422.2,384.6,"tny","apt",85},
  {-66.67,153.85,"smv","apt",40},
  {-177.78,246.15,"wee","vor"}}
@@ -865,7 +865,7 @@ function _update()
 	  -- avoid matrix skew
 	  q_normz(q2)
 	  -- update cam
-	  cam:track({lat,(alt+4.4)/120,lon},q2) --correction for height of pilot in airplane
+	  cam:track({lat,(alt+3.7)/100,lon},q2) --correction for height of pilot in airplane
 
 	  zbuf_filter(actors)
 
