@@ -7,18 +7,18 @@ __lua__
 
 --scenarios (name,lat,lon,hdg,alt,pitch,bank,throttle,tas,gps dto,nav1,nav2)
 local scenarios={
-	{"visual approach",-417,326.3,85,600,-1,0,25,112,3,2,1},
- {"final approach",-408.89,230.77,85,1000,1,0,75,112,3,2,1},
- {"full approach",-222.22,461.54,313,3000,0,0,91,112,3,2,1},
+  {"visual approach",-417,326.3,85,600,-1,0,25,112,3,2,1},
+  {"final approach",-408.89,230.77,85,1000,1,0,75,112,3,2,1},
+  {"full approach",-222.22,461.54,313,3000,0,0,91,112,3,2,1},
 	{"engine failure!",-422.2,408,85,500,10,0,0,65,4,2,5},
- {"unusual attitude",-222.22,461.54,330,450,99,99,100,112,3,2,1},
+  {"unusual attitude",-222.22,461.54,330,450,99,99,100,112,3,2,1},
 	{"free flight",-421,370,85,0,0,0,0,0,3,2,1}}
 
---weather (name,wind,ceiling)
+--weather (name,wind,ceiling,bg color,sky gradient,light_ramp x offset, inverse light distance)
 local wx={
-	{"clear, calm",{0,0},20000},
- {"clouds, breezy",{60,10},500},
- {"low clouds, stormy",{10,30},200}}
+	{name="clear, calm",dir={0,0},sky_gradient={0xee,0xffff,0x2e,0xffff,0x11,0xffff}},
+  {name="clouds, breezy",dir={60,10},ceiling=500,horiz=48,bkg_color=0,sky_gradient={0x66,0xa5a5,0x65,0xa5a5,0x55,0xa5a5},cloud={0x61,0x6d,0b0100111001000000.1},light_ramp=68,light_dist=12},
+  {name="low clouds, stormy",dir={10,30},ceiling=200,horiz=32,bkg_color=0,sky_gradient={0x51,0x5a5a,0x50,0x5a5a},cloud={0xd5,0x15,0xa5a5},light_ramp=68,light_dist=8}}
 
 --airport and navaid database (rwy hdg < 180)
 local db={
@@ -32,6 +32,9 @@ local db={
 palt(15,true)
 palt(0,false)
 local frame,frame2=0,0
+
+-- scenario + weather selection
+local scen,wnd=1,1
 
 -- plane pos/orientation
 local lat,lon,heading,pitch,bank
@@ -128,8 +131,6 @@ function scenario(s)
 		dto=s[10]
   nav1=s[11]
   nav2=s[12]
-  wind=wx[wnd][2]
-  ceiling=wx[wnd][3]
   if(pitch==99) bank,pitch=unusual()
 end
 
@@ -577,6 +578,7 @@ function dispflaps()
 end
 
 function calcwind()
+  local wind=wx[wnd].dir
   relwind=heading-wind[1]
   relwind=(relwind+180)%360-180
   relh=-wind[2]*cos(relwind/360)
@@ -616,7 +618,7 @@ function drawmenu()
   print("flight:",8,37,item==0 and c or 7)
   print(scenarios[scen][1],44,37,7)
  	print("weather:",8,47,item==1 and c or 7)
-  print(wx[wnd][1],44,47,7)
+  print(wx[wnd].name,44,47,7)
   print("press ❎ for briefing",8,57,7)
   print("x/z: throttle",8,80,6)
   print("q: toggle flaps",8,87,6)
@@ -882,11 +884,12 @@ function _draw()
 	 elseif menu==3 then
 	   drawbriefing()
 	 else
-	 	cls()
+	 	cls(wx[wnd].bkg_color or 0)
  		clip()
    -- 3d
 	  draw_ground()
 	  zbuf_draw()
+  	draw_clouds()
 
     dispai()
     drawstatic()
@@ -1147,14 +1150,15 @@ function collect_drawables(model,m,pos,out)
 
 		-- draw line
 		if viz==true then
- 		local x0,y0,z0,w0=cam:project2d(a)
- 		local x1,y1,z1,w1=cam:project2d(b)
- 		-- is it a light line?
+   local x0,y0,z0,w0=cam:project2d(a)
+   local x1,y1,z1,w1=cam:project2d(b)
+   -- is it a light line?
    if e.n then
- 		 lightline(x0,y0,x1,y1,c,0,w0,t*e.n,w1,out)
- 		else
- 			line(x0,y0,x1,y1,c)
- 		end
+     local bloom=lerp(24,12,mid(-20*v_dot({cam.m[3],cam.m[7],cam.m[11]},v_up),0,1))
+     lightline(x0,y0,x1,y1,c,0,w0,t*e.n,w1,bloom,out)
+   else   
+     --line(x0,y0,x1,y1,c)
+   end
 		end
 	end
 end
@@ -1243,7 +1247,9 @@ function make_cam(x0,y0,focal)
 		track=function(self,pos,x,y,z)
 			self.pos=v_clone(pos)
       self.m=make_m_from_euler(x,y,z)
+      self.m_billboard=make_m_from_euler(x,0,z)
       m_inv(self.m)
+      m_inv(self.m_billboard)
 		end,
 		project=function(self,x,y,z)
 			-- world to view
@@ -1293,41 +1299,71 @@ for i=1,48 do
 	add(stars,v)
 end
 
-local sky_gradient={0xee,0x2e,0x11}
---local sky_gradient={0x55,0x55,0x55} --bad weather gradient wx[1] and wx[2]
-local sky_fillp={0xffff,0xffff,0xffff}
-function draw_ground(self)
+function draw_clouds()
+  local weather=wx[wnd]
+ local ceiling=weather.ceiling
+ -- clear sky?
+ if not ceiling then
+  -- stars
+ 	for _,v in pairs(stars) do
+			local x,y,z,w=cam:project(cam.pos[1]+v[1],cam.pos[2]+v[2],cam.pos[3]+v[3])
+			if(z>0) pset(x,y,v.c)
+		end
+		return
+ end
 
+ local cloudy=ceiling/120-cam.pos[2]
+ local zfar=2048
+ local cloudplane={
+			{zfar,cloudy,zfar},
+			{-zfar,cloudy,zfar},
+			{-zfar,cloudy,-zfar},
+			{zfar,cloudy,-zfar}}
+ for _,v in pairs(cloudplane) do
+    m_x_v(cam.m_billboard,v)  
+ end
+ -- 
+ local clipplanes={
+	  {0,0,-1},{0,0,0.25},
+		{0.707,0,-0.707},{0.25,0,0},
+		{-0.707,0,-0.707},{0,0,0},
+		{0,0.707,-0.707},{0,0,0},
+		{0,-0.707,-0.707},{0,0,0}}
+	for i=1,#clipplanes,2 do
+	 cloudplane=plane_poly_clip(clipplanes[i],clipplanes[i+1],cloudplane)		
+	end	
+ --fillp(dither_pat[flr((#dither_pat-1)*mid(abs(cloudy/12),0,1))+1]+0x.ff)
+ fillp(weather.cloud[3])
+ -- pick in/above color
+ project_poly(cloudplane,weather.cloud[cloudy>0 and 1 or 2])	
+ fillp() 
+end
+
+function draw_ground(self)
 	-- draw horizon
-	local zfar=-2048
-	local x,y=-zfar,zfar
+	local zfar=-(wx[wnd].horiz or 2048)
+	local x,y=-2048,2048
 	local farplane={
 			{x,y,zfar},
 			{x,-y,zfar},
 			{-x,-y,zfar},
 			{-x,y,zfar}}
-	-- ground normal in cam space
-	local n={0,1,0}
-	m_x_v(cam.m,n)
+	-- up in cam space
+	local n=m_up(cam.m)
 
-	for k=0,#sky_gradient-1 do
+ local sky_gradient,k=wx[wnd].sky_gradient,0
+	for i=1,#sky_gradient,2 do
 		-- ground location in cam space
 		local p={0,cam.pos[2]-48*k*k,0}
 		m_x_v(cam.m,p)
-
-		local sky=plane_poly_clip(n,p,farplane)
-		-- complete line?
-		fillp(sky_fillp[k+1])
+		local x,y,z,w=cam:project2d(p)
+		farplane=plane_poly_clip(n,p,farplane)
+		fillp(sky_gradient[i+1])
     -- display
-		project_poly(sky,sky_gradient[k+1])
+		project_poly(farplane,sky_gradient[i])
+    k+=1
 	end
  fillp()
-
- -- stars
-	for _,v in pairs(stars) do
-		local x,y,z,w=cam:project(cam.pos[1]+v[1],cam.pos[2]+v[2],cam.pos[3]+v[3])
-		if(z>0) pset(x,y,v.c)
-	end
 
 	local cy=cam.pos[2]
 
@@ -1342,11 +1378,10 @@ function draw_ground(self)
 			local jj=scale*j-dy+z0
 			local x,y,z,w=cam:project(ii,0,jj)
 			if z>0 then
-				pset(x,y,3)
+				pset(x,y,1)
 			end
- 	end
+ 	  end
 	end
-
 end
 
 function project_poly(p,c)
@@ -1362,8 +1397,11 @@ function project_poly(p,c)
 end
 
 -- draw a light line
-function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,out)
+function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,out)
 
+  -- get color ramp from weather
+  local ramp,light_dist=wx[wnd].light_ramp or 64,wx[wnd].light_dist or 2
+  
  local w,h=abs(x1-x0),abs(y1-y0)
  
  local prevu=-1
@@ -1379,17 +1417,19 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,out)
 		 local t=-y0/h
 		 -- todo: unroll lerp
 	  x0,y0,u0,w0=x0+w*t,0,lerp(u0,u1*w1,t),lerp(w0,w1,t)
+	  prevu=nil
   end
 	 
    for y=y0,min(y1,40) do
 		  local u=flr(u0/w0)
-    if prevu!=u then
-     pset(x0,y,sget(64+3*mid(w0/2,0,1),c))
-					-- avoid too many lights!
-					if w0>12 then     
-						add(out,{key=-w0,x=x0,y=y,c=c,kind=0})
-					end
-				end						
+    if prevu and prevu!=u then
+ 				local col=sget(ramp+3*mid(w0/light_dist,0,1),c)
+     if(col!=15) pset(x0,y,col)
+      -- avoid too many lights!
+      if bloom and w0>bloom then     
+        add(out,{key=-w0,x=x0,y=y,c=c,kind=0})
+      end
+     end						
      x0+=w/h
      u0+=du
      w0+=dw
@@ -1407,17 +1447,19 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,out)
 	    -- u is not linear
 	    -- u*w is
 	    x0,y0,u0,w0=0,y0+h*t,lerp(u0,u1*w1,t),lerp(w0,w1,t)
+	    prevu=nil
 	  end
  
  		
    for x=x0,min(x1,127) do	
 		  local u=flr(u0/w0)
-    if prevu!=u then
-     pset(x,y0,sget(64+3*mid(w0/2,0,1),c))
-					if w0>12 then     
-			   add(out,{key=-w0,x=x,y=y0,c=c,kind=0})
+      if prevu and prevu!=u then
+        local col=sget(ramp+3*mid(w0/light_dist,0,1),c)        
+        if(col!=15) pset(x,y0,col)
+	  	  if bloom and w0>bloom then     
+			    add(out,{key=-w0,x=x,y=y0,c=c,kind=0})
 			  end
-			 end
+			end
 		  y0+=h/w
 		  u0+=du
 		  w0+=dw
@@ -1596,19 +1638,19 @@ end
 -- do it
 unpack_models(m_scale)
 __gfx__
-00000000fff7777f49777777777777e25fffffff7fffffff77ff777fffffffff0000000000000000000000000000000000000000000000000000000000000000
-00000000ff7fffffffffffffffffffff55fffffff7f7ffff7f7f777ffffffeff0000000011c00000000100000000000000000000000000000000000000000000
-00000000f7ffffffff3b77777777d5ff555fffffff77ffff7f7f7f7feeeeeeef0000000022800000001200000000000000000000000000000000000000000000
-000000007fffffffffffffffffffffff55fffffff777fffffffffffffffffeff0000000053b00000005300000000000000000000000000000000000000000000
-00000000ffffffffffff1c7777c1ffff5fffffffffffffffffffffffffffffff0000000024900000002400000000000000000000000000000000000000000000
-00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000055600000001500000000000000000000000000000000000000000000
-00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff1556000056700000015600000000000000000000000000000000000000000000
-00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff5677000057700000056700000000000000000000000000000000000000000000
-0000000000000000ffffffff77777fffffbfffff00000000ff222fffffffffff1288000028700000002800000000000000000000000000000000000000000000
+00000000fff7777f49777777777777e25fffffff7fffffff77ff777fffffffff000000000000000000000000d5d5d5d500000000000000000000000000000000
+00000000ff7fffffffffffffffffffff55fffffff7f7ffff7f7f777ffffffeff0000000011c00000000100005d5d5d5d00000000000000000000000000000000
+00000000f7ffffffff3b77777777d5ff555fffffff77ffff7f7f7f7feeeeeeef0000000022800000001200001111111100000000000000000000000000000000
+000000007fffffffffffffffffffffff55fffffff777fffffffffffffffffeff0000000053b00000005300005555555500000000000000000000000000000000
+00000000ffffffffffff1c7777c1ffff5fffffffffffffffffffffffffffffff0000000024900000002400005151515100000000000000000000000000000000
+00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000055600000001500001515151500000000000000000000000000000000
+00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff1556f55656700000015600005151515100000000000000000000000000000000
+00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff5677567757700000056700001515151500000000000000000000000000000000
+0000000000000000ffffffff77777fffffbfffff00000000ff222fffffffffff1288f28828700000002800000000000000000000000000000000000000000000
 1d00000000000000fffffffff777fffffbffffff00000000f2e7e2ffff0fffff0000000029a00000014900000000000000000000000000000000000000000000
-2e00000000000000ffffffffff7fffffbbbbbbbb000000002ee7ee2ff00fffff29aa00004a700000049a00000000000000000000000000000000000000000000
-3b000000000000000ffffffffffffffffbffffff000000002ee7ee2f000fffff33bb00003b700000013b00000000000000000000000000000000000000000000
-450000000000000000ffffffffffffffffbfffff000000002ee7ee2ff00fffff011c00001c700000011c00000000000000000000000000000000000000000000
+2e00000000000000ffffffffff7fffffbbbbbbbb000000002ee7ee2ff00fffff29aaff9a4a700000049a00000000000000000000000000000000000000000000
+3b000000000000000ffffffffffffffffbffffff000000002ee7ee2f000fffff33bbffb33b700000013b00000000000000000000000000000000000000000000
+450000000000000000ffffffffffffffffbfffff000000002ee7ee2ff00fffff011cffc11c700000011c00000000000000000000000000000000000000000000
 5600000000000000000fffffffffffffffffffff00000000f2e7e2ffff0fffff000000005d600000015d00000000000000000000000000000000000000000000
 6d0000000000000000000fffffffffffffffffff00000000ff222fffffffffff000000002e800000012e00000000000000000000000000000000000000000000
 760000000000000000000000ffffffffffffffff00000000ffffffffffffffff000000005f70000001df00000000000000000000000000000000000000000000
