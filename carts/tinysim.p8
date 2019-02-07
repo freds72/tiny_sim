@@ -884,8 +884,8 @@ function _draw()
 	 elseif menu==3 then
 	   drawbriefing()
 	 else
-	 	cls(wx[wnd].bkg_color or 0)
- 		clip()
+	 	cls(0) --wx[wnd].bkg_color or 0)
+ 		clip(0,0,127,40)
    -- 3d
 	  draw_ground()
 	  zbuf_draw()
@@ -907,7 +907,7 @@ function _draw()
     dispflaps()
     dispwind()
 		 dispmessage()
-			
+		
     -- perf monitor!
     local cpu=flr(100*stat(1)).."%"
     print(cpu,2,3,2)
@@ -953,9 +953,6 @@ for c=0,15 do
  sset(74,0,sget(72,c))
 	light_shades[c]=unpack_ramp(74,0)
 end
-
--- 
-local dither_pat={0b1111111111111111,0b0111111111111111,0b0111111111011111,0b0101111111011111,0b0101111101011111,0b0101101101011111,0b0101101101011110,0b0101101001011110,0b0101101001011010,0b0001101001011010,0b0001101001001010,0b0000101001001010,0b0000101000001010,0b0000001000001010,0b0000001000001000,0b0000000000000000}
 
 -- zbuffer (kind of)
 local drawables={}
@@ -1150,12 +1147,13 @@ function collect_drawables(model,m,pos,out)
 
 		-- draw line
 		if viz==true then
-   local x0,y0,z0,w0=cam:project2d(a)
-   local x1,y1,z1,w1=cam:project2d(b)
+   local p0=cam:project2d(a)
+   local p1=cam:project2d(b)
    -- is it a light line?
    if e.n then
-     local bloom=lerp(24,12,mid(-20*v_dot({cam.m[3],cam.m[7],cam.m[11]},v_up),0,1))
-     lightline(x0,y0,x1,y1,c,0,w0,t*e.n,w1,bloom,out)
+     --local bloom=lerp(24,12,mid(-20*v_dot({cam.m[3],cam.m[7],cam.m[11]},v_up),0,1))
+     --lightline(x0,y0,x1,y1,c,0,w0,t*e.n,w1,bloom,out)
+     line(p0[1],p0[2],p1[1],p1[2],c)
    else   
      --line(x0,y0,x1,y1,c)
    end
@@ -1204,15 +1202,19 @@ function plane_poly_clip(n,p,v)
 		if d1>0 then
 			if d0<=0 then
 				local r=make_v(v0,v1)
-				v_scale(r,d0/(d0-d1))
+				local t=d0/(d0-d1)
+				v_scale(r,t)
 				v_add(r,v0)
+				if(v0[4]) r[4],r[5]=lerp(v0[4],v1[4],t),lerp(v0[5],v1[5],t)
 				add(res,r)
 			end
 			add(res,v1)
 		elseif d0>0 then
 			local r=make_v(v0,v1)
-			v_scale(r,d0/(d0-d1))
+			local t=d0/(d0-d1)
+			v_scale(r,t)
 			v_add(r,v0)
+			if(v0[4]) r[4],r[5]=lerp(v0[4],v1[4],t),lerp(v0[5],v1[5],t)
 			add(res,r)
 		end
 		v0,d0=v1,d1
@@ -1251,17 +1253,6 @@ function make_cam(x0,y0,focal)
       m_inv(self.m)
       m_inv(self.m_billboard)
 		end,
-		project=function(self,x,y,z)
-			-- world to view
-			x-=self.pos[1]
-			y-=self.pos[2]
-			z-=self.pos[3]
-			x,y,z=m_x_xyz(self.m,x,y,z)
-
-			-- view to screen
-	 	  local w=focal/z
- 		  return x0+x*w,y0-y*w,z,w
-    end,
     -- to camera space
     modelview=function(self,m,v)
       v=v_clone(v)
@@ -1276,7 +1267,7 @@ function make_cam(x0,y0,focal)
     project2d=function(self,v)
   	  -- view to screen
   	  local w=focal/v[3]
-  	  return x0+v[1]*w,y0-v[2]*w,v[3],w
+  	  return {x0+v[1]*w,y0-v[2]*w,w,v[4] and v[4]*w,v[5] and v[5]*w}
 		end,
 		-- draw the given vertices using function fn
 		-- performs cam space clipping
@@ -1289,6 +1280,7 @@ function make_cam(x0,y0,focal)
 	return c
 end
 
+--[[
 local stars={}
 for i=1,48 do
 	local v={rnd()-0.5,rnd(0.25),rnd()-0.5}
@@ -1298,33 +1290,35 @@ for i=1,48 do
 	v_scale(v,32)
 	add(stars,v)
 end
-
+]]
 function draw_clouds()
   local weather=wx[wnd]
  local ceiling=weather.ceiling
  -- clear sky?
  if not ceiling then
   -- stars
- 	for _,v in pairs(stars) do
+  --[[
+ 	  for _,v in pairs(stars) do
 			local x,y,z,w=cam:project(cam.pos[1]+v[1],cam.pos[2]+v[2],cam.pos[3]+v[3])
 			if(z>0) pset(x,y,v.c)
 		end
+    ]]
 		return
  end
 
  local cloudy=ceiling/120-cam.pos[2]
- local zfar=2048
+ local zfar=512
  local cloudplane={
-			{zfar,cloudy,zfar},
-			{-zfar,cloudy,zfar},
-			{-zfar,cloudy,-zfar},
-			{zfar,cloudy,-zfar}}
+			{zfar,cloudy,zfar,0,0},
+			{-zfar,cloudy,zfar,32*16,0},
+			{-zfar,cloudy,-zfar,32*16,32*16},
+			{zfar,cloudy,-zfar,0,32*16}}
  for _,v in pairs(cloudplane) do
-    m_x_v(cam.m_billboard,v)  
+    m_x_v(cam.m,v)  
  end
  -- 
  local clipplanes={
-	  {0,0,-1},{0,0,0.25},
+	  {0,0,-1},{0,0,1},
 		{0.707,0,-0.707},{0.25,0,0},
 		{-0.707,0,-0.707},{0,0,0},
 		{0,0.707,-0.707},{0,0,0},
@@ -1356,7 +1350,6 @@ function draw_ground(self)
 		-- ground location in cam space
 		local p={0,cam.pos[2]-48*k*k,0}
 		m_x_v(cam.m,p)
-		local x,y,z,w=cam:project2d(p)
 		farplane=plane_poly_clip(n,p,farplane)
 		fillp(sky_gradient[i+1])
     -- display
@@ -1364,7 +1357,7 @@ function draw_ground(self)
     k+=1
 	end
  fillp()
-
+ 
 	local cy=cam.pos[2]
 
 	local scale=4*max(flr(cy/32+0.5),1)
@@ -1376,22 +1369,25 @@ function draw_ground(self)
 		local ii=scale*i-dx+x0
 		for j=-4,4 do
 			local jj=scale*j-dy+z0
-			local x,y,z,w=cam:project(ii,0,jj)
-			if z>0 then
-				pset(x,y,1)
+			local v={ii,0,jj}
+			v_add(v,cam.pos,-1)
+   m_x_v(cam.m,v)
+			v=cam:project2d(v)
+			if v[3]>0 then
+				pset(v[1],v[2],1)
 			end
- 	  end
-	end
+ 	end
+	end 
 end
 
 function project_poly(p,c)
 	if #p>2 then
-		local x0,y0=cam:project2d(p[1])
-		local x1,y1=cam:project2d(p[2])
+		local p0=cam:project2d(p[1])
+		local p1=cam:project2d(p[2])
 		for i=3,#p do
-			local x2,y2=cam:project2d(p[i])
-			trifill(x0,y0,x1,y1,x2,y2,c)
-			x1,y1=x2,y2
+			local p2=cam:project2d(p[i])
+			trifill(p0[1],p0[2],p1[1],p1[2],p2[1],p2[2],c)
+			p1=p2
 		end
 	end
 end
@@ -1467,6 +1463,7 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,out)
 	  end
 	end
 end
+
 -->8
 -- trifill
 -- by @p01
@@ -1637,6 +1634,71 @@ function unpack_models(scale)
 end
 -- do it
 unpack_models(m_scale)
+
+-->8
+-- tritex
+function trapezefill(l,dl,r,dr,start,finish)
+	local l,dl={
+		l[1],l[3],l[4],l[5],
+		r[1],r[3],r[4],r[5]},{
+		dl[1],dl[3],dl[4],dl[5],
+		dr[1],dr[3],dr[4],dr[5]}
+	local dt=1/(finish-start)
+	for k,v in pairs(dl) do
+		dl[k]=(v-l[k])*dt
+	end
+
+	-- cliping
+	if start<0 then
+		for k,v in pairs(dl) do
+			l[k]-=start*v
+		end
+		start=0
+	end
+
+	-- rasterization
+	for j=start,min(finish,40) do
+		--rectfill(l[1],j,r[1],j,11)
+		local len=l[5]-l[1]
+		if len>0 then
+			local w0,u0,v0=l[2],l[3],l[4]
+			local dw,du,dv=(l[6]-w0)/len,(l[7]-u0)/len,(l[8]-v0)/len						
+			for i=l[1],l[5] do
+				local c=sget(96+(u0/w0)%32,(v0/w0)%32)
+				if(c!=11) pset(i,j,c)
+				u0+=du
+				v0+=dv
+				w0+=dw
+			end
+  end 
+		for k,v in pairs(dl) do
+			l[k]+=v
+		end
+	end
+end
+function tritex(v0,v1,v2)
+	local x0,x1,x2=v0[1],v1[1],v2[1]
+	local y0,y1,y2=v0[2],v1[2],v2[2]
+if(y1<y0)v0,v1,x0,x1,y0,y1=v1,v0,x1,x0,y1,y0
+if(y2<y0)v0,v2,x0,x2,y0,y2=v2,v0,x2,x0,y2,y0
+if(y2<y1)v1,v2,x1,x2,y1,y2=v2,v1,x2,x1,y2,y1
+
+	-- mid point
+	local v02,mt={},1/(y2-y0)*(y1-y0)
+	for k,v in pairs(v0) do
+		v02[k]=v+(v2[k]-v)*mt
+	end
+	if(x1>v02[1])v1,v02=v02,v1
+
+	-- upper trapeze
+	-- x u v
+	trapezefill(v0,v1,v0,v02,y0,y1)
+	-- lower trapeze
+	trapezefill(v1,v2,v02,v2,y1,y2)
+
+end
+
+
 __gfx__
 00000000fff7777f49777777777777e25fffffff7fffffff77ff777fffffffff000000000000000000000000d5d5d5d500000000000000000000000000000000
 00000000ff7fffffffffffffffffffff55fffffff7f7ffff7f7f777ffffffeff0000000011c00000000100005d5d5d5d00000000000000000000000000000000
