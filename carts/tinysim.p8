@@ -17,8 +17,8 @@ local scenarios={
 --weather (name,wind,ceiling,bg color,sky gradient,light_ramp x offset, inverse light distance)
 local wx={
 	{name="clear, calm",dir={0,0},sky_gradient={0xee,0xffff,0x2e,0xffff,0x11,0xffff}},
-  {name="clouds, breezy",dir={60,10},ceiling=500,horiz=48,bkg_color=0,sky_gradient={0x66,0xa5a5,0x65,0xa5a5,0x55,0xa5a5},cloud={0x61,0x6d,0b0100111001000000.1},light_ramp=68,light_dist=12},
-  {name="low clouds, stormy",dir={10,30},ceiling=200,horiz=32,bkg_color=0,sky_gradient={0x51,0x5a5a,0x50,0x5a5a},cloud={0xd5,0x15,0xa5a5},light_ramp=68,light_dist=8}}
+  {name="clouds, breezy",dir={60,10},ceiling=500,bkg_color=0,sky_gradient={0x55,0xa5a5,0x51,0x5a5a,0x5d,0xa5a5},light_ramp=68,light_dist=12},
+  {name="low clouds, stormy",dir={10,30},ceiling=200,bkg_color=5,sky_gradient={0x66,0xa5a5,0x65,0xa5a5,0x55,0xa5a5},light_ramp=68,light_dist=8}}
 
 --airport and navaid database (rwy hdg < 180)
 local db={
@@ -1300,8 +1300,7 @@ for i=1,48 do
 end
 
 function draw_clouds()
-  local weather=wx[wnd]
- local ceiling=weather.ceiling
+ local ceiling=wx[wnd].ceiling
  -- clear sky?
  if not ceiling then
   -- stars
@@ -1333,16 +1332,15 @@ function draw_clouds()
 	 cloudplane=plane_poly_clip(clipplanes[i],clipplanes[i+1],cloudplane)		
 	end	
  --fillp(dither_pat[flr((#dither_pat-1)*mid(abs(cloudy/12),0,1))+1]+0x.ff)
- fillp(weather.cloud[3])
- -- pick in/above color
- project_poly(cloudplane,weather.cloud[cloudy>0 and 1 or 2])	
+ fillp(0xa5a5)
+ project_poly(cloudplane,cloudy>0 and 0x15 or 0x50)	
  fillp() 
 end
 
 function draw_ground(self)
 	-- draw horizon
-	local zfar=-(wx[wnd].horiz or 2048)
-	local x,y=-2048,2048
+	local zfar=-2048
+	local x,y=-zfar,zfar
 	local farplane={
 			{x,y,zfar},
 			{x,-y,zfar},
@@ -1423,8 +1421,7 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,out)
    for y=y0,min(y1,40) do
 		  local u=flr(u0/w0)
     if prevu and prevu!=u then
- 				local col=sget(ramp+3*mid(w0/light_dist,0,1),c)
-     if(col!=15) pset(x0,y,col)
+     pset(x0,y,sget(ramp+3*mid(w0/light_dist,0,1),c))
       -- avoid too many lights!
       if bloom and w0>bloom then     
         add(out,{key=-w0,x=x0,y=y,c=c,kind=0})
@@ -1454,8 +1451,7 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,out)
    for x=x0,min(x1,127) do	
 		  local u=flr(u0/w0)
       if prevu and prevu!=u then
-        local col=sget(ramp+3*mid(w0/light_dist,0,1),c)        
-        if(col!=15) pset(x,y0,col)
+        pset(x,y0,sget(ramp+3*mid(w0/light_dist,0,1),c))
 	  	  if bloom and w0>bloom then     
 			    add(out,{key=-w0,x=x,y=y0,c=c,kind=0})
 			  end
@@ -1644,13 +1640,13 @@ __gfx__
 000000007fffffffffffffffffffffff55fffffff777fffffffffffffffffeff0000000053b00000005300005555555500000000000000000000000000000000
 00000000ffffffffffff1c7777c1ffff5fffffffffffffffffffffffffffffff0000000024900000002400005151515100000000000000000000000000000000
 00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000055600000001500001515151500000000000000000000000000000000
-00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff1556f55656700000015600005151515100000000000000000000000000000000
+00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff1556005656700000015600005151515100000000000000000000000000000000
 00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff5677567757700000056700001515151500000000000000000000000000000000
-0000000000000000ffffffff77777fffffbfffff00000000ff222fffffffffff1288f28828700000002800000000000000000000000000000000000000000000
+0000000000000000ffffffff77777fffffbfffff00000000ff222fffffffffff1288528828700000002800000000000000000000000000000000000000000000
 1d00000000000000fffffffff777fffffbffffff00000000f2e7e2ffff0fffff0000000029a00000014900000000000000000000000000000000000000000000
-2e00000000000000ffffffffff7fffffbbbbbbbb000000002ee7ee2ff00fffff29aaff9a4a700000049a00000000000000000000000000000000000000000000
-3b000000000000000ffffffffffffffffbffffff000000002ee7ee2f000fffff33bbffb33b700000013b00000000000000000000000000000000000000000000
-450000000000000000ffffffffffffffffbfffff000000002ee7ee2ff00fffff011cffc11c700000011c00000000000000000000000000000000000000000000
+2e00000000000000ffffffffff7fffffbbbbbbbb000000002ee7ee2ff00fffff29aa009a4a700000049a00000000000000000000000000000000000000000000
+3b000000000000000ffffffffffffffffbffffff000000002ee7ee2f000fffff33bb005b3b700000013b00000000000000000000000000000000000000000000
+450000000000000000ffffffffffffffffbfffff000000002ee7ee2ff00fffff011c005c1c700000011c00000000000000000000000000000000000000000000
 5600000000000000000fffffffffffffffffffff00000000f2e7e2ffff0fffff000000005d600000015d00000000000000000000000000000000000000000000
 6d0000000000000000000fffffffffffffffffff00000000ff222fffffffffff000000002e800000012e00000000000000000000000000000000000000000000
 760000000000000000000000ffffffffffffffff00000000ffffffffffffffff000000005f70000001df00000000000000000000000000000000000000000000
