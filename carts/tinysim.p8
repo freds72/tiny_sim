@@ -1,23 +1,24 @@
 pico-8 cartridge // http://www.pico-8.com
 version 16
 __lua__
---tiny sim 0.60
---@yellowbaron, 3d engine @freds72
+-- tiny sim 0.60
+-- @yellowbaron, 3d engine @freds72
+-- 3d math portions from threejs
 
 --scenarios (name,lat,lon,hdg,alt,pitch,bank,throttle,tas,gps dto,nav1,nav2)
 local scenarios={
-	{"visual approach",-417,326.3,85,600,-1,0,25,112,3,2,1},
- {"final approach",-408.89,230.77,85,1000,1,0,75,112,3,2,1},
- {"full approach",-222.22,461.54,313,3000,0,0,91,112,3,2,1},
+  {"visual approach",-417,326.3,85,600,-1,0,25,112,3,2,1},
+  {"final approach",-408.89,230.77,85,1000,1,0,75,112,3,2,1},
+  {"full approach",-222.22,461.54,313,3000,0,0,91,112,3,2,1},
 	{"engine failure!",-422.2,408,85,500,10,0,0,65,4,2,5},
- {"unusual attitude",-222.22,461.54,330,450,99,99,100,112,3,2,1},
+  {"unusual attitude",-222.22,461.54,330,450,99,99,100,112,3,2,1},
 	{"free flight",-421,370,85,0,0,0,0,0,3,2,1}}
 
---weather (name,wind,ceiling)
+--weather (name,wind,ceiling,bg color,sky gradient,light_ramp x offset, inverse light distance)
 local wx={
-	{"clear, calm",{0,0},20000},
- {"clouds, breezy",{60,10},500},
- {"low clouds, stormy",{10,30},200}}
+	{name="clear, calm",dir={0,0},sky_gradient={0xee,0xffff,0x2e,0xffff,0x11,0xffff}},
+  {name="clouds, breezy",dir={60,10},ceiling=500,horiz=48,sky_gradient={0x66,0xa5a5,0x65,0xa5a5,0x55,0xa5a5},cloud={0x61,0x6d,0b0100111001000000.1},light_ramp=68,light_dist=12},
+  {name="low clouds, stormy",dir={10,30},ceiling=200,horiz=32,sky_gradient={0x51,0x5a5a,0x50,0x5a5a},cloud={0xd5,0x15,0xa5a5},light_ramp=68,light_dist=8}}
 
 --airport and navaid database (rwy hdg < 180)
 local db={
@@ -31,6 +32,9 @@ local db={
 palt(15,true)
 palt(0,false)
 local frame,frame2=0,0
+
+-- scenario + weather selection
+local scen,wnd=1,1
 
 -- plane pos/orientation
 local lat,lon,heading,pitch,bank
@@ -127,8 +131,6 @@ function scenario(s)
 		dto=s[10]
   nav1=s[11]
   nav2=s[12]
-  wind=wx[wnd][2]
-  ceiling=wx[wnd][3]
   if(pitch==99) bank,pitch=unusual()
 end
 
@@ -576,6 +578,7 @@ function dispflaps()
 end
 
 function calcwind()
+  local wind=wx[wnd].dir
   relwind=heading-wind[1]
   relwind=(relwind+180)%360-180
   relh=-wind[2]*cos(relwind/360)
@@ -615,7 +618,7 @@ function drawmenu()
   print("flight:",8,37,item==0 and c or 7)
   print(scenarios[scen][1],44,37,7)
  	print("weather:",8,47,item==1 and c or 7)
-  print(wx[wnd][1],44,47,7)
+  print(wx[wnd].name,44,47,7)
   print("press ❎ for briefing",8,57,7)
   print("x/z: throttle",8,80,6)
   print("q: toggle flaps",8,87,6)
@@ -858,14 +861,8 @@ function _update()
    --3d
   	zbuf_clear()
 
-   local q=make_q(v_right,-pitch/360)
-	  q_x_q(q,make_q(v_fwd,-bank/360))
-	  local q2=make_q(v_up,heading/360-0.25)
-	  q_x_q(q2,q)
-	  -- avoid matrix skew
-	  q_normz(q2)
 	  -- update cam
-	  cam:track({lat,(alt+4.4)/120,lon},q2) --correction for height of pilot in airplane
+	  cam:track({lat,(alt+4.4)/120,lon},-pitch/360,heading/360-0.25,-bank/360) --correction for height of pilot in airplane
 
 	  zbuf_filter(actors)
 
@@ -887,11 +884,12 @@ function _draw()
 	 elseif menu==3 then
 	   drawbriefing()
 	 else
-	 	cls()
- 		clip()
+	 	cls(0)
+ 		clip(0,0,127,40)
    -- 3d
 	  draw_ground()
 	  zbuf_draw()
+  	draw_clouds()
 
     dispai()
     drawstatic()
@@ -909,7 +907,7 @@ function _draw()
     dispflaps()
     dispwind()
 		 dispmessage()
-			
+		
     -- perf monitor!
     local cpu=flr(100*stat(1)).."%"
     print(cpu,2,3,2)
@@ -964,19 +962,18 @@ end
 function zbuf_draw()
 	local objs={}
 	for _,d in pairs(drawables) do
-		-- cull objects too far
-		-- todo: fix sqr_dist
-  if sqr_dist(cam.pos,d.pos)<6000 then		
-		 collect_drawables(d.model,d.m,objs)		
-  end
+    -- todo: cull objects too far
+		collect_drawables(d.model,d.m,d.pos,objs)		
 	end
 	-- z-sorting
 	sort(objs)
 	-- actual draw
 	for i=1,#objs do
 		local d=objs[i]
-		local r=min(3,-24/d.key)
-		if(r>1) circfillt(d.x,d.y,r,light_shades[d.c])
+		if d.kind==0 then
+			local r=min(3,-24/d.key)
+			if(r>1) circfillt(d.x,d.y,r,light_shades[d.c])		
+		end
 	end
 end
 
@@ -1067,52 +1064,19 @@ function m_inv_x_v(m,v)
 	v[1],v[2],v[3]=m[1]*x+m[2]*y+m[3]*z,m[5]*x+m[6]*y+m[7]*z,m[9]*x+m[10]*y+m[11]*z
 end
 
--- quaternion
-function make_q(v,angle)
-	angle/=2
-	-- fix pico sin
-	local s=-sin(angle)
-	return {v[1]*s,
-	        v[2]*s,
-	        v[3]*s,
-	        cos(angle)}
-end
-function q_clone(q)
-	return {q[1],q[2],q[3],q[4]}
-end
-function q_normz(q)
-	local d=v_dot(q,q)+q[4]*q[4]
-	if d>0 then
-		d=sqrt(d)
-		q[1]/=d
-		q[2]/=d
-		q[3]/=d
-		q[4]/=d
-	end
-end
+function make_m_from_euler(x,y,z)
+		local a,b = cos(x),-sin(x)
+		local c,d = cos(y),-sin(y)
+		local e,f = cos(z),-sin(z)
+    local ac,ad,bc,bd = a * c, a * d, b * c, b * d
 
-function q_x_q(a,b)
-	local qax,qay,qaz,qaw=a[1],a[2],a[3],a[4]
-	local qbx,qby,qbz,qbw=b[1],b[2],b[3],b[4]
-
-	a[1]=qax*qbw+qaw*qbx+qay*qbz-qaz*qby
-	a[2]=qay*qbw+qaw*qby+qaz*qbx-qax*qbz
-	a[3]=qaz*qbw+qaw*qbz+qax*qby-qay*qbx
-	a[4]=qaw*qbw-qax*qbx-qay*qby-qaz*qbz
-end
-function m_from_q(q)
-	local x,y,z,w=q[1],q[2],q[3],q[4]
-	local x2,y2,z2=x+x,y+y,z+z
-	local xx,xy,xz=x*x2,x*y2,x*z2
-	local yy,yz,zz=y*y2,y*z2,z*z2
-	local wx,wy,wz=w*x2,w*y2,w*z2
-
-	return {
-		1-(yy+zz),xy+wz,xz-wy,0,
-		xy-wz,1-(xx+zz),yz+wx,0,
-		xz+wy,yz-wx,1-(xx+yy),0,
-		0,0,0,1
-	}
+    -- yzx order
+    return {
+      c * e, f, -d * e,0,
+      bd - ac * f, a * e, ad * f + bc,0,
+      bc * f + ad, -b * e, ac - bd * f,0,
+      0,0,0,1
+    }
 end
 
 -- only invert 3x3 part
@@ -1138,9 +1102,10 @@ function m_right(m)
 end
 
 local znear,zdir=1,-1
-function collect_drawables(model,m,out)
-  -- project point cache
+function collect_drawables(model,m,pos,out)
+  -- vertex cache
   local p={}
+   
  -- edges
  for i=1,#model.e do
 		local e=model.e[i]
@@ -1182,14 +1147,16 @@ function collect_drawables(model,m,out)
 
 		-- draw line
 		if viz==true then
- 		local x0,y0,z0,w0=cam:project2d(a)
- 		local x1,y1,z1,w1=cam:project2d(b)
- 		-- is it a light line?
+   local p0=cam:project2d(a)
+   local p1=cam:project2d(b)
+   -- is it a light line?
    if e.n then
- 		 lightline(x0,y0,x1,y1,c,0,w0,t*e.n,w1,out)
- 		else
- 			line(x0,y0,x1,y1,c)
- 		end
+     --local bloom=lerp(24,12,mid(-20*v_dot({cam.m[3],cam.m[7],cam.m[11]},v_up),0,1))
+     --lightline(x0,y0,x1,y1,c,0,w0,t*e.n,w1,bloom,out)
+     line(p0[1],p0[2],p1[1],p1[2],c)
+   else   
+     --line(x0,y0,x1,y1,c)
+   end
 		end
 	end
 end
@@ -1235,15 +1202,19 @@ function plane_poly_clip(n,p,v)
 		if d1>0 then
 			if d0<=0 then
 				local r=make_v(v0,v1)
-				v_scale(r,d0/(d0-d1))
+				local t=d0/(d0-d1)
+				v_scale(r,t)
 				v_add(r,v0)
+				if(v0[4]) r[4],r[5]=lerp(v0[4],v1[4],t),lerp(v0[5],v1[5],t)
 				add(res,r)
 			end
 			add(res,v1)
 		elseif d0>0 then
 			local r=make_v(v0,v1)
-			v_scale(r,d0/(d0-d1))
+			local t=d0/(d0-d1)
+			v_scale(r,t)
 			v_add(r,v0)
+			if(v0[4]) r[4],r[5]=lerp(v0[4],v1[4],t),lerp(v0[5],v1[5],t)
 			add(res,r)
 		end
 		v0,d0=v1,d1
@@ -1257,41 +1228,31 @@ function make_actor(model,p,angle)
 	local a={
 		pos=v_clone(p),
 		-- north is up
-		q=make_q(v_up,angle-0.25)
+		m=make_m_from_euler(0,angle-0.25,0)
   }
+
   a.model=all_models[model]
 	a.update=a.update or nop
-	-- init orientation
-	local m=m_from_q(a.q)
-	m_set_pos(m,p)
-	a.m=m
+	-- init position
+  m_set_pos(a.m,p)
 	return a
 end
 
 function make_cam(x0,y0,focal)
+	-- clip planes
+ local znear=0.25
+	
 	local c={
 		pos={0,0,3},
-		q=make_q(v_up,0),
 		update=function(self)
-      -- keep world orientation in mw
-			self.mw,self.m=m_from_q(self.q),m_from_q(self.q)
-			m_inv(self.m)
 		end,
-		track=function(self,pos,q)
-			self.pos,q=v_clone(pos),q_clone(q)
-			self.q=q
+		track=function(self,pos,x,y,z)
+			self.pos=v_clone(pos)
+      self.m=make_m_from_euler(x,y,z)
+      self.m_billboard=make_m_from_euler(x,0,z)
+      m_inv(self.m)
+      m_inv(self.m_billboard)
 		end,
-		project=function(self,x,y,z)
-			-- world to view
-			x-=self.pos[1]
-			y-=self.pos[2]
-			z-=self.pos[3]
-			x,y,z=m_x_xyz(self.m,x,y,z)
-
-			-- view to screen
-	 	  local w=focal/z
- 		  return x0+x*w,y0-y*w,z,w
-    end,
     -- to camera space
     modelview=function(self,m,v)
       v=v_clone(v)
@@ -1306,56 +1267,97 @@ function make_cam(x0,y0,focal)
     project2d=function(self,v)
   	  -- view to screen
   	  local w=focal/v[3]
-  	  return x0+v[1]*w,y0-v[2]*w,v[3],w
+  	  return {x0+v[1]*w,y0-v[2]*w,w,v[4] and v[4]*w,v[5] and v[5]*w}
+		end,
+		-- draw the given vertices using function fn
+		-- performs cam space clipping
+		draw=function(self,fn,v,c)
+ 		-- clip loop
+		 v=plane_poly_clip({0,0,-1},{0,0,znear},v)
+			fn(v,c)
 		end
 	}
 	return c
 end
 
+--[[
 local stars={}
 for i=1,48 do
-	local v={rnd()-0.5,rnd(0.5),rnd()-0.5}
+	local v={rnd()-0.5,rnd(0.25),rnd()-0.5}
 	v_normz(v)
+  -- shade star according to height
+  v.c=sget(4*min(v[2]*3,1),24)
 	v_scale(v,32)
 	add(stars,v)
 end
+]]
+function draw_clouds()
+  local weather=wx[wnd]
+ local ceiling=weather.ceiling
+ -- clear sky?
+ if not ceiling then
+  -- stars
+  --[[
+ 	  for _,v in pairs(stars) do
+			local x,y,z,w=cam:project(cam.pos[1]+v[1],cam.pos[2]+v[2],cam.pos[3]+v[3])
+			if(z>0) pset(x,y,v.c)
+		end
+    ]]
+		return
+ end
 
-local sky_gradient={0xee,0x2e,0x11}
---local sky_gradient={0x55,0x55,0x55} --bad weather gradient wx[1] and wx[2]
-local sky_fillp={0xffff,0xffff,0xffff}
+ local cloudy=ceiling/120-cam.pos[2]
+ local zfar=512
+ local cloudplane={
+			{zfar,cloudy,zfar,0,0},
+			{-zfar,cloudy,zfar,32*16,0},
+			{-zfar,cloudy,-zfar,32*16,32*16},
+			{zfar,cloudy,-zfar,0,32*16}}
+ for _,v in pairs(cloudplane) do
+    m_x_v(cam.m,v)  
+ end
+ -- 
+ local clipplanes={
+	  {0,0,-1},{0,0,1},
+		{0.707,0,-0.707},{0.25,0,0},
+		{-0.707,0,-0.707},{0,0,0},
+		{0,0.707,-0.707},{0,0,0},
+		{0,-0.707,-0.707},{0,0,0}}
+	for i=1,#clipplanes,2 do
+	 cloudplane=plane_poly_clip(clipplanes[i],clipplanes[i+1],cloudplane)		
+	end	
+ --fillp(dither_pat[flr((#dither_pat-1)*mid(abs(cloudy/12),0,1))+1]+0x.ff)
+ fillp(weather.cloud[3])
+ -- pick in/above color
+ project_poly(cloudplane,weather.cloud[cloudy>0 and 1 or 2])	
+ fillp() 
+end
+
 function draw_ground(self)
-
 	-- draw horizon
-	local zfar=-2048
-	local x,y=-zfar,zfar
+	local zfar=-(wx[wnd].horiz or 2048)
+	local x,y=-2048,2048
 	local farplane={
 			{x,y,zfar},
 			{x,-y,zfar},
 			{-x,-y,zfar},
 			{-x,y,zfar}}
-	-- ground normal in cam space
-	local n={0,1,0}
-	m_x_v(cam.m,n)
+	-- up in cam space
+	local n=m_up(cam.m)
 
-	for k=0,#sky_gradient-1 do
+ local sky_gradient,k=wx[wnd].sky_gradient,0
+	for i=1,#sky_gradient,2 do
 		-- ground location in cam space
 		local p={0,cam.pos[2]-48*k*k,0}
 		m_x_v(cam.m,p)
-
-		local v0=farplane[#farplane]
-		local sky=plane_poly_clip(n,p,farplane)
-		-- complete line?
-		fillp(sky_fillp[k+1])
-		polyfill(sky,sky_gradient[k+1])
+		farplane=plane_poly_clip(n,p,farplane)
+		fillp(sky_gradient[i+1])
+    -- display
+		project_poly(farplane,sky_gradient[i])
+    k+=1
 	end
  fillp()
-
- -- stars
-	for _,v in pairs(stars) do
-		local x,y,z,w=cam:project(cam.pos[1]+v[1],cam.pos[2]+v[2],cam.pos[3]+v[3])
-		if(z>0) pset(x,y,7)
-	end
-
+ 
 	local cy=cam.pos[2]
 
 	local scale=4*max(flr(cy/32+0.5),1)
@@ -1367,17 +1369,35 @@ function draw_ground(self)
 		local ii=scale*i-dx+x0
 		for j=-4,4 do
 			local jj=scale*j-dy+z0
-			local x,y,z,w=cam:project(ii,0,jj)
-			if z>0 then
-				pset(x,y,3)
+			local v={ii,0,jj}
+			v_add(v,cam.pos,-1)
+   m_x_v(cam.m,v)
+			v=cam:project2d(v)
+			if v[3]>0 then
+				pset(v[1],v[2],1)
 			end
- 		end
+ 	end
+	end 
+end
+
+function project_poly(p,c)
+	if #p>2 then
+		local p0=cam:project2d(p[1])
+		local p1=cam:project2d(p[2])
+		for i=3,#p do
+			local p2=cam:project2d(p[i])
+			trifill(p0[1],p0[2],p1[1],p1[2],p2[1],p2[2],c)
+			p1=p2
+		end
 	end
 end
 
 -- draw a light line
-function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,out)
+function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,out)
 
+  -- get color ramp from weather
+  local ramp,light_dist=wx[wnd].light_ramp or 64,wx[wnd].light_dist or 2
+  
  local w,h=abs(x1-x0),abs(y1-y0)
  
  local prevu=-1
@@ -1393,17 +1413,19 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,out)
 		 local t=-y0/h
 		 -- todo: unroll lerp
 	  x0,y0,u0,w0=x0+w*t,0,lerp(u0,u1*w1,t),lerp(w0,w1,t)
+	  prevu=nil
   end
 	 
    for y=y0,min(y1,40) do
 		  local u=flr(u0/w0)
-    if prevu!=u then
-     pset(x0,y,sget(64+3*mid(w0/16,0,1),c))
-					-- avoid too many lights!
-					if w0>12 then     
-						add(out,{key=-w0,x=x0,y=y,c=c})
-					end
-				end						
+    if prevu and prevu!=u then
+ 				local col=sget(ramp+3*mid(w0/light_dist,0,1),c)
+     if(col!=15) pset(x0,y,col)
+      -- avoid too many lights!
+      if bloom and w0>bloom then     
+        add(out,{key=-w0,x=x0,y=y,c=c,kind=0})
+      end
+     end						
      x0+=w/h
      u0+=du
      w0+=dw
@@ -1421,17 +1443,19 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,out)
 	    -- u is not linear
 	    -- u*w is
 	    x0,y0,u0,w0=0,y0+h*t,lerp(u0,u1*w1,t),lerp(w0,w1,t)
+	    prevu=nil
 	  end
  
  		
    for x=x0,min(x1,127) do	
 		  local u=flr(u0/w0)
-    if prevu!=u then
-     pset(x,y0,sget(64+3*mid(w0/16,0,1),c))
-					if w0>12 then     
-			   add(out,{key=-w0,x=x,y=y0,c=c})
+      if prevu and prevu!=u then
+        local col=sget(ramp+3*mid(w0/light_dist,0,1),c)        
+        if(col!=15) pset(x,y0,col)
+	  	  if bloom and w0>bloom then     
+			    add(out,{key=-w0,x=x,y=y0,c=c,kind=0})
 			  end
-			 end
+			end
 		  y0+=h/w
 		  u0+=du
 		  w0+=dw
@@ -1439,6 +1463,7 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,out)
 	  end
 	end
 end
+
 -->8
 -- trifill
 -- by @p01
@@ -1480,24 +1505,10 @@ function trifill(x0,y0,x1,y1,x2,y2,col)
  end
 end
 
-function polyfill(p,c)
-	if #p>2 then
-		local x0,y0=cam:project2d(p[1])
-		local x1,y1=cam:project2d(p[2])
-		for i=3,#p do
-			local x2,y2=cam:project2d(p[i])
-			trifill(x0,y0,x1,y1,x2,y2,c)
-			x1,y1=x2,y2
-		end
-	end
-end
-
 -->8
 -- transparent drawing functions
 
 -- init transparent colors
-
--- hardcoded colors
 local shades=unpack_ramp(1,8)
 
 function rectfillt(x0,y0,x1,y1)
@@ -1600,30 +1611,6 @@ function unpack_models(scale)
 			add(model.v,{unpack_double(scale),unpack_double(scale),unpack_double(scale)})
 		end
 		
-		-- faces
-		model.f={}
-		for i=1,unpack_int() do
-			local f={ni=i,vi={},c=unpack_int(),double_sided=unpack_int()==1 or nil,z=unpack_double()}
-			-- vertex indices
-			for i=1,unpack_int() do
-				add(f.vi,unpack_int())
-			end
-			add(model.f,f)
-		end
- 
-		-- normals
-		model.n={}
-		for i=1,unpack_int() do
-			add(model.n,{unpack_float(),unpack_float(),unpack_float()})			
-		end
-		
-		-- n.p cache	
-		model.cp={}
-		for i=1,#model.f do
-			local f=model.f[i]
-			add(model.cp,v_dot(model.n[i],model.v[f.vi[1]]))
-		end	
-    	
 		-- edges
 		model.e={}
 		for i=1,unpack_int() do
@@ -1647,23 +1634,24 @@ function unpack_models(scale)
 end
 -- do it
 unpack_models(m_scale)
+
 __gfx__
-00000000fff7777f49777777777777e25fffffff7fffffff77ff777fffffffff0000000000000000000000000000000000000000000000000000000000000000
-00000000ff7fffffffffffffffffffff55fffffff7f7ffff7f7f777ffffffeff0000000011c00000000000000000000000000000000000000000000000000000
-00000000f7ffffffff3b77777777d5ff555fffffff77ffff7f7f7f7feeeeeeef0000000022800000000000000000000000000000000000000000000000000000
-000000007fffffffffffffffffffffff55fffffff777fffffffffffffffffeff0000000053b00000000000000000000000000000000000000000000000000000
-00000000ffffffffffff1c7777c1ffff5fffffffffffffffffffffffffffffff0000000024900000000000000000000000000000000000000000000000000000
-00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000055600000000000000000000000000000000000000000000000000000
-00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff1556000056700000000000000000000000000000000000000000000000000000
-00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff5677000057700000000000000000000000000000000000000000000000000000
-0000000000000000ffffffff77777fffffbfffff00000000ff222fffffffffff1288000028700000000000000000000000000000000000000000000000000000
-1d00000000000000fffffffff777fffffbffffff00000000f2e7e2ffff0fffff0000000029a00000000000000000000000000000000000000000000000000000
-2e00000000000000ffffffffff7fffffbbbbbbbb000000002ee7ee2ff00fffff29aa00004a700000000000000000000000000000000000000000000000000000
-3b000000000000000ffffffffffffffffbffffff000000002ee7ee2f000fffff33bb00003b700000000000000000000000000000000000000000000000000000
-450000000000000000ffffffffffffffffbfffff000000002ee7ee2ff00fffff011c00001c700000000000000000000000000000000000000000000000000000
-5600000000000000000fffffffffffffffffffff00000000f2e7e2ffff0fffff000000005d600000000000000000000000000000000000000000000000000000
-6d0000000000000000000fffffffffffffffffff00000000ff222fffffffffff000000002e800000000000000000000000000000000000000000000000000000
-760000000000000000000000ffffffffffffffff00000000ffffffffffffffff000000005f700000000000000000000000000000000000000000000000000000
+00000000fff7777f49777777777777e25fffffff7fffffff77ff777fffffffff000000000000000000000000d5d5d5d500000000000000000000000000000000
+00000000ff7fffffffffffffffffffff55fffffff7f7ffff7f7f777ffffffeff0000000011c00000000100005d5d5d5d00000000000000000000000000000000
+00000000f7ffffffff3b77777777d5ff555fffffff77ffff7f7f7f7feeeeeeef0000000022800000001200001111111100000000000000000000000000000000
+000000007fffffffffffffffffffffff55fffffff777fffffffffffffffffeff0000000053b00000005300005555555500000000000000000000000000000000
+00000000ffffffffffff1c7777c1ffff5fffffffffffffffffffffffffffffff0000000024900000002400005151515100000000000000000000000000000000
+00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000055600000001500001515151500000000000000000000000000000000
+00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff1556f55656700000015600005151515100000000000000000000000000000000
+00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff5677567757700000056700001515151500000000000000000000000000000000
+0000000000000000ffffffff77777fffffbfffff00000000ff222fffffffffff1288f28828700000002800000000000000000000000000000000000000000000
+1d00000000000000fffffffff777fffffbffffff00000000f2e7e2ffff0fffff0000000029a00000014900000000000000000000000000000000000000000000
+2e00000000000000ffffffffff7fffffbbbbbbbb000000002ee7ee2ff00fffff29aaff9a4a700000049a00000000000000000000000000000000000000000000
+3b000000000000000ffffffffffffffffbffffff000000002ee7ee2f000fffff33bbffb33b700000013b00000000000000000000000000000000000000000000
+450000000000000000ffffffffffffffffbfffff000000002ee7ee2ff00fffff011cffc11c700000011c00000000000000000000000000000000000000000000
+5600000000000000000fffffffffffffffffffff00000000f2e7e2ffff0fffff000000005d600000015d00000000000000000000000000000000000000000000
+6d0000000000000000000fffffffffffffffffff00000000ff222fffffffffff000000002e800000012e00000000000000000000000000000000000000000000
+760000000000000000000000ffffffffffffffff00000000ffffffffffffffff000000005f70000001df00000000000000000000000000000000000000000000
 8e000000ff7fffff00000fffffcfffff777fffff777ffffffbffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
 9a00000077777fff00000ffffcffffff7fffffff77ffffffbbbfffffffcccfff0000000000000000000000000000000000000000000000000000000000000000
 a7000000ff7fffff000000ffccccccccff7fffff7ffffffffbfffffffcfffcff0000000000000000000000000000000000000000000000000000000000000000
@@ -1672,7 +1660,7 @@ cd000000f777ffff000000ffffcffffffffffffffffffffffffffffffcfffcff0000000000000000
 d6000000ffffffff0000000fffffffffffffffffffffffffffffffffffcccfff0000000000000000000000000000000000000000000000000000000000000000
 ef000000ffffffff0000000fffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
 f6000000ffffffff00000000ffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
-00000000fff66666ffffff66000fffff77ffffff7f7fffffff222fffff222fff0000000000000000000000000000000000000000000000000000000000000000
+d9677000fff66666ffffff66000fffff77ffffff7f7fffffff222fffff222fff0000000000000000000000000000000000000000000000000000000000000000
 0000000066677777ffff6677070fffff7f7fffff7f7ffffff2eee2fff2eee2ff0000000000000000000000000000000000000000000000000000000000000000
 0000000077755555ffff7755070fffff7f7fffff777fffff2eeeee2f2eee7e2f0000000000000000000000000000000000000000000000000000000000000000
 0000000055511111ffff5511070fffff7f7fffff777fffff2777772f2ee7ee2f0000000000000000000000000000000000000000000000000000000000000000
@@ -1712,18 +1700,18 @@ f6000000ffffffff00000000ffffffffffffffffffffffffffffffffffffffff0000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-1030c0b1f110f4f38a04000407f38c04000407f38a04002405f38c04002405f38d04000407f38f04000407f38d04002405f38f04002405048004000407048204
+1030c0b1f110f5f38a04000407f38c04000407f38a04002405f38c04002405f38d04000407f38f04000407f38d04002405f38f04002405048004000407048204
 000407048004002405048204002405048304000407048504000407048304002405048504002405f30104000400040f04000400f3010400d90c040f0400d90cf3
 8404000407f38604000407f38404002405f38604002405f38704000407f38904000407f38704002405f389040024050486040004070488040004070486040024
 05048804002405048904000407048b04000407048904002405048b04002405f38104000407f38304000407f38104002405f38304002405048c04000407048e04
 000407048c04002405048e0400240504000400040004000400b80004000400d90c04000400b80004000400320ef30a0400d20404060400d204f3070400320e04
 090400320ef3010400630a040f0400630a04000400630a04000400320e040f0400730e74030400630a54450400730e540f040083e774130400c41874dc0400d4
-02540f0400361e2507040066e2040ff3bfe58e040f040016e2540f040066e225070400d402f3cf0400732ef3cf0400930c04c904007314548f04007324644904
-00730e64490400461e0487f3aff58a548e046156d004870400d551644504f15602a0700004004010204030700004004050608070700004004090a0c0b0700004
-0040d0e001f0700004004051618171700004004091a1c1b17000040040d1e102f1700004004012224232700004004052628272700004004092a2c2b2a0080a08
-080a08080a08080a08080a08080a08080a08080a08080a08080a082231111070043441107004d2e2106004f20310808023331080a043531080a0112110b0a031
-4110805063110083931080a0c3d310c08021a300b3e30004d310c080144410c080443410c080240410c080541410c080f35410c080e4c410b080746410b08084
-9410b080b4a410b080f4b410b080c4d410b080a3c310c0802173002134107004e3f310c08073b30021240094a410b080648410b080d4f410b080000000000000
+02540f0400361e2507040066e2040f0400e58e040f040016e2540f040066e225070400d402f3cf0400732ef3cf0400930c04c904007314548f04007324644904
+00730e64490400461e04870400f58a548e040056d004870400d551644504005602b40e04008600d40204008600b40e04009604d40204009604b40e24088600d4
+0224088600b40e24089604d40224089604b40b2408760dd4052408760db40b24089607d40524089607b4083402760dd4053402760db40834029607d405340296
+072231111070233441107002d2e2106005f20310806223331080204353108020112110b0e131411080e163110083931080e1c3d310c02021a300b3e30004d310
+c032144410c0a0443410c060240410c060541410c041f35410c090e4c410b080746410b060849410b011b4a410b009f4b410b020c4d410b091a3c310c0402173
+002134107021e3f310c02073b30021240094a410b030648410b030d4f410b0200000000000000000000000000000000000000000000000000000000000000000
 __label__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
