@@ -1390,9 +1390,11 @@ function draw_ground(self)
 			local v={ii,0,jj}
 			v_add(v,cam.pos,-1)
    m_x_v(cam.m,v)
-			v=cam:project2d(v)
-			if v[3]>0 then
-				pset(v[1],v[2],1)
+   if v[3]>zfar then
+				v=cam:project2d(v)
+				if v[3]>0 then
+					pset(v[1],v[2],1)
+				end
 			end
  	end
 	end 
@@ -1621,9 +1623,9 @@ function trapezefill(l,dl,r,dr,start,finish)
 		if len>0 then
 			local w0,u0,v0=l[2],l[3],l[4]
 			local dw,du,dv=4*(l[6]-w0)/len,4*(l[7]-u0)/len,4*(l[8]-v0)/len
-      -- mipmap (5 levels)
-      local m0=shr(4*w0,1)
-      local dm=4*(shr(4*l[6],1)-m0)/len
+   -- mipmap (5 levels)
+   local m0=shr(4*w0,1)
+   local dm=4*(shr(4*l[6],1)-m0)/len
 			for i=band(l[1],0xfffc),band(l[5],0xfffc),4 do
 				local mipmap=mipmaps[mid(flr(m0),0,4)+1]
 				local c=sget(mipmap.x+(u0/w0)%mipmap.w,mipmap.y+(v0/w0)%mipmap.w)
