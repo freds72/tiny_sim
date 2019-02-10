@@ -1151,9 +1151,8 @@ function collect_drawables(model,m,pos,out)
    local p1=cam:project2d(b)
    -- is it a light line?
    if e.n then
-     --local bloom=lerp(24,12,mid(-20*v_dot({cam.m[3],cam.m[7],cam.m[11]},v_up),0,1))
-     --lightline(x0,y0,x1,y1,c,0,w0,t*e.n,w1,bloom,out)
-     line(p0[1],p0[2],p1[1],p1[2],c)
+     local bloom=lerp(24,12,mid(-20*v_dot({cam.m[3],cam.m[7],cam.m[11]},v_up),0,1))
+     lightline(p0[1],p0[2],p1[1],p1[2],c,0,p0[4],t*e.n,p1[4],bloom,out)
    else   
      --line(x0,y0,x1,y1,c)
    end
@@ -1249,9 +1248,7 @@ function make_cam(x0,y0,focal)
 		track=function(self,pos,x,y,z)
 			self.pos=v_clone(pos)
       self.m=make_m_from_euler(x,y,z)
-      self.m_billboard=make_m_from_euler(x,0,z)
       m_inv(self.m)
-      m_inv(self.m_billboard)
 		end,
     -- to camera space
     modelview=function(self,m,v)
@@ -1267,7 +1264,7 @@ function make_cam(x0,y0,focal)
     project2d=function(self,v)
   	  -- view to screen
   	  local w=focal/v[3]
-  	  return {x0+v[1]*w,y0-v[2]*w,w,v[4] and v[4]*w,v[5] and v[5]*w}
+  	  return {x0+v[1]*w,y0-v[2]*w,v[3],w}
 		end,
 		-- draw the given vertices using function fn
 		-- performs cam space clipping
@@ -1280,7 +1277,6 @@ function make_cam(x0,y0,focal)
 	return c
 end
 
---[[
 local stars={}
 for i=1,48 do
 	local v={rnd()-0.5,rnd(0.25),rnd()-0.5}
@@ -1290,20 +1286,21 @@ for i=1,48 do
 	v_scale(v,32)
 	add(stars,v)
 end
-]]
+
 function draw_clouds()
   local weather=wx[wnd]
  local ceiling=weather.ceiling
  -- clear sky?
  if not ceiling then
-  -- stars
-  --[[
- 	  for _,v in pairs(stars) do
-			local x,y,z,w=cam:project(cam.pos[1]+v[1],cam.pos[2]+v[2],cam.pos[3]+v[3])
-			if(z>0) pset(x,y,v.c)
+    -- stars
+    for _,v in pairs(stars) do
+  	  local c=v.c
+      v=v_clone(v)
+      m_x_v(cam.m,v)
+		  local v=cam:project2d(v)
+		  if(v[3]>0) pset(v[1],v[2],c)
 		end
-    ]]
-		return
+    return
  end
 
  local cloudy=ceiling/120-cam.pos[2]
