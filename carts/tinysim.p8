@@ -97,7 +97,7 @@ function json_parse(str, pos, end_delim)
   end
 end
 
-local world=json_parse'{"scenarios":[{"name":"visual approach","args":[-417,326.3,85,600,-1,0,25,112,3,2,1],"briefing":[{"fn":"print","args":["remain on runway axis. extend the\nflaps and keep speed at 65-70\nknots by using pitch and\nthrottle. at 50 feet, smoothly\nclose throttle and raise the\nnose to gently touch down\nbelow 65 knots.\ntoo easy? add some wind!",8,30,6]}]},{"name":"final approach","args":[-408.89,230.77,85,1000,1,0,75,112,3,2,1],"briefing":[{"fn":"print","args":["fly heading of approx. 085\nkeep localizer (  ) centered\n(the wind might push you away)\nmaintain 1000 ft\nintercept glide slope ( )\nreduce power and extend flaps\nstart 500 ft/min descent\nkeep localizer centered\nkeep glideslope centered\nat 200 ft reduce power & land",8,30,6]},{"fn":"spr","args":[20,71,36]},{"fn":"spr","args":[38,100,55]}]},{"name":"full approach","briefing":[{"fn":"print","args":["cross pco (  ) on heading 313\nintercept localizer (  )\nturn left heading 265\ndescend to 2000 ft\nturn right heading 310\nfly 1 minute\nturn left heading 130\nintercept localizer\nturn left heading 085\nfly final approach and land",8,30,6]},{"fn":"spr","args":[35,51,30]},{"fn":"spr","args":[20,91,36]}],"args":[-222.22,461.54,313,3000,0,0,91,112,3,2,1]},{"name":"engine failure!","briefing":[{"fn":"print","args":["you have just taken off\nfrom tinyville for a trip\nto the beach, when the\nengine suddenly quits at\nonly 500 feet! make a steep\nturn back to airport while\nmaintaining best glide\nspeed (65 knots). can you\nmake it back? good luck!",8,30,6]}],"args":[-422.2,408,85,500,10,0,0,65,4,2,5]},{"name":"unusual attitude","briefing":[{"fn":"print","args":["while checking the map you did\nnot pay attention to your\nattitude. when you look up,\nthe airplane is out of control\nat low altitude. oops!\ncan you recover?\nhint: bank first, then pull up",8,30,6]}],"args":[-222.22,461.54,330,450,99,99,100,112,3,2,1]},{"name":"free flight","briefing":[{"fn":"print","args":["you are cleared for take-off\non runway 08 at tinyville.\napply full power and raise\nthe nose at 50-55 knots.\nhave fun!",8,30,6]}],"args":[-421,370,85,0,0,0,0,0,3,2,1]}],"wx":[{"name":"clear, calm","dir":[0,0],"horiz":[2048,2048],"sky_gradient":[12,0,2,0,1,0]},{"name":"clouds, breezy","dir":[60,10],"ceiling":500,"horiz":[64,512],"sky_gradient":[5,0],"cloud_mipmaps":[{"x":60,"y":32,"w":2},{"x":56,"y":32,"w":4},{"x":48,"y":32,"w":8},{"x":32,"y":32,"w":16},{"x":0,"y":32,"w":32}],"light_ramp":68,"light_dist":12},{"name":"low clouds, stormy","dir":[10,30],"ceiling":200,"horiz":[32,512],"sky_gradient":[5,0],"cloud_mipmaps":[{"x":124,"y":32,"w":2},{"x":120,"y":32,"w":4},{"x":112,"y":32,"w":8},{"x":96,"y":32,"w":16},{"x":64,"y":32,"w":32}],"light_ramp":68,"light_dist":8}],"db":[{"lat":-251.11,"lon":430.77,"name":"pco","type":"vor"},{"lat":-422.2,"lon":370,"name":"itn","type":"ils","angle":85},{"lat":-422.2,"lon":384.6,"name":"tny","type":"apt","angle":85},{"lat":-66.67,"lon":153.85,"name":"smv","type":"apt","angle":40},{"lat":-177.78,"lon":246.15,"name":"wee","type":"vor"}],"vspeeds":[[55,"r"],[60,"x"],[65,"g"],[79,"y"]],"hsic":[64,111],"bp":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124]],"e":[[1,2],[1,3],[1,4],[5,6]]},"nesw":[[64,99,52],[52,111,53],[64,123,36],[76,111,37]],"cdii":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124],[64,104],[64,118]],"e":[[1,2],[1,3],[1,4],[5,6],[7,8]]},"cockpit":[{"fn":"rectfill","args":[10,36,127,42,0]},{"fn":"print","args":["nav1",11,37,7]},{"fn":"line","args":[43,36,43,42,7]},{"fn":"spr","args":[7,47,37]},{"fn":"print","args":["dis",75,37,7]},{"fn":"print","args":["gs",107,37]},{"fn":"rectfill","args":[0,115,8,127,0]},{"fn":"line","args":[4,90,4,110,5]},{"fn":"line","args":[5,90,5,110,13]},{"fn":"line","args":[5,90,5,110,13]},{"fn":"rectfill","args":[11,97,33,119,0]},{"fn":"line","args":[41,71,45,71,10]},{"fn":"line","args":[83,71,87,71]},{"fn":"rectfill","args":[57,88,71,94,0]},{"fn":"pset","args":[70,89,7]},{"fn":"rectfill","args":[107,121,127,127,0]},{"fn":"line","args":[45,111,47,111,7]},{"fn":"line","args":[81,111,83,111,7]},{"fn":"spr","args":[18,71,120,1,1,true,false]},{"fn":"spr","args":[34,79,115,1,1,true,false]},{"fn":"rectfill","args":[87,115,100,127,0]},{"fn":"rectfill","args":[79,123,86,127]},{"fn":"spr","args":[35,79,122,1,1,true,false]},{"fn":"rectfill","args":[40,95,45,100,0]},{"fn":"spr","args":[49,4,27]},{"fn":"spr","args":[50,-4,29]},{"fn":"sspr","args":[15,24,1,8,12,26,116,8]}]}'
+local world=json_parse'{"scenarios":[{"name":"visual approach","args":[-417,326.3,85,600,-1,0,25,112,3,2,1,false],"briefing":[{"fn":"print","args":["remain on runway axis. extend the\nflaps and keep speed at 65-70\nknots by using pitch and\nthrottle. at 50 feet, smoothly\nclose throttle and raise the\nnose to gently touch down\nbelow 65 knots.\ntoo easy? add some wind!",8,30,6]}]},{"name":"final approach","args":[-408.89,230.77,85,1000,1,0,75,112,3,2,1,false],"briefing":[{"fn":"print","args":["fly heading of approx. 085\nkeep localizer (  ) centered\n(the wind might push you away)\nmaintain 1000 ft\nintercept glide slope ( )\nreduce power and extend flaps\nstart 500 ft/min descent\nkeep localizer centered\nkeep glideslope centered\nat 200 ft reduce power & land",8,30,6]},{"fn":"spr","args":[20,71,36]},{"fn":"spr","args":[38,100,55]}]},{"name":"full approach","briefing":[{"fn":"print","args":["cross pco (  ) on heading 313\nintercept localizer (  )\nturn left heading 265\ndescend to 2000 ft\nturn right heading 310\nfly 1 minute\nturn left heading 130\nintercept localizer\nturn left heading 085\nfly final approach and land",8,30,6]},{"fn":"spr","args":[35,51,30]},{"fn":"spr","args":[20,91,36]}],"args":[-222.22,461.54,313,3000,0,0,91,112,3,2,1,false]},{"name":"engine failure!","briefing":[{"fn":"print","args":["you have just taken off\nfrom tinyville for a trip\nto the beach, when the\nengine suddenly quits at\nonly 500 feet! make a steep\nturn back to airport while\nmaintaining best glide\nspeed (65 knots). can you\nmake it back? good luck!",8,30,6]}],"args":[-422.2,408,85,500,10,0,0,65,4,2,5,false]},{"name":"unusual attitude","briefing":[{"fn":"print","args":["while checking the map you did\nnot pay attention to your\nattitude. when you look up,\nthe airplane is out of control\nat low altitude. oops!\ncan you recover?\nhint: bank first, then pull up",8,30,6]}],"args":[-222.22,461.54,330,450,99,99,100,112,3,2,1,false]},{"name":"free flight","briefing":[{"fn":"print","args":["you are cleared for take-off\non runway 08 at tinyville.\napply full power and raise\nthe nose at 50-55 knots.\nhave fun!",8,30,6]}],"args":[-421,370,85,0,0,0,0,0,3,2,1,true]}],"wx":[{"name":"clear, calm","dir":[0,0],"horiz":[2048,2048],"sky_gradient":[14,0,2,0,1,0]},{"name":"clouds, breezy","dir":[60,10],"ceiling":500,"horiz":[64,512],"sky_gradient":[5,0],"cloud_mipmaps":[{"x":60,"y":32,"w":2},{"x":56,"y":32,"w":4},{"x":48,"y":32,"w":8},{"x":32,"y":32,"w":16},{"x":0,"y":32,"w":32}],"light_ramp":68,"light_dist":12},{"name":"low clouds, stormy","dir":[10,30],"ceiling":200,"horiz":[32,512],"sky_gradient":[5,0],"cloud_mipmaps":[{"x":124,"y":32,"w":2},{"x":120,"y":32,"w":4},{"x":112,"y":32,"w":8},{"x":96,"y":32,"w":16},{"x":64,"y":32,"w":32}],"light_ramp":68,"light_dist":8}],"db":[{"lat":-251.11,"lon":430.77,"name":"pco","type":"vor"},{"lat":-422.2,"lon":370,"name":"itn","type":"ils","angle":85},{"lat":-422.2,"lon":384.6,"name":"tny","type":"apt","angle":85},{"lat":-66.67,"lon":153.85,"name":"smv","type":"apt","angle":40},{"lat":-177.78,"lon":246.15,"name":"wee","type":"vor"}],"vspeeds":[{"ias":55,"s":40},{"ias":60,"s":56},{"ias":65,"s":41},{"ias":79,"s":57}],"hsic":[64,111],"bp":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124]],"e":[[1,2],[1,3],[1,4],[5,6]]},"nesw":[[64,99,52],[52,111,53],[64,123,36],[76,111,37]],"cdii":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124],[64,104],[64,118]],"e":[[1,2],[1,3],[1,4],[5,6],[7,8]]},"cockpit":[{"fn":"rectfill","args":[10,36,127,42,0]},{"fn":"print","args":["nav1",11,37,7]},{"fn":"line","args":[43,36,43,42,7]},{"fn":"spr","args":[7,47,37]},{"fn":"print","args":["dis",75,37,7]},{"fn":"print","args":["gs",107,37]},{"fn":"rectfill","args":[0,115,8,127,0]},{"fn":"line","args":[4,90,4,110,5]},{"fn":"line","args":[5,90,5,110,13]},{"fn":"line","args":[5,90,5,110,13]},{"fn":"rectfill","args":[11,97,33,119,0]},{"fn":"line","args":[41,71,45,71,10]},{"fn":"line","args":[83,71,87,71]},{"fn":"rectfill","args":[57,88,71,94,0]},{"fn":"pset","args":[70,89,7]},{"fn":"rectfill","args":[107,121,127,127,0]},{"fn":"line","args":[45,111,47,111,7]},{"fn":"line","args":[81,111,83,111,7]},{"fn":"spr","args":[18,71,120,1,1,true,false]},{"fn":"spr","args":[34,79,115,1,1,true,false]},{"fn":"rectfill","args":[87,115,100,127,0]},{"fn":"rectfill","args":[79,123,86,127]},{"fn":"spr","args":[35,79,122,1,1,true,false]},{"fn":"rectfill","args":[40,95,45,100,0]},{"fn":"spr","args":[49,4,27]},{"fn":"spr","args":[50,-4,29]},{"fn":"sspr","args":[15,24,1,8,12,26,116,8]}]}'
 local all_models={}
 
 --scenarios (name,lat,lon,hdg,alt,pitch,bank,throttle,tas,gps dto,nav1,nav2,onground)
@@ -416,12 +416,9 @@ function dispspeed()
 end
 
 function dispv()
-	 clip(34,50,7,41)
+	 clip(34,50,8,41)
 	 for v in all(vspeeds) do
-	   local y=(ias-v[1])*3+69
-			 spr(23,34,y)
-				rectfill(37,y,41,y+6,0)
-				print(v[2],37,y+1,12)
+    spr(v.s,34,(ias-v.ias)*3+69)
   end
   clip()
 end
@@ -695,13 +692,10 @@ function drawmap(message)
       spr(39,x,y)
       print(l.name,x+9,y+1,7)
     elseif l.type=="ils" then
-      local a=(l.angle-3)/360
-      local b=(l.angle+3)/360
-      local _x=sin(a)
-      local _y=cos(a)
+      local a,b=(l.angle-3)/360,(l.angle+3)/360
+      local _x,_y=sin(a),cos(a)
       line(x+3,y+3,50*_x+x+3,50*_y+y+3,3)
-      local _x=sin(b)
-      local _y=cos(b)
+      local _x,_y=sin(b),cos(b)
       line(x+3,y+3,50*_x+x+3,50*_y+y+3,11)
       print(l.name,62*_x+x+2,62*_y+y+3,7)
     --airports
@@ -1240,16 +1234,12 @@ end
 
 -- todo: json
 local stars={}
---[[
 for i=1,48 do
 	local v={rnd()-0.5,rnd(0.25),rnd()-0.5}
 	v_normz(v)
-  -- shade star according to height
-  v.c=sget(4*min(v[2]*3,1),24)
 	v_scale(v,32)
 	add(stars,v)
 end
-]]
 
 local clipplanes=json_parse'[[0,0,-1],[0,0,2],[0.707,0,-0.707],[0.25,0,0],[-0.707,0,-0.707],[-0.25,0,0],[0,0.707,-0.707],[0,0.25,0],[0,-0.707,-0.707],[0,-0.25,0]]'
 
@@ -1264,13 +1254,12 @@ function draw_clouds()
       v=v_clone(v)
       m_x_v(cam.m,v)
 		  local v=cam:project2d(v)
-		  if(v[3]>0) pset(v[1],v[2],c)
+		  if(v[3]>0) pset(v[1],v[2],6)
 		end
     return
  end
 
- local cloudy=ceiling/120-cam.pos[2]
- local zfar=512
+ local cloudy,zfar=ceiling/120-cam.pos[2],512
  local cloudplane={
 		{zfar,cloudy,zfar,0,0},
 		{-zfar,cloudy,zfar,32*16,0},
@@ -1693,22 +1682,22 @@ __gfx__
 5600000000000000000fffffffffffffffffffff00000000f2e7e2ffff0fffff000000005d600000015d00000000000000000000000000000000000000000000
 6d0000000000000000000fffffffffffffffffff00000000ff222fffffffffff000000002e800000012e00000000000000000000000000000000000000000000
 760000000000000000000000ffffffffffffffff00000000ffffffffffffffff000000005f70000001df00000000000000000000000000000000000000000000
-8e000000ff7fffff00000fffffcfffff777fffff777ffffffbffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
-9a00000077777fff00000ffffcffffff7fffffff77ffffffbbbfffffffcccfff0000000000000000000000000000000000000000000000000000000000000000
-a7000000ff7fffff000000ffccccccccff7fffff7ffffffffbfffffffcfffcff0000000000000000000000000000000000000000000000000000000000000000
-b6000000ff7fffff000000fffcffffff777fffff777ffffffffffffffcfcfcff0000000000000000000000000000000000000000000000000000000000000000
-cd000000f777ffff000000ffffcffffffffffffffffffffffffffffffcfffcff0000000000000000000000000000000000000000000000000000000000000000
-d6000000ffffffff0000000fffffffffffffffffffffffffffffffffffcccfff0000000000000000000000000000000000000000000000000000000000000000
-ef000000ffffffff0000000fffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
-f6000000ffffffff00000000ffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
-d9677000fff66666ffffff66000fffff77ffffff7f7fffffff222fffff222fff0000000000000000000000000000000000000000000000000000000000000000
-0000000066677777ffff6677070fffff7f7fffff7f7ffffff2eee2fff2eee2ff0000000000000000000000000000000000000000000000000000000000000000
-0000000077755555ffff7755070fffff7f7fffff777fffff2eeeee2f2eee7e2f0000000000000000000000000000000000000000000000000000000000000000
-0000000055511111ffff5511070fffff7f7fffff777fffff2777772f2ee7ee2f0000000000000000000000000000000000000000000000000000000000000000
-0000000011100000ffff1100070fffffffffffffffffffff2eeeee2f2e7eee2f0000000000000000000000000000000000000000000000000000000000000000
-0000000000000000ffff0000070ffffffffffffffffffffff2eee2fff2eee2ff0000000000000000000000000000000000000000000000000000000000000000
-0000000000000000ffff0000000fffffffffffffffffffffff222fffff222fff0000000000000000000000000000000000000000000000000000000000000000
-00000000000fffffffff00ffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000
+8e000000ff7fffff00000fffffcfffff777fffff777ffffffbfffffffffffffffff00000fff00000000000000000000000000000000000000000000000000000
+9a00000077777fff00000ffffcffffff7fffffff77ffffffbbbfffffffcccfffff006660ff000660000000000000000000000000000000000000000000000000
+a7000000ff7fffff000000ffccccccccff7fffff7ffffffffbfffffffcfffcfff0006060f0006000000000000000000000000000000000000000000000000000
+b6000000ff7fffff000000fffcffffff777fffff777ffffffffffffffcfcfcff0000660000006000000000000000000000000000000000000000000000000000
+cd000000f777ffff000000ffffcffffffffffffffffffffffffffffffcfffcfff0006060f0006060000000000000000000000000000000000000000000000000
+d6000000ffffffff0000000fffffffffffffffffffffffffffffffffffcccfffff006060ff006660000000000000000000000000000000000000000000000000
+ef000000ffffffff0000000ffffffffffffffffffffffffffffffffffffffffffff00000fff00000000000000000000000000000000000000000000000000000
+f6000000ffffffff00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000000000000000000000000000000000000000000000
+d9677000fff66666ffffff66000fffff77ffffff7f7fffffff222fffff222ffffff00000fff00000000000000000000000000000000000000000000000000000
+0000000066677777ffff6677070fffff7f7fffff7f7ffffff2eee2fff2eee2ffff006060ff006060000000000000000000000000000000000000000000000000
+0000000077755555ffff7755070fffff7f7fffff777fffff2eeeee2f2eee7e2ff0006060f0006060000000000000000000000000000000000000000000000000
+0000000055511111ffff5511070fffff7f7fffff777fffff2777772f2ee7ee2f0000060000006660000000000000000000000000000000000000000000000000
+0000000011100000ffff1100070fffffffffffffffffffff2eeeee2f2e7eee2ff0006060f0000060000000000000000000000000000000000000000000000000
+0000000000000000ffff0000070ffffffffffffffffffffff2eee2fff2eee2ffff006060ff006660000000000000000000000000000000000000000000000000
+0000000000000000ffff0000000fffffffffffffffffffffff222fffff222ffffff00000fff00000000000000000000000000000000000000000000000000000
+00000000000fffffffff00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000000000000000000000000000000000000000000000
 1468988410000000000000000000000027a82000000000001465100014653600ffeaaceb8877642467678bfb7433338cedbd8642457c6227cbac8654db9add00
 67affffa5000000000000000000001339dfe7000000000153576200000002100cdcffffd82333101333469b963000159adfea2123467533688bd722365698700
 9bfffffc920000000000000000001467bdeb81000000003947774002457600009bffffffc51001333234777654332467bdffe638bb848b9a68ab810398890000

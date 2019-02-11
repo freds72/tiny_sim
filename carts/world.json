@@ -116,7 +116,7 @@
             "args": [-421,370,85,0,0,0,0,0,3,2,1,true]}
     ],
     "wx": [
-          {"name":"clear, calm","dir":[0,0],"horiz":[2048,2048],"sky_gradient":[12,0,2,0,1,0]},
+          {"name":"clear, calm","dir":[0,0],"horiz":[2048,2048],"sky_gradient":[14,0,2,0,1,0]},
           {"name":"clouds, breezy","dir":[60,10],"ceiling":500,"horiz":[64,512],"sky_gradient":[5,0],
           "cloud_mipmaps":[
               {"x":60,"y":32,"w":2},
@@ -169,7 +169,11 @@
             "type": "vor"
         }
     ],
-    "vspeeds":[[55,"r"],[60,"x"],[65,"g"],[79,"y"]],
+    "vspeeds":[
+        {"ias":55,"s":40},
+        {"ias":60,"s":56},
+        {"ias":65,"s":41},
+        {"ias":79,"s":57}],
     "hsic": [
         64,
         111
