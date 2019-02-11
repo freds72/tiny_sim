@@ -1347,7 +1347,7 @@ function draw_clouds()
 	 cloudplane=plane_poly_clip(clipplanes[i],clipplanes[i+1],cloudplane)		
 	end
   mipmaps=weather.cloud_mipmaps
-	color(cloudy<0 and 0x5 or 0x6)	
+	color(cloudy<0 and 0x5 or 0x1)	
   project_texpoly(cloudplane)	
 end
 
@@ -1632,7 +1632,7 @@ function trapezefill(l,dl,r,dr,start,finish)
 				local c=sget(mipmap.x+shr(u0/w0,4-mipmapi)%mipmap.w,mipmap.y+shr(v0/w0,4-mipmapi)%mipmap.w)
 				if c!=0 then
 					fillp(dither_pat[c+1]+0x.ff)
-					rectfill(i-2,j,i+2,j)
+					rectfill(i-2,j,i+1,j)
 				end
 				u0+=du
 				v0+=dv
