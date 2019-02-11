@@ -5,42 +5,109 @@ __lua__
 -- @yellowbaron, 3d engine @freds72
 -- 3d math portions from threejs
 
---scenarios (name,lat,lon,hdg,alt,pitch,bank,throttle,tas,gps dto,nav1,nav2)
-local scenarios={
-  {"visual approach",-417,326.3,85,2600,-1,0,25,112,3,2,1},
-  {"final approach",-408.89,230.77,85,1000,1,0,75,112,3,2,1},
-  {"full approach",-222.22,461.54,313,3000,0,0,91,112,3,2,1},
-	{"engine failure!",-422.2,408,85,500,10,0,0,65,4,2,5},
-  {"unusual attitude",-222.22,461.54,330,450,99,99,100,112,3,2,1},
-	{"free flight",-421,370,85,0,0,0,0,0,3,2,1}}
+-- json globals
+local _tok={
+  ['true']=true,
+  ['false']=false}
+function nop() return true end
+local _g={
+  print=print,
+  line=line,
+  spr=spr,
+  sspr=sspr,
+  pset=pset,
+  rectfill=rectfill}
+
+-- json parser
+-- from: https://gist.github.com/tylerneylon/59f4bcf316be525b30ab
+local table_delims={['{']="}",['[']="]"}
+local function match(s,tokens)
+  for i=1,#tokens do
+    if(s==sub(tokens,i,i)) return true
+  end
+  return false
+end
+local function skip_delim(str, pos, delim, err_if_missing)
+if sub(str,pos,pos)!=delim then
+  --if(err_if_missing) assert'delimiter missing'
+  return pos,false
+end
+return pos+1,true
+end
+
+local function parse_str_val(str, pos, val)
+  val=val or ''
+  --[[
+  if pos>#str then
+    assert'end of input found while parsing string.'
+  end
+  ]]
+  local c=sub(str,pos,pos)
+  -- lookup global refs
+if(c=='"') return _g[val] or val,pos+1
+  return parse_str_val(str,pos+1,val..c)
+end
+local function parse_num_val(str,pos,val)
+  val=val or ''
+  --[[
+  if pos>#str then
+    assert'end of input found while parsing string.'
+  end
+  ]]
+  local c=sub(str,pos,pos)
+  -- support base 10, 16 and 2 numbers
+  if(not match(c,"-xb0123456789abcdef.")) return tonum(val),pos
+  return parse_num_val(str,pos+1,val..c)
+end
+-- public values and functions.
+
+function json_parse(str, pos, end_delim)
+  pos=pos or 1
+  -- if(pos>#str) assert'reached unexpected end of input.'
+  local first=sub(str,pos,pos)
+  if match(first,"{[") then
+    local obj,key,delim_found={},true,true
+    pos+=1
+    while true do
+      key,pos=json_parse(str, pos, table_delims[first])
+      if(key==nil) return obj,pos
+      -- if not delim_found then assert'comma missing between table items.' end
+      if first=="{" then
+        pos=skip_delim(str,pos,':',true)  -- true -> error if missing.
+        obj[key],pos=json_parse(str,pos)
+      else
+        add(obj,key)
+      end
+      pos,delim_found=skip_delim(str, pos, ',')
+  end
+  elseif first=='"' then
+    -- parse a string (or a reference to a global object)
+    return parse_str_val(str,pos+1)
+  elseif match(first,"-0123456789") then
+    -- parse a number.
+    return parse_num_val(str, pos)
+  elseif first==end_delim then  -- end of an object or array.
+    return nil,pos+1
+  else  -- parse true, false
+    for lit_str,lit_val in pairs(_tok) do
+      local lit_end=pos+#lit_str-1
+      if sub(str,pos,lit_end)==lit_str then return lit_val,lit_end+1 end
+    end
+    -- assert'invalid json token'
+  end
+end
+
+local world=json_parse'{"scenarios":[{"name":"visual approach","args":[-417,326.3,85,600,-1,0,25,112,3,2,1],"briefing":[{"fn":"print","args":["remain on runway axis. extend the\nflaps and keep speed at 65-70\nknots by using pitch and\nthrottle. at 50 feet, smoothly\nclose throttle and raise the\nnose to gently touch down\nbelow 65 knots.\ntoo easy? add some wind!",8,30,6]}]},{"name":"final approach","args":[-408.89,230.77,85,1000,1,0,75,112,3,2,1],"briefing":[{"fn":"print","args":["fly heading of approx. 085\nkeep localizer (  ) centered\n(the wind might push you away)\nmaintain 1000 ft\nintercept glide slope ( )\nreduce power and extend flaps\nstart 500 ft/min descent\nkeep localizer centered\nkeep glideslope centered\nat 200 ft reduce power & land",8,30,6]},{"fn":"spr","args":[20,71,36]},{"fn":"spr","args":[38,100,55]}]},{"name":"full approach","briefing":[{"fn":"print","args":["cross pco (  ) on heading 313\nintercept localizer (  )\nturn left heading 265\ndescend to 2000 ft\nturn right heading 310\nfly 1 minute\nturn left heading 130\nintercept localizer\nturn left heading 085\nfly final approach and land",8,30,6]},{"fn":"spr","args":[35,51,30]},{"fn":"spr","args":[20,91,36]}],"args":[-222.22,461.54,313,3000,0,0,91,112,3,2,1]},{"name":"engine failure!","briefing":[{"fn":"print","args":["you have just taken off\nfrom tinyville for a trip\nto the beach, when the\nengine suddenly quits at\nonly 500 feet! make a steep\nturn back to airport while\nmaintaining best glide\nspeed (65 knots). can you\nmake it back? good luck!",8,30,6]}],"args":[-422.2,408,85,500,10,0,0,65,4,2,5]},{"name":"unusual attitude","briefing":[{"fn":"print","args":["while checking the map you did\nnot pay attention to your\nattitude. when you look up,\nthe airplane is out of control\nat low altitude. oops!\ncan you recover?\nhint: bank first, then pull up",8,30,6]}],"args":[-222.22,461.54,330,450,99,99,100,112,3,2,1]},{"name":"free flight","briefing":[{"fn":"print","args":["you are cleared for take-off\non runway 08 at tinyville.\napply full power and raise\nthe nose at 50-55 knots.\nhave fun!",8,30,6]}],"args":[-421,370,85,0,0,0,0,0,3,2,1]}],"wx":[{"name":"clear, calm","dir":[0,0],"horiz":[2048,2048],"sky_gradient":[12,0,2,0,1,0]},{"name":"clouds, breezy","dir":[60,10],"ceiling":500,"horiz":[64,512],"sky_gradient":[5,0],"cloud_mipmaps":[{"x":60,"y":32,"w":2},{"x":56,"y":32,"w":4},{"x":48,"y":32,"w":8},{"x":32,"y":32,"w":16},{"x":0,"y":32,"w":32}],"light_ramp":68,"light_dist":12},{"name":"low clouds, stormy","dir":[10,30],"ceiling":200,"horiz":[32,512],"sky_gradient":[5,0],"cloud_mipmaps":[{"x":124,"y":32,"w":2},{"x":120,"y":32,"w":4},{"x":112,"y":32,"w":8},{"x":96,"y":32,"w":16},{"x":64,"y":32,"w":32}],"light_ramp":68,"light_dist":8}],"db":[{"lat":-251.11,"lon":430.77,"name":"pco","type":"vor"},{"lat":-422.2,"lon":370,"name":"itn","type":"ils","angle":85},{"lat":-422.2,"lon":384.6,"name":"tny","type":"apt","angle":85},{"lat":-66.67,"lon":153.85,"name":"smv","type":"apt","angle":40},{"lat":-177.78,"lon":246.15,"name":"wee","type":"vor"}],"vspeeds":[[55,"r"],[60,"x"],[65,"g"],[79,"y"]],"hsic":[64,111],"bp":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124]],"e":[[1,2],[1,3],[1,4],[5,6]]},"nesw":[[64,99,52],[52,111,53],[64,123,36],[76,111,37]],"cdii":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124],[64,104],[64,118]],"e":[[1,2],[1,3],[1,4],[5,6],[7,8]]},"cockpit":[{"fn":"rectfill","args":[10,36,127,42,0]},{"fn":"print","args":["nav1",11,37,7]},{"fn":"line","args":[43,36,43,42,7]},{"fn":"spr","args":[7,47,37]},{"fn":"print","args":["dis",75,37,7]},{"fn":"print","args":["gs",107,37]},{"fn":"rectfill","args":[0,115,8,127,0]},{"fn":"line","args":[4,90,4,110,5]},{"fn":"line","args":[5,90,5,110,13]},{"fn":"line","args":[5,90,5,110,13]},{"fn":"rectfill","args":[11,97,33,119,0]},{"fn":"line","args":[41,71,45,71,10]},{"fn":"line","args":[83,71,87,71]},{"fn":"rectfill","args":[57,88,71,94,0]},{"fn":"pset","args":[70,89,7]},{"fn":"rectfill","args":[107,121,127,127,0]},{"fn":"line","args":[45,111,47,111,7]},{"fn":"line","args":[81,111,83,111,7]},{"fn":"spr","args":[18,71,120,1,1,true,false]},{"fn":"spr","args":[34,79,115,1,1,true,false]},{"fn":"rectfill","args":[87,115,100,127,0]},{"fn":"rectfill","args":[79,123,86,127]},{"fn":"spr","args":[35,79,122,1,1,true,false]},{"fn":"rectfill","args":[40,95,45,100,0]},{"fn":"spr","args":[49,4,27]},{"fn":"spr","args":[50,-4,29]},{"fn":"sspr","args":[15,24,1,8,12,26,116,8]}]}'
+local all_models={}
+
+--scenarios (name,lat,lon,hdg,alt,pitch,bank,throttle,tas,gps dto,nav1,nav2,onground)
 
 --weather (name,wind,ceiling,bg color,sky gradient,light_ramp x offset, inverse light distance)
-local wx={
-	{name="clear, calm",dir={0,0},horiz={2048,2048},sky_gradient={0xee,0xffff,0x2e,0xffff,0x11,0xffff}},
-  {name="clouds, breezy",dir={60,10},ceiling=500,horiz={64,512},sky_gradient={0x5,0x0},
-  cloud_mipmaps={
-	  {x=60,y=32,w=2},
-	  {x=56,y=32,w=4},
-	  {x=48,y=32,w=8},
-	  {x=32,y=32,w=16},
-	  {x=0,y=32,w=32}},
-  light_ramp=68,light_dist=12},
-  {name="low clouds, stormy",dir={10,30},ceiling=200,horiz={32,512},sky_gradient={0x5,0x0},
-  cloud_mipmaps={
-	  {x=124,y=32,w=2},
-	  {x=120,y=32,w=4},
-	  {x=112,y=32,w=8},
-	  {x=96,y=32,w=16},
-	  {x=64,y=32,w=32}},
-  light_ramp=68,light_dist=8}}
 
 --airport and navaid database (rwy hdg < 180)
-local db={
-	{-251.11,430.77,"pco","vor"},
- {-422.2,384.6,"itn","ils",85}, --370
- {-422.2,384.6,"tny","apt",85},
- {-66.67,153.85,"smv","apt",40},
- {-177.78,246.15,"wee","vor"}}
+
+-- shortcuts
+local scenarios,wx,db,hsic,bp,cdii,nesw,vspeeds=world.scenarios,world.wx,world.db,world.hsic,world.bp,world.cdii,world.nesw,world.vspeeds
 
 --general settings and vars
 palt(15,true)
@@ -52,31 +119,13 @@ local scen,wnd=1,1
 
 -- plane pos/orientation
 local lat,lon,heading,pitch,bank
+local brg,dist,crs,cdi={},{},0,0
 
 --instruments
 --ai
 local aic={64,71} --center
-local ai={{-87,72},{215,72},{64,-79},{64,223}}
-local aipitch={60,141}
-local aistep=10
-local aiwidth=8
-
---asi
-local vspeeds={{55,"r"},{60,"x"},{65,"g"},{79,"y"}}
-
---hsi
-local hsic={64,111} --center
-local bp={
-  -- vertices
-  v={{64,98},{64,102},{62,100},{66,100},{64,120},{64,124}},
-  -- edges
-  e={{1,2},{1,3},{1,4},{5,6}}} --bearing pointer
-local nesw={{64,99,52},{52,111,53},{64,123,36},{76,111,37}} --cardinal directions
-local cdii={
-  -- vertices
-  v={{64,98},{64,102},{62,100},{66,100},{64,120},{64,124},{64,104},{64,118}},
-  -- edges
-  e={{1,2},{1,3},{1,4},{5,6},{7,8}}} --cdi
+local ai=json_parse'[[-87,72],[215,72],[64,-79],[64,223]]'
+local aipitch,aistep,aiwidth={60,141},10,8
 
 --inset map
 local mapc={22,111} --center
@@ -86,12 +135,8 @@ local mapclr={apt=14,vor=12,ils=0}
 -- world axis
 local v_fwd,v_right,v_up={0,0,1},{1,0,0},{0,1,0}
 
--- meter to world scale
-local m_scale=0.0202
-
 -- models & actors
-local all_models={}
-local actors={}
+local all_models,actors={},{}
 
 -- selected cloud texture
 local mipmaps
@@ -115,9 +160,10 @@ function _init()
  dist={}
  crs=0
  cdi=0
- --
-	onground=false
-	hardlanding=0 --0: soft, 1: hard, 2:crash
+ 
+ --avoid 'good landing' message at take-off
+ onground=false
+ hardlanding=0 --0: soft, 1: hard, 2:crash
  flight={}
 
  --3d
@@ -127,27 +173,18 @@ function _init()
  actors={}
  for _,l in pairs(db) do
   -- registered model?
-  if all_models[l[4]] then
-			add(actors,make_actor(l[4],{l[1],0,l[2]},l[5]))
+  if all_models[l.type] then
+			add(actors,make_actor(l.type,{l.lat,0,l.lon},l.angle))
 		end
 	end
 end
 
 function scenario(s)
-	 if(s==6) onground=true --avoid 'good landing' message at take-off
-		s=scenarios[s]
-  name=s[1]
-  lat=s[2]
-  lon=s[3]
-  heading=s[4]
-  alt=s[5]
-  pitch=s[6]
-  bank=s[7]
-  throttle=s[8]
-  tas=s[9]
-		dto=s[10]
-  nav1=s[11]
-  nav2=s[12]
+  -- init globals
+  lat,lon,heading,alt,pitch,bank,throttle,tas,dto,nav1,nav2,onground=munpack(scenarios[s].args)
+  -- safeguard
+  assert(nav2,"missing scenario arg")
+
   if(pitch==99) bank,pitch=unusual()
 end
 
@@ -421,15 +458,15 @@ function dispmap()
   latmin=lat+67.77
   lonmin=lon-93.75 --187.5/2
   for l in all(db) do
-				local p=disppoint(l)
-    if(checkonmap(p)) pset(p[1]+0.5,p[2],mapclr[l[4]])
+		local p=disppoint(l)
+    if(checkonmap(p)) pset(p[1]+0.5,p[2],mapclr[l.type])
   end
   spr(33,20,110) --map plane symbol
 end
 
 function disppoint(p)
-  local mapx=11+22/187.5*(p[2]-lonmin) --scale to map
-  local mapy=119-22/187.5*(-p[1]+latmin)
+  local mapx=11+22/187.5*(p.lon-lonmin) --scale to map
+  local mapy=119-22/187.5*(-p.lat+latmin)
   local rotx,roty=rotatepoint({mapx,mapy},mapc,360-heading)
   return {rotx,roty}
 end
@@ -441,7 +478,7 @@ end
 function calcdistbrg()
   local j=1
   for l in all(db) do
-    local dy,dx=-(l[1]-lat)*16/600,(l[2]-lon)*16/600
+    local dy,dx=-(l.lat-lat)*16/600,(l.lon-lon)*16/600
     brg[j]=90+(atan2(dx,dy)*360)-heading
     brg[j]-=flr(brg[j]/360)*360
     dist[j]=sqrt(dx*dx+dy*dy)
@@ -462,7 +499,7 @@ function disphsi()
   --bearing pointer
   polyliner(bp,hsic,brg[nav2],12)
   --cdi
-  crs=db[nav1][5]-heading
+  crs=db[nav1].angle-heading
   cdii.v[7][1]=cdi+64
   cdii.v[8][1]=cdi+64
   polyliner(cdii,hsic,crs,11)
@@ -494,10 +531,10 @@ function dispdist(j,x,y,c)
 end
 
 function dispnav()
-  print(db[nav1][3],28,37,11)
+  print(db[nav1].name,28,37,11)
   print("d",48,37,14) --dto symbol
-  print(db[dto][3],56,37)
-  print(db[nav2][3],89,122,12)
+  print(db[dto].name,56,37)
+  print(db[nav2].name,89,122,12)
   dispdist(nav2,89,116,7)
   dispdist(dto,88,37,14)
 end
@@ -633,7 +670,7 @@ function drawmenu()
   print("tiny sim v0.60",35,10,7)
   print("the world's smallest flight sim",2,20,6)
   print("flight:",8,37,item==0 and c or 7)
-  print(scenarios[scen][1],44,37,7)
+  print(scenarios[scen].name,44,37,7)
  	print("weather:",8,47,item==1 and c or 7)
   print(wx[wnd].name,44,47,7)
   print("press ❎ for briefing",8,57,7)
@@ -650,31 +687,31 @@ function drawmap(message)
   local c = frame%16<8 and 7 or 9
   cls()
   for l in all(db) do
-    local x,y=scalemap(l[2],l[1])
+    local x,y=scalemap(l.lon,l.lat)
     x-=3 --correct for sprite size
     y-=3
     --navaids
-    if l[4]=="vor" then
+    if l.type=="vor" then
       spr(39,x,y)
-      print(l[3],x+9,y+1,7)
-    elseif l[4]=="ils" then
-      local a=(l[5]-3)/360
-      local b=(l[5]+3)/360
+      print(l.name,x+9,y+1,7)
+    elseif l.type=="ils" then
+      local a=(l.angle-3)/360
+      local b=(l.angle+3)/360
       local _x=sin(a)
       local _y=cos(a)
       line(x+3,y+3,50*_x+x+3,50*_y+y+3,3)
       local _x=sin(b)
       local _y=cos(b)
       line(x+3,y+3,50*_x+x+3,50*_y+y+3,11)
-      print(l[3],62*_x+x+2,62*_y+y+3,7)
+      print(l.name,62*_x+x+2,62*_y+y+3,7)
     --airports
-    elseif l[4]=="apt" then
-      if l[5]>=0 and l[5]<23 then spr(22,x,y)
-      elseif l[5]>22 and l[5]<68 then spr(55,x,y)
-      elseif l[5]>67 and l[5]<103 then spr(54,x,y)
-      elseif l[5]>102 and l[5]<148 then spr(55,x-1,y,1,1,true,false)
+    elseif l.type=="apt" then
+      if l.angle>=0 and l.angle<23 then spr(22,x,y)
+      elseif l.angle>22 and l.angle<68 then spr(55,x,y)
+      elseif l.angle>67 and l.angle<103 then spr(54,x,y)
+      elseif l.angle>102 and l.angle<148 then spr(55,x-1,y,1,1,true,false)
       else spr(22,x,y) end
-      print(l[3],x+9,y+1,7)
+      print(l.name,x+9,y+1,7)
     end
   end
 		--flight track
@@ -699,121 +736,33 @@ function scalemap(_x,_y)
   return (_x/600)*128,128+(_y/600)*128
 end
 
+-- trick from: https://gist.github.com/josefnpat/bfe4aaa5bbb44f572cd0
+function munpack(t, from, to)
+  local from,to=from or 1,to or #t
+  if(from<=to) return t[from], munpack(t, from+1, to)
+end
+
 function drawbriefing()
   cls()
   print("flight briefing:",8,10,6)
-  print(name,8,17,7)
-  if scen==1 then
-    local msg=[[
-remain on runway axis. extend the
-flaps and keep speed at 65-70
-knots by using pitch and
-throttle. at 50 feet, smoothly
-close throttle and raise the
-nose to gently touch down
-below 65 knots.
-too easy? add some wind!]]
-    print(msg,8,30,6)
-  elseif scen==2 then
-    local msg=[[
-fly heading of approx. 085
-keep localizer (  ) centered
-(the wind might push you away)
-maintain 1000 ft
-intercept glide slope ( )
-reduce power and extend flaps
-start 500 ft/min descent
-keep localizer centered
-keep glideslope centered
-at 200 ft reduce power & land]]
-    print(msg,8,30,6)
-    -- icons
-			spr(20,71,36)
-			spr(38,100,55)
-  elseif scen==3 then
-    local msg=[[
-cross pco (  ) on heading 313
-intercept localizer (  )
-turn left heading 265
-descend to 2000 ft
-turn right heading 310
-fly 1 minute
-turn left heading 130
-intercept localizer
-turn left heading 085
-fly final approach and land]]
-    print(msg,8,30,6)
-    -- icons
-    spr(35,51,30)
-    spr(20,91,36)
-  elseif scen==4 then
-    local msg=[[
-you have just taken off
-from tinyville for a trip
-to the beach, when the
-engine suddenly quits at
-only 500 feet! make a steep
-turn back to airport while
-maintaining best glide
-speed (65 knots). can you
-make it back? good luck!]]
-    print(msg,8,30,6)
-  elseif scen==5 then
-    local msg=[[
-while checking the map you did
-not pay attention to your
-attitude. when you look up,
-the airplane is out of control
-at low altitude. oops!
-can you recover?
-hint: bank first, then pull up]]
-    print(msg,8,30,6)
-  else
-			 local msg=[[
-you are cleared for take-off
-on runway 08 at tinyville.
-apply full power and raise
-the nose at 50-55 knots.
-have fun!]]
-    print(msg,8,30,6)
-		end
+  print(scenarios[scen],8,17,7)
+  
+  -- 
+  drawstatic(scenarios[scen].briefing)
+
   print("press ❎ to   fly",8,112,7)
   spr(2,54,112)
   spr(3,77,112)
   print("z: back to menu",8,119,6)
 end
 
-function drawstatic()
-  rectfill(10,36,127,42,0) --navbar
-  print("nav1",11,37,7)
-  line(43,36,43,42,7)
-  spr(7,47,37) --dto arrow
-  print("dis",75,37,7)
-  print("gs",107,37)
-  rectfill(0,115,8,127,0) --rpm
-  line(4,90,4,110,5)
-  line(5,90,5,110,13)
-  line(5,90,5,110,13)
-  rectfill(11,97,33,119,0) --map
-  line(41,71,45,71,10) --level
-  line(83,71,87,71)
-  rectfill(57,88,71,94,0) --hdg
-  pset(70,89,7)
-  rectfill(107,121,127,127,0) --timer
-  line(45,111,47,111,7)
-  line(81,111,83,111,7)
-  spr(18,71,120,1,1,true,false) --bearing 2
-  spr(34,79,115,1,1,true,false)
-  rectfill(87,115,100,127,0)
-  rectfill(79,123,86,127)
-  spr(35,79,122,1,1,true,false) --nav2 arrow
-  rectfill(40,95,45,100,0) --wind
-
-  			-- glareshield
-  	spr(49,4,27)
-  	spr(50,-4,29)
-		 sspr(15,24,1,8,12,26,116,8)
-
+-- execute the given draw commands from a table
+function drawstatic(cmds)
+  -- call native pico function from list of instructions
+  for i=1,#cmds do
+    local drawcmd=cmds[i]  
+    drawcmd.fn(munpack(drawcmd.args))
+  end
 end
 
 function _update()
@@ -873,7 +822,7 @@ function _update()
     calcgs()
     calccdi()
     checklanded()
-				flaps()
+		flaps()
     blackbox()
    --3d
   	zbuf_clear()
@@ -882,9 +831,6 @@ function _update()
 	  cam:track({lat,(alt+4.4)/120,lon},-pitch/360,heading/360-0.25,-bank/360) --correction for height of pilot in airplane
 
 	  zbuf_filter(actors)
-
-	  -- must be done after update loop
-	  cam:update()
 
    if btnp(4,1) then --tab
      menu=2
@@ -909,11 +855,11 @@ function _draw()
   	draw_clouds()
 
     dispai()
-    drawstatic()
+    drawstatic(world.cockpit)
     disphsi()
     disprpm()
     dispspeed()
-				dispv()
+		dispv()
     dispalt()
     dispvs()
     dispheading()
@@ -923,20 +869,19 @@ function _draw()
     dispgs()
     dispflaps()
     dispwind()
-		 dispmessage()
-		
+		dispmessage()
+    
     -- perf monitor!
+    --[[
     local cpu=flr(100*stat(1)).."%"
     print(cpu,2,3,2)
     print(cpu,2,2,7)
+    ]]
   end
 end
 
 -->8
 -- 3d engine @freds72
-
--- register json context here
-function nop() return true end
 
 -- https://github.com/morgan3d/misc/tree/master/p8sort
 function sort(data)
@@ -953,6 +898,7 @@ function sort(data)
 end
 
 -- light blooms
+-- todo: unpack
 local light_shades={}
 function unpack_ramp(x,y)
  local shades={}
@@ -1164,13 +1110,12 @@ function collect_drawables(model,m,pos,out)
 
 		-- draw line
 		if viz==true then
-   local p0=cam:project2d(a)
-   local p1=cam:project2d(b)
+   local p0,p1=cam:project2d(a),cam:project2d(b)
    -- is it a light line?
    if e.n then
-     -- local bloom=lerp(24,12,mid(-20*v_dot({cam.m[3],cam.m[7],cam.m[11]},v_up),0,1))
-     -- lightline(p0[1],p0[2],p1[1],p1[2],c,0,p0[4],t*e.n,p1[4],bloom,out)
-     line(p0[1],p0[2],p1[1],p1[2],c)
+     -- hide light glare at low angle
+     local bloom=lerp(24,12,mid(-10*v_dot({cam.m[3],cam.m[7],cam.m[11]},v_up),0,1))
+     lightline(p0[1],p0[2],p1[1],p1[2],c,0,p0[3],t*e.n,p1[3],bloom,out)
    else   
      --line(x0,y0,x1,y1,c)
    end
@@ -1261,8 +1206,6 @@ function make_cam(x0,y0,focal)
 	
 	local c={
 		pos={0,0,3},
-		update=function(self)
-		end,
 		track=function(self,pos,x,y,z)
 			self.pos=v_clone(pos)
       self.m=make_m_from_euler(x,y,z)
@@ -1308,13 +1251,14 @@ for i=1,48 do
 end
 ]]
 
+local clipplanes=json_parse'[[0,0,-1],[0,0,2],[0.707,0,-0.707],[0.25,0,0],[-0.707,0,-0.707],[-0.25,0,0],[0,0.707,-0.707],[0,0.25,0],[0,-0.707,-0.707],[0,-0.25,0]]'
+
 function draw_clouds()
  local weather=wx[wnd]
  local ceiling=weather.ceiling
  -- clear sky?
  if not ceiling then
     -- stars
-    --[[
     for _,v in pairs(stars) do
   	  local c=v.c
       v=v_clone(v)
@@ -1322,7 +1266,6 @@ function draw_clouds()
 		  local v=cam:project2d(v)
 		  if(v[3]>0) pset(v[1],v[2],c)
 		end
-    ]]
     return
  end
 
@@ -1333,21 +1276,15 @@ function draw_clouds()
 		{-zfar,cloudy,zfar,32*16,0},
 		{-zfar,cloudy,-zfar,32*16,32*16},
 		{zfar,cloudy,-zfar,0,32*16}}
- for _,v in pairs(cloudplane) do
-    m_x_v(cam.m,v)  
- end
+  for _,v in pairs(cloudplane) do
+      m_x_v(cam.m,v)  
+  end
  -- 
- local clipplanes={
-	  {0,0,-1},{0,0,2},
-		{0.707,0,-0.707},{0.25,0,0},
-		{-0.707,0,-0.707},{-0.25,0,0},
-		{0,0.707,-0.707},{0,0.25,0},
-		{0,-0.707,-0.707},{0,-0.25,0}}
 	for i=1,#clipplanes,2 do
 	 cloudplane=plane_poly_clip(clipplanes[i],clipplanes[i+1],cloudplane)		
 	end
   mipmaps=weather.cloud_mipmaps
-	color(cloudy<0 and 0x5 or 0x1)	
+	color(cloudy<0 and 5 or 13)	
   project_texpoly(cloudplane)	
 end
 
@@ -1389,8 +1326,8 @@ function draw_ground(self)
 			local jj=scale*j-dy+z0
 			local v={ii,0,jj}
 			v_add(v,cam.pos,-1)
-   m_x_v(cam.m,v)
-   if v[3]>zfar then
+      m_x_v(cam.m,v)
+      if v[3]>zfar then
 				v=cam:project2d(v)
 				if v[3]>0 then
 					pset(v[1],v[2],1)
@@ -1402,8 +1339,7 @@ end
 
 function project_poly(p,c)
 	if #p>2 then
-		local p0=cam:project2d(p[1])
-		local p1=cam:project2d(p[2])
+		local p0,p1=cam:project2d(p[1]),cam:project2d(p[2])
 		for i=3,#p do
 			local p2=cam:project2d(p[i])
 			trifill(p0[1],p0[2],p1[1],p1[2],p2[1],p2[2],c)
@@ -1420,6 +1356,77 @@ function project_texpoly(p)
 			tritex(p0,p1,p2)
 			p1=p2
 		end
+	end
+end
+
+-- draw a light line
+function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,out)
+
+  -- get color ramp from weather
+  local ramp,light_dist=wx[wnd].light_ramp or 64,wx[wnd].light_dist or 2
+  
+ local w,h=abs(x1-x0),abs(y1-y0)
+ 
+ local prevu=-1
+ if h>w then
+  -- order points on y
+  if(y0>y1) x0,y0,x1,y1,u0,u1,w0,w1=x1,y1,x0,y0,u1,u0,w1,w0
+  w,h=x1-x0,y1-y0
+	 local du,dw=(u1*w1-u0*w0)/h,(w1-w0)/h
+	 	
+   -- y-major
+    u0*=w0
+	 if y0<0 then
+		 local t=-y0/h
+		 -- todo: unroll lerp
+	  x0,y0,u0,w0=x0+w*t,0,lerp(u0,u1*w1,t),lerp(w0,w1,t)
+	  prevu=nil
+  end
+	 
+   for y=y0,min(y1,40) do
+		  local u=flr(u0/w0)
+    if prevu and prevu!=u then
+ 				local col=sget(ramp+3*mid(w0/light_dist,0,1),c)
+     if(col!=15) pset(x0,y,col)
+      -- avoid too many lights!
+      if bloom and w0>bloom then     
+        add(out,{key=-w0,x=x0,y=y,c=c,kind=0})
+      end
+     end						
+     x0+=w/h
+     u0+=du
+     w0+=dw
+     prevu=u
+    end
+  else
+   -- x-major
+	  if(x0>x1) x0,y0,x1,y1,u0,u1,w0,w1=x1,y1,x0,y0,u1,u0,w1,w0
+	  w,h=x1-x0,y1-y0
+	  local du,dw=(u1*w1-u0*w0)/w,(w1-w0)/w
+
+	  u0*=w0
+	  if x0<0 then
+	    local t=-x0/w
+	    -- u is not linear
+	    -- u*w is
+	    x0,y0,u0,w0=0,y0+h*t,lerp(u0,u1*w1,t),lerp(w0,w1,t)
+	    prevu=nil
+	  end
+
+   for x=x0,min(x1,127) do	
+		  local u=flr(u0/w0)
+      if prevu and prevu!=u then
+        local col=sget(ramp+3*mid(w0/light_dist,0,1),c)        
+        if(col!=15) pset(x,y0,col)
+	  	  if bloom and w0>bloom then     
+			    add(out,{key=-w0,x=x,y=y0,c=c,kind=0})
+			  end
+			end
+		  y0+=h/w
+		  u0+=du
+		  w0+=dw
+		  prevu=u
+	  end
 	end
 end
 
@@ -1591,12 +1598,12 @@ function unpack_models(scale)
 		all_models[name]=clone(model,all_models[name])
 	end
 end
--- do it
-unpack_models(m_scale)
+-- do it (meter to world scale)
+unpack_models(0.0202)
 
 -->8
 -- tritex
-local dither_pat={0b1111111111111111,0b0111111111111111,0b0111111111011111,0b0101111111011111,0b0101111101011111,0b0101101101011111,0b0101101101011110,0b0101101001011110,0b0101101001011010,0b0001101001011010,0b0001101001001010,0b0000101001001010,0b0000101000001010,0b0000001000001010,0b0000001000001000,0b0000000000000000}
+local dither_pat=json_parse'[0b1111111111111111,0b0111111111111111,0b0111111111011111,0b0101111111011111,0b0101111101011111,0b0101101101011111,0b0101101101011110,0b0101101001011110,0b0101101001011010,0b0001101001011010,0b0001101001001010,0b0000101001001010,0b0000101000001010,0b0000001000001010,0b0000001000001000,0b0000000000000000]'
 
 function trapezefill(l,dl,r,dr,start,finish)
 	local l,dl={
@@ -1676,13 +1683,13 @@ __gfx__
 000000007fffffffffffffffffffffff55fffffff777fffffffffffffffffeff0000000053b00000005300000000000000000000000000000000000000000000
 00000000ffffffffffff1c7777c1ffff5fffffffffffffffffffffffffffffff0000000024900000002400000000000000000000000000000000000000000000
 00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000055600000001500000000000000000000000000000000000000000000
-00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff1556555656700000015600000000000000000000000000000000000000000000
-00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff5677567757700000056700000000000000000000000000000000000000000000
-0000000000000000ffffffff77777fffffbfffff00000000ff222fffffffffff1288528828700000002800000000000000000000000000000000000000000000
+00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff1556ff5656700000015600000000000000000000000000000000000000000000
+00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff5677f67757700000056700000000000000000000000000000000000000000000
+0000000000000000ffffffff77777fffffbfffff00000000ff222fffffffffff1288f28828700000002800000000000000000000000000000000000000000000
 1d00000000000000fffffffff777fffffbffffff00000000f2e7e2ffff0fffff0000000029a00000014900000000000000000000000000000000000000000000
-2e00000000000000ffffffffff7fffffbbbbbbbb000000002ee7ee2ff00fffff29aa59a54a700000049a00000000000000000000000000000000000000000000
-3b000000000000000ffffffffffffffffbffffff000000002ee7ee2f000fffff33bb55b53b700000013b00000000000000000000000000000000000000000000
-450000000000000000ffffffffffffffffbfffff000000002ee7ee2ff00fffff011c55c51c700000011c00000000000000000000000000000000000000000000
+2e00000000000000ffffffffff7fffffbbbbbbbb000000002ee7ee2ff00fffff29aaff9a4a700000049a00000000000000000000000000000000000000000000
+3b000000000000000ffffffffffffffffbffffff000000002ee7ee2f000fffff33bbff3b3b700000013b00000000000000000000000000000000000000000000
+450000000000000000ffffffffffffffffbfffff000000002ee7ee2ff00fffff011cfffc1c700000011c00000000000000000000000000000000000000000000
 5600000000000000000fffffffffffffffffffff00000000f2e7e2ffff0fffff000000005d600000015d00000000000000000000000000000000000000000000
 6d0000000000000000000fffffffffffffffffff00000000ff222fffffffffff000000002e800000012e00000000000000000000000000000000000000000000
 760000000000000000000000ffffffffffffffff00000000ffffffffffffffff000000005f70000001df00000000000000000000000000000000000000000000
