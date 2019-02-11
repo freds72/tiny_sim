@@ -7,7 +7,7 @@ __lua__
 
 --scenarios (name,lat,lon,hdg,alt,pitch,bank,throttle,tas,gps dto,nav1,nav2)
 local scenarios={
-  {"visual approach",-417,326.3,85,600,-1,0,25,112,3,2,1},
+  {"visual approach",-417,326.3,85,2600,-1,0,25,112,3,2,1},
   {"final approach",-408.89,230.77,85,1000,1,0,75,112,3,2,1},
   {"full approach",-222.22,461.54,313,3000,0,0,91,112,3,2,1},
 	{"engine failure!",-422.2,408,85,500,10,0,0,65,4,2,5},
@@ -1338,11 +1338,11 @@ function draw_clouds()
  end
  -- 
  local clipplanes={
-	  {0,0,-1},{0,0,0.75},
+	  {0,0,-1},{0,0,2},
 		{0.707,0,-0.707},{0.25,0,0},
-		{-0.707,0,-0.707},{0,0,0},
-		{0,0.707,-0.707},{0,0,0},
-		{0,-0.707,-0.707},{0,0,0}}
+		{-0.707,0,-0.707},{-0.25,0,0},
+		{0,0.707,-0.707},{0,0.25,0},
+		{0,-0.707,-0.707},{0,-0.25,0}}
 	for i=1,#clipplanes,2 do
 	 cloudplane=plane_poly_clip(clipplanes[i],clipplanes[i+1],cloudplane)		
 	end
