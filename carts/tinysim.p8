@@ -1286,7 +1286,7 @@ function draw_ground(self)
 			{x,-y,zfar},
 			{-x,-y,zfar},
 			{-x,y,zfar}}
-	-- up in cam space
+	-- cam up in world space
 	local n=m_up(cam.m)
 
  local sky_gradient,k=wx[wnd].sky_gradient,0
