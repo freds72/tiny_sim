@@ -13,7 +13,7 @@ def call(args):
     #
     return exitcode, out, err
 
-file_list = ['landing_strip']
+file_list = ['landing_strip','city1']
 s = "{:02x}".format(len(file_list))
 for blend_file in file_list:
     print("Exporting: {}.blend".format(blend_file))

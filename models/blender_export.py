@@ -24,6 +24,9 @@ obdata = obcontext.data
 # charset
 charset="_0123456789abcdefghijklmnopqrstuvwxyz"
 
+def tohex(val, nbits):
+    return (hex((int(round(val,0)) + (1<<nbits)) % (1<<nbits))[2:]).zfill(nbits>>2)
+
 # float must be between -3.2/+3.2
 def pack_float(x):
     h = "{:02x}".format(int(round(32*x+128,0)))
@@ -32,7 +35,7 @@ def pack_float(x):
     return h
 # double must be between -2046/+2046
 def pack_double(x):
-    h = "{:04x}".format(int(round(16*x+16384,0)))
+    h = "{}".format(tohex(16*x+16384,16))
     if len(h)!=4:
         raise Exception('Unable to convert: {} into a double-byte: {}'.format(x,h))
     return h
@@ -58,7 +61,8 @@ lights_db = {
     "RWY-CLL": { "color": 6, "n": 15 },
     "RWY-CLL-End": { "color": 8, "n": 8 },
     "TAXI": { "color": 12, "n": 20 },
-    "TAXI-CLL": { "color": 11, "n": 5 }
+    "TAXI-CLL": { "color": 11, "n": 5 },
+    "CITY": { "color": 9, "n": 30 },
 }
 
 # group data

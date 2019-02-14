@@ -156,6 +156,12 @@
             "angle": 85
         },
         {
+            "lat": -422.2,
+            "lon": 384.6,
+            "name": "Smallville",
+            "type": "cty"
+        },
+        {
             "lat": -66.67,
             "lon": 153.85,
             "name": "smv",

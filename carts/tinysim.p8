@@ -97,7 +97,7 @@ function json_parse(str, pos, end_delim)
   end
 end
 
-local world=json_parse'{"scenarios":[{"name":"visual approach","args":[-417,326.3,85,600,-1,0,25,112,3,2,1,false],"briefing":[{"fn":"print","args":["remain on runway axis. extend the\nflaps and keep speed at 65-70\nknots by using pitch and\nthrottle. at 50 feet, smoothly\nclose throttle and raise the\nnose to gently touch down\nbelow 65 knots.\ntoo easy? add some wind!",8,30,6]}]},{"name":"final approach","args":[-408.89,230.77,85,1000,1,0,75,112,3,2,1,false],"briefing":[{"fn":"print","args":["fly heading of approx. 085\nkeep localizer (  ) centered\n(the wind might push you away)\nmaintain 1000 ft\nintercept glide slope ( )\nreduce power and extend flaps\nstart 500 ft/min descent\nkeep localizer centered\nkeep glideslope centered\nat 200 ft reduce power & land",8,30,6]},{"fn":"spr","args":[20,71,36]},{"fn":"spr","args":[38,100,55]}]},{"name":"full approach","briefing":[{"fn":"print","args":["cross pco (  ) on heading 313\nintercept localizer (  )\nturn left heading 265\ndescend to 2000 ft\nturn right heading 310\nfly 1 minute\nturn left heading 130\nintercept localizer\nturn left heading 085\nfly final approach and land",8,30,6]},{"fn":"spr","args":[35,51,30]},{"fn":"spr","args":[20,91,36]}],"args":[-222.22,461.54,313,3000,0,0,91,112,3,2,1,false]},{"name":"engine failure!","briefing":[{"fn":"print","args":["you have just taken off\nfrom tinyville for a trip\nto the beach, when the\nengine suddenly quits at\nonly 500 feet! make a steep\nturn back to airport while\nmaintaining best glide\nspeed (65 knots). can you\nmake it back? good luck!",8,30,6]}],"args":[-422.2,408,85,500,10,0,0,65,4,2,5,false]},{"name":"unusual attitude","briefing":[{"fn":"print","args":["while checking the map you did\nnot pay attention to your\nattitude. when you look up,\nthe airplane is out of control\nat low altitude. oops!\ncan you recover?\nhint: bank first, then pull up",8,30,6]}],"args":[-222.22,461.54,330,450,99,99,100,112,3,2,1,false]},{"name":"free flight","briefing":[{"fn":"print","args":["you are cleared for take-off\non runway 08 at tinyville.\napply full power and raise\nthe nose at 50-55 knots.\nhave fun!",8,30,6]}],"args":[-421,370,85,0,0,0,0,0,3,2,1,true]}],"wx":[{"name":"clear, calm","dir":[0,0],"horiz":[2048,2048],"sky_gradient":[14,0,2,0,1,0]},{"name":"clouds, breezy","dir":[60,10],"ceiling":500,"horiz":[64,512],"sky_gradient":[5,0],"cloud_mipmaps":[{"x":60,"y":32,"w":2},{"x":56,"y":32,"w":4},{"x":48,"y":32,"w":8},{"x":32,"y":32,"w":16},{"x":0,"y":32,"w":32}],"light_ramp":68,"light_dist":12},{"name":"low clouds, stormy","dir":[10,30],"ceiling":200,"horiz":[32,512],"sky_gradient":[5,0],"cloud_mipmaps":[{"x":124,"y":32,"w":2},{"x":120,"y":32,"w":4},{"x":112,"y":32,"w":8},{"x":96,"y":32,"w":16},{"x":64,"y":32,"w":32}],"light_ramp":68,"light_dist":8}],"db":[{"lat":-251.11,"lon":430.77,"name":"pco","type":"vor"},{"lat":-422.2,"lon":370,"name":"itn","type":"ils","angle":85},{"lat":-422.2,"lon":384.6,"name":"tny","type":"apt","angle":85},{"lat":-66.67,"lon":153.85,"name":"smv","type":"apt","angle":40},{"lat":-177.78,"lon":246.15,"name":"wee","type":"vor"}],"vspeeds":[{"ias":55,"s":40},{"ias":60,"s":56},{"ias":65,"s":41},{"ias":79,"s":57}],"hsic":[64,111],"bp":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124]],"e":[[1,2],[1,3],[1,4],[5,6]]},"nesw":[[64,99,52],[52,111,53],[64,123,36],[76,111,37]],"cdii":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124],[64,104],[64,118]],"e":[[1,2],[1,3],[1,4],[5,6],[7,8]]},"cockpit":[{"fn":"rectfill","args":[10,36,127,42,0]},{"fn":"print","args":["nav1",11,37,7]},{"fn":"line","args":[43,36,43,42,7]},{"fn":"spr","args":[7,47,37]},{"fn":"print","args":["dis",75,37,7]},{"fn":"print","args":["gs",107,37]},{"fn":"rectfill","args":[0,115,8,127,0]},{"fn":"line","args":[4,90,4,110,5]},{"fn":"line","args":[5,90,5,110,13]},{"fn":"line","args":[5,90,5,110,13]},{"fn":"rectfill","args":[11,97,33,119,0]},{"fn":"line","args":[41,71,45,71,10]},{"fn":"line","args":[83,71,87,71]},{"fn":"rectfill","args":[57,88,71,94,0]},{"fn":"pset","args":[70,89,7]},{"fn":"rectfill","args":[107,121,127,127,0]},{"fn":"line","args":[45,111,47,111,7]},{"fn":"line","args":[81,111,83,111,7]},{"fn":"spr","args":[18,71,120,1,1,true,false]},{"fn":"spr","args":[34,79,115,1,1,true,false]},{"fn":"rectfill","args":[87,115,100,127,0]},{"fn":"rectfill","args":[79,123,86,127]},{"fn":"spr","args":[35,79,122,1,1,true,false]},{"fn":"rectfill","args":[40,95,45,100,0]},{"fn":"spr","args":[49,4,27]},{"fn":"spr","args":[50,-4,29]},{"fn":"sspr","args":[15,24,1,8,12,26,116,8]}]}'
+local world=json_parse'{"scenarios":[{"name":"visual approach","args":[-417,326.3,85,12600,-1,0,25,112,3,2,1,false],"briefing":[{"fn":"print","args":["remain on runway axis. extend the\nflaps and keep speed at 65-70\nknots by using pitch and\nthrottle. at 50 feet, smoothly\nclose throttle and raise the\nnose to gently touch down\nbelow 65 knots.\ntoo easy? add some wind!",8,30,6]}]},{"name":"final approach","args":[-408.89,230.77,85,1000,1,0,75,112,3,2,1,false],"briefing":[{"fn":"print","args":["fly heading of approx. 085\nkeep localizer (  ) centered\n(the wind might push you away)\nmaintain 1000 ft\nintercept glide slope ( )\nreduce power and extend flaps\nstart 500 ft/min descent\nkeep localizer centered\nkeep glideslope centered\nat 200 ft reduce power & land",8,30,6]},{"fn":"spr","args":[20,71,36]},{"fn":"spr","args":[38,100,55]}]},{"name":"full approach","briefing":[{"fn":"print","args":["cross pco (  ) on heading 313\nintercept localizer (  )\nturn left heading 265\ndescend to 2000 ft\nturn right heading 310\nfly 1 minute\nturn left heading 130\nintercept localizer\nturn left heading 085\nfly final approach and land",8,30,6]},{"fn":"spr","args":[35,51,30]},{"fn":"spr","args":[20,91,36]}],"args":[-222.22,461.54,313,3000,0,0,91,112,3,2,1,false]},{"name":"engine failure!","briefing":[{"fn":"print","args":["you have just taken off\nfrom tinyville for a trip\nto the beach, when the\nengine suddenly quits at\nonly 500 feet! make a steep\nturn back to airport while\nmaintaining best glide\nspeed (65 knots). can you\nmake it back? good luck!",8,30,6]}],"args":[-422.2,408,85,500,10,0,0,65,4,2,5,false]},{"name":"unusual attitude","briefing":[{"fn":"print","args":["while checking the map you did\nnot pay attention to your\nattitude. when you look up,\nthe airplane is out of control\nat low altitude. oops!\ncan you recover?\nhint: bank first, then pull up",8,30,6]}],"args":[-222.22,461.54,330,450,99,99,100,112,3,2,1,false]},{"name":"free flight","briefing":[{"fn":"print","args":["you are cleared for take-off\non runway 08 at tinyville.\napply full power and raise\nthe nose at 50-55 knots.\nhave fun!",8,30,6]}],"args":[-421,370,85,0,0,0,0,0,3,2,1,true]}],"wx":[{"name":"clear, calm","dir":[0,0],"horiz":[2048,2048],"sky_gradient":[14,0,2,0,1,0]},{"name":"clouds, breezy","dir":[60,10],"ceiling":500,"horiz":[64,512],"sky_gradient":[5,0],"cloud_mipmaps":[{"x":60,"y":32,"w":2},{"x":56,"y":32,"w":4},{"x":48,"y":32,"w":8},{"x":32,"y":32,"w":16},{"x":0,"y":32,"w":32}],"light_ramp":68,"light_dist":12},{"name":"low clouds, stormy","dir":[10,30],"ceiling":200,"horiz":[32,512],"sky_gradient":[5,0],"cloud_mipmaps":[{"x":124,"y":32,"w":2},{"x":120,"y":32,"w":4},{"x":112,"y":32,"w":8},{"x":96,"y":32,"w":16},{"x":64,"y":32,"w":32}],"light_ramp":68,"light_dist":8}],"db":[{"lat":-251.11,"lon":430.77,"name":"pco","type":"vor"},{"lat":-422.2,"lon":370,"name":"itn","type":"ils","angle":85},{"lat":-422.2,"lon":384.6,"name":"tny","type":"apt","angle":85},{"lat":-322.2,"lon":266.6,"name":"smallville","type":"cty"},{"lat":-66.67,"lon":153.85,"name":"smv","type":"apt","angle":40},{"lat":-177.78,"lon":246.15,"name":"wee","type":"vor"}],"vspeeds":[{"ias":55,"s":40},{"ias":60,"s":56},{"ias":65,"s":41},{"ias":79,"s":57}],"hsic":[64,111],"bp":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124]],"e":[[1,2],[1,3],[1,4],[5,6]]},"nesw":[[64,99,52],[52,111,53],[64,123,36],[76,111,37]],"cdii":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124],[64,104],[64,118]],"e":[[1,2],[1,3],[1,4],[5,6],[7,8]]},"cockpit":[{"fn":"rectfill","args":[10,36,127,42,0]},{"fn":"print","args":["nav1",11,37,7]},{"fn":"line","args":[43,36,43,42,7]},{"fn":"spr","args":[7,47,37]},{"fn":"print","args":["dis",75,37,7]},{"fn":"print","args":["gs",107,37]},{"fn":"rectfill","args":[0,115,8,127,0]},{"fn":"line","args":[4,90,4,110,5]},{"fn":"line","args":[5,90,5,110,13]},{"fn":"line","args":[5,90,5,110,13]},{"fn":"rectfill","args":[11,97,33,119,0]},{"fn":"line","args":[41,71,45,71,10]},{"fn":"line","args":[83,71,87,71]},{"fn":"rectfill","args":[57,88,71,94,0]},{"fn":"pset","args":[70,89,7]},{"fn":"rectfill","args":[107,121,127,127,0]},{"fn":"line","args":[45,111,47,111,7]},{"fn":"line","args":[81,111,83,111,7]},{"fn":"spr","args":[18,71,120,1,1,true,false]},{"fn":"spr","args":[34,79,115,1,1,true,false]},{"fn":"rectfill","args":[87,115,100,127,0]},{"fn":"rectfill","args":[79,123,86,127]},{"fn":"spr","args":[35,79,122,1,1,true,false]},{"fn":"rectfill","args":[40,95,45,100,0]},{"fn":"spr","args":[49,4,27]},{"fn":"spr","args":[50,-4,29]},{"fn":"sspr","args":[15,24,1,8,12,26,116,8]}]}'
 local all_models={}
 
 --scenarios (name,lat,lon,hdg,alt,pitch,bank,throttle,tas,gps dto,nav1,nav2,onground)
@@ -117,26 +117,14 @@ local frame,frame2=0,0
 -- scenario + weather selection
 local scen,wnd=1,1
 
--- plane pos/orientation
-local lat,lon,heading,pitch,bank
-local brg,dist,crs,cdi={},{},0,0
-
---instruments
---ai
-local aic={64,71} --center
-local ai=json_parse'[[-87,72],[215,72],[64,-79],[64,223]]'
-local aipitch,aistep,aiwidth={60,141},10,8
-
---inset map
-local mapc={22,111} --center
-local mapclr={apt=14,vor=12,ils=0}
-
 --3d
 -- world axis
 local v_fwd,v_right,v_up={0,0,1},{1,0,0},{0,1,0}
 
 -- models & actors
-local all_models,actors={},{}
+local all_models,actors,cam={},{}
+-- main game engine
+local sim
 
 -- selected cloud texture
 local mipmaps
@@ -146,25 +134,6 @@ function _init()
  item=0
  scen=1
  wnd=1
- --
- rpm=2200
- vs=0
- aoa=0
- timer=0
- flps=0
- blag=0 --bank lag
- plag=0 --pitch lag
- slag=0 --stall lag
- --
- brg={}
- dist={}
- crs=0
- cdi=0
- 
- --avoid 'good landing' message at take-off
- onground=false
- hardlanding=0 --0: soft, 1: hard, 2:crash
- flight={}
 
  --3d
  cam=make_cam(64,12,64)
@@ -179,13 +148,429 @@ function _init()
 	end
 end
 
-function scenario(s)
-  -- init globals
-  lat,lon,heading,alt,pitch,bank,throttle,tas,dto,nav1,nav2,onground=munpack(scenarios[s].args)
+-- create a simulator entity from the given scenario
+function make_sim(s)
+  local brg,dist,crs,cdi,flight={},{},0,0,{}
+  local rpm,vs,aoa,timer,flps,blag,plag,slag=2200,0,0,0,0,0,0,0
+
+  -- plane pos/orientation
+  local lat,lon,heading,alt,pitch,bank,throttle,tas,dto,nav1,nav2,onground=munpack(scenarios[s].args)
   -- safeguard
   assert(nav2,"missing scenario arg")
 
+  local hardlanding=0 --0: soft, 1: hard, 2:crash
+
   if(pitch==99) bank,pitch=unusual()
+
+  --instruments
+  --ai
+  local aic={64,71} --center
+  local ai=json_parse'[[-87,72],[215,72],[64,-79],[64,223]]'
+  local aipitch,aistep,aiwidth={60,141},10,8
+
+  --inset map
+  local mapc={22,111} --center
+  local mapclr={apt=14,vor=12,ils=0}
+
+  local warn=function(y,j)
+    for i=0,j do
+      local _y=y+i*aistep+pitch
+      local j=1
+      if(y>64) j=-1
+      local x1,y1=rotatepoint({aipitch[1],_y},aic,-bank)
+      local x2,y2=rotatepoint({aipitch[1]+aiwidth/2,_y+(aistep-2)*j},aic,-bank)
+      local x3,y3=rotatepoint({aipitch[1]+aiwidth,_y},aic,-bank)
+      line(x1,y1,x2,y2,8)
+      line(x3,y3,x2,y2)
+    end
+  end
+
+  return {
+    -- pos and orientation
+    get_pos=function()
+      --correction for height of pilot in airplane
+      return {lat,(alt+4.4)/120,lon},make_m_from_euler(-pitch/360,heading/360-0.25,-bank/360)
+    end,
+    input=function()
+      -- rpm
+      --set throttle
+      if btn(5) then --x
+        throttle+=1.5
+        blag=-3
+      elseif btn(4) then --y
+        throttle-=1.5
+        blag=3
+      end
+      throttle=mid(throttle,0,100)
+      --calculate rpm
+      local maxrpm=2400
+      if(alt>=2000) maxrpm=2456-0.028*alt
+      targetrpm=throttle/100*(maxrpm-700)+700
+      rpm+=(targetrpm-rpm)/20
+      if(abs(targetrpm-rpm)>=30) plag=(targetrpm-rpm)/20
+      rpm=max(rpm,700)
+    
+      -- pitch
+      if btn(2) then --pitch dn
+        plag=max(plag-2,-60)
+        pitch-=0.25*cos(bank/360)
+      elseif btn(3) and aoa<18 then --pitch up
+        plag=min(plag+2,60)
+        pitch+=0.35*cos(bank/360)
+      elseif plag!=0 then
+        pitch+=0.004*plag*cos(bank/360)
+        plag-=plag/abs(plag)
+      end
+      if(abs(pitch)>=45) pitch*=45/abs(pitch)
+    
+      if btn(0) then
+        if onground and tas<30 then --nosewheel steering <30 knots
+          heading-=0.6
+        else
+          blag=max(blag-1,-50)
+          bank-=1.8-tas/250
+        end
+      elseif btn(1) then
+        if onground and tas<30 then
+               heading+=0.6
+            else
+              blag=min(blag+1,50)
+          bank+=1.8-tas/250
+            end
+      elseif blag!=0 then
+        bank+=0.03*blag
+        blag-=blag/abs(blag)
+      end
+      if (abs(bank)<4 and blag==0) bank/=1.1 --bank stability
+      if(abs(bank)>20) pitch-=0.3*abs(sin(bank/360))
+      if(abs(bank)>160) pitch-=0.15
+      if(bank>180) bank-=360
+      if(bank<-180) bank+=360
+      
+      -- flaps()
+      if btnp(5,1) then --q
+        flps=1-flps --toggle
+        plag=flps==1 and 70 or -70
+      end
+    
+      -- on ground check
+      if alt==0 then
+        bank/=1.3 --level off at ground contact
+        pitch=max(pitch,0)
+      end    
+    end,
+    update=function()
+      -- calcalt
+      local coeff=88
+      if(vs<0) coeff=74
+      vs=tas*-(sin((pitch-aoa)/360))*coeff
+      if(alt==0) vs=max(vs)
+      alt=max(alt+vs/1800,0)
+    
+      -- calcheading()
+      if abs(bank)<=90 then heading+=bank*0.007
+      else heading+=(180-abs(bank))*bank/abs(bank)*0.007 end
+      heading=(heading+360)%360
+    
+      -- calcspeed()
+      local targetspeed=38.67+rpm/30-3.8*pitch
+      targetspeed=mid(targetspeed,-30,200)
+      if(flps==1) targetspeed-=10
+      if(alt==0) targetspeed-=40
+      tas+=(targetspeed-tas)/250
+      ias=tas/(1+alt/1000*0.02) --2% per 1000 ft
+    
+      -- calcaoa()
+      if ias>=71.1 then
+        aoa=13.2-0.12*ias
+      elseif ias>=46.7 then
+        aoa=26-0.3*ias
+      else
+        aoa=54-0.9*ias
+      end
+      aoa=max(aoa)
+    
+      -- calcwind()
+      local wind=wx[wnd].dir
+      relwind=heading-wind[1]
+      relwind=(relwind+180)%360-180
+      relh=-wind[2]*cos(relwind/360)
+      relc=wind[2]*sin(relwind/360)
+      groundspeed=sqrt((tas/10+relh/10)^2+(relc/10)^2) --/10: avoid tas^2 overflow
+      groundspeed=flr(10*groundspeed+0.5)
+      wca=atan2(tas+relh,relc)*360
+      wca=(wca+180)%360-180
+      if(alt==0) wca=0
+      -- actual 2d velocity direction
+      track=heading+wca
+    
+      -- calcposition()
+      local dx,dy=-groundspeed*sin(track/360)/2880,groundspeed*cos(track/360)/2880
+      lon+=dx
+      lat-=dy
+
+      -- calcdistbrg()
+      local j=1
+      for l in all(db) do
+        local dy,dx=-(l.lat-lat)*16/600,(l.lon-lon)*16/600
+        brg[j]=90+(atan2(dx,dy)*360)-heading
+        brg[j]-=flr(brg[j]/360)*360
+        dist[j]=sqrt(dx*dx+dy*dy)
+        j+=1
+      end
+    
+      -- stall()
+      local critical=18+4*flps
+      if aoa>=critical then
+        slag,plag=45,0
+        if(alt>0) blag=-10
+      end
+      if alt>0 then
+           pitch-=slag*0.008
+        else
+           pitch-=slag*0.003
+        end
+      if (slag>=1) slag-=1
+    
+      -- calcgs()
+      local alpha=atan2(alt/6072,dist[nav1])*360-270
+      gsy=mid(63+10/0.7*(alpha-3),50,74)
+    
+      -- calccdi()
+      local cdangle=brg[nav1]-crs
+      cdangle=(cdangle+360)%360
+      if(cdangle>180) cdangle-=360
+      if cdangle>90 then cdangle=180-cdangle --backcourse
+      elseif cdangle<-90 then cdangle=-180-cdangle end
+      cdi=18/10*cdangle --5 deg full deflection
+      if(abs(cdi)>9) cdi=9*cdi/abs(cdi)
+    
+      -- checklanded()
+      if alt==0 and (onground==false) then
+        onground=true
+        frame2=frame+60 --message displayed for 2s
+        if vs>-300 and pitch>-0.5 and abs(bank)<5 then hardlanding=0
+        elseif vs>-1000 and pitch>-0.5 and abs(bank)<30 then hardlanding=1
+        else hardlanding=2 end
+      end
+      if alt>0 and onground==true then
+        onground=false
+      end
+     
+      -- flaps(): moved to input
+      -- blackbox()
+      if(frame%150==1) add(flight, {lat,lon,alt}) 
+  
+    end,
+    draw=function()
+      -- dispai()
+      ai[1][2]=72+pitch
+      ai[2][2]=72+pitch
+      ai[3][2]=-80+pitch
+      ai[4][2]=222+pitch
+      local ax,ay=rotatepoint(ai[1],aic,-bank)
+      local bx,by=rotatepoint(ai[2],aic,-bank)
+      local cx,cy=rotatepoint(ai[3],aic,-bank)
+      local dx,dy=rotatepoint(ai[4],aic,-bank)
+      clip(10,36,118,96)
+      trifill(ax,ay,bx,by,cx,cy,12)
+      trifill(ax,ay,bx,by,dx,dy,4)
+      line(ax,ay,bx,by,7)
+      clip(35,44,55,43)
+      for j=0,15 do
+        local tmp=aipitch[2]-j*aistep+pitch
+        local x1,y1=rotatepoint({aipitch[1],tmp},aic,-bank)
+        local x2,y2=rotatepoint({aipitch[1]+aiwidth,tmp},aic,-bank)
+        if(j!=7) line(x1,y1,x2,y2,7)
+      end
+      warn(-8,3)
+      warn(110,3)
+      clip()
+      --transparency
+      rectfillt(21,50,33,90)
+      rectfillt(95,50,111,90)
+      rectfill(0,33,127,42,6)
+      rectfill(0,33,9,127)
+      line(48,75,aic[1],aic[2],10) --aircraft symbol
+      line(80,75,aic[1],aic[2])
+    
+      drawstatic(world.cockpit)
+
+      -- disphsi()
+      --transparency
+      circfillt(64,111,15)
+      circ(64,111,8,7)
+      spr(19,62,95) --tick mark
+      --cardinal directions
+      for l in all(nesw) do
+        local x,y=rotatepoint(l,hsic,-heading)
+        spr(l[3],x-1,y-1)
+      end
+      --bearing pointer
+      polyliner(bp,hsic,brg[nav2],12)
+      --cdi
+      crs=db[nav1].angle-heading
+      cdii.v[7][1]=cdi+64
+      cdii.v[8][1]=cdi+64
+      polyliner(cdii,hsic,crs,11)
+      spr(33,62,110) --heading plane symbol
+
+      -- disprpm()
+      local drpm,c=flr(rpm/10+0.5)*10
+      if drpm<=2000 then c=7 --white
+      elseif drpm<=2400 then c=11 --green
+      end
+      if drpm>=1000 then
+        print(sub(drpm,1,2),1,116,c)
+        print(sub(drpm,3,4),1,122,c)
+      else
+        print(sub(drpm,1,1),5,116,c)
+        print(sub(drpm,2,3),1,122,c)
+      end
+      spr(4,1,108-throttle/5)
+    
+      -- dispspeed()
+      local dy=ias*3
+      clip(22,50,32,41)
+      local n=ias>20 and flr(ias/10) or 2
+      for i=n,n+2 do
+        local x=i*10>99 and 22 or 26
+            print(i*10,x,70-(i*30)+dy,6)
+            line(31,72-(i*30)-15+dy,33,72-(i*30)-15+dy)
+      end
+        clip()
+        -- red or black
+      local c=ias>=163 and 8 or 0
+      rectfill(21,68,33,74,c)
+      rectfill(29,65,33,77)
+      local y=ias-flr(ias/10)*10
+      local y2=flr(y+0.5)
+      local y3=((y-0.5)*7)%7
+      if ias>=20 then
+        clip(30,65,3,13)
+        print(y2%10,30,66+y3,7)
+        print((y2-1)%10,30,72+y3)
+        print((y2+1)%10,30,60+y3)
+        clip()
+        local z=ias>=99.5 and 22 or 26
+        print(flr((ias+0.5)/10),z,69)
+      else
+        print('---',22,69,7)
+      end
+      print(groundspeed,116,37,14)
+  
+      clip(34,50,8,41)
+      for v in all(vspeeds) do
+        spr(v.s,34,(ias-v.ias)*3+69)
+      end
+      clip()
+         
+      -- dispalt()
+      local dy=alt/5
+      clip(95,50,16,41)
+      local n=alt>199 and flr(alt/100) or 2
+      for i=n-2,n+2 do
+          local x=i<100 and 96 or 92
+          print(i*100,x,70-(i*20)+dy,6)
+          line(95,62-(i*20)+dy,97,62-(i*20)+dy,6)
+      end
+      clip()
+        rectfill(95,68,111,74,0)
+      rectfill(103,65,111,77)
+      local _y=alt/10
+      local y=_y-flr(_y/10)*10
+      local y2,y3=flr(y+0.5),((y-0.5)*7)%7
+      clip(104,65,7,13)
+      print((y2%10)..0,104,66+y3,7)
+      print(((y2-1)%10)..0,104,72+y3)
+      print(((y2+1)%10)..0,104,60+y3)
+      clip()
+      local z
+      if alt>=9995 then
+        rectfill(91,68,94,74,0)
+        z=92
+      elseif alt<995 then
+        z=100
+      else
+        z=96
+      end
+      if(alt>=100) print(flr((_y+0.5)/10),z,69,7)
+  
+      -- dispvs()
+      local vsoffset=flr(vs/100+0.5)
+      vsoffset=mid(vsoffset,-19,21)
+      rectfill(115,68-vsoffset,126,74-vsoffset,0)
+      spr(23,112,68-vsoffset)
+      if(vsoffset!=0) print(flr(vs/100+0.5),115,69-vsoffset,7)
+    
+      -- dispheading()
+      local hdg=flr(heading+0.5)%360
+      if hdg<10 then print("00"..hdg,58,89,7)
+      elseif hdg<100 then print("0"..hdg,58,89,7)
+      else print(hdg,58,89,7) end
+     
+      -- disptime()
+      timer+=1/30
+      local minutes=flr(timer/60)
+      local seconds=flr(timer-minutes*60)
+      if(minutes<10) minutes="0"..minutes
+      if(seconds<10) seconds="0"..seconds
+      print(minutes..":"..seconds,108,122)
+    
+      -- dispmap()
+      --based on 5nm/187.5 per 22px
+      local latmin,lonmin=lat+67.77, lon-93.75
+      disppoint=function(p)
+        local mapx=11+22/187.5*(p.lon-lonmin) --scale to map
+        local mapy=119-22/187.5*(-p.lat+latmin)
+        local rotx,roty=rotatepoint({mapx,mapy},mapc,360-heading)
+        return {rotx,roty}
+      end
+      for l in all(db) do
+        local p=disppoint(l)
+        if(checkonmap(p)) pset(p[1]+0.5,p[2],mapclr[l.type])
+      end
+      spr(33,20,110) --map plane symbol
+
+      -- dispnav()
+      print(db[nav1].name,28,37,11)
+      print("d",48,37,14) --dto symbol
+      print(db[dto].name,56,37)
+      print(db[nav2].name,89,122,12)
+      dispdist(dist[nav2],89,116,7)
+      dispdist(dist[dto],88,37,14)
+
+      -- dispgs()
+      if dist[nav1]<15 and alt< 9995 then
+        -- todo: static trick?
+        rectfillt(91,58,93,84)
+        for j=0,4 do pset(92,61+j*5,7) end
+        line(91,71,93,71,7)
+        spr(38,91,gsy+8)
+      end
+      -- dispflaps()
+      -- todo: static map based on flap state
+      line(4,74,4,79,5)
+      line(5,74,5,79,13)
+      if flps==1 then
+        rectfill(2,78,7,79,7)
+      else
+        rectfill(2,74,7,75,7)
+      end
+
+      -- dispwind()
+      if relwind>=0 and relwind<90 then
+        spr(5,41,96)
+      elseif relwind<=0 and relwind>-90 then
+        spr(5,37,96,1,1,true,false)
+      elseif relwind>=90 and relwind<180 then
+        spr(5,41,92,1,1,false,true)
+      elseif relwind<=-90 and relwind>-180 then
+        spr(5,37,92,1,1,true,true)
+      end
+    
+    end
+  }
 end
 
 function unusual()
@@ -193,314 +578,8 @@ function unusual()
   return (80-rnd(15))*sign,-45
 end
 
-function setrpm()
-  --set throttle
-  if btn(5) then --x
-    throttle+=1.5
-    blag=-3
-  elseif btn(4) then --y
-    throttle-=1.5
-    blag=3
-  end
-  throttle=mid(throttle,0,100)
-  --calculate rpm
-  maxrpm=2400
-  if(alt>=2000) maxrpm=2456-0.028*alt
-  targetrpm=throttle/100*(maxrpm-700)+700
-  rpm+=(targetrpm-rpm)/20
-  if(abs(targetrpm-rpm)>=30) plag=(targetrpm-rpm)/20
-  rpm=max(rpm,700)
-end
-
-function disprpm()
-  local drpm,c=flr(rpm/10+0.5)*10
-  if drpm<=2000 then c=7 --white
-  elseif drpm<=2400 then c=11 --green
-  end
-  if drpm>=1000 then
-    print(sub(drpm,1,2),1,116,c)
-    print(sub(drpm,3,4),1,122,c)
-  else
-    print(sub(drpm,1,1),5,116,c)
-    print(sub(drpm,2,3),1,122,c)
-  end
-  spr(4,1,108-throttle/5)
-end
-
-function movepitch()
-  if btn(2) then --pitch dn
-    plag=max(plag-2,-60)
-    pitch-=0.25*cos(bank/360)
-  elseif btn(3) and aoa<18 then --pitch up
-    plag=min(plag+2,60)
-    pitch+=0.35*cos(bank/360)
-  elseif plag!=0 then
-    pitch+=0.004*plag*cos(bank/360)
-    plag-=plag/abs(plag)
-  end
-  if(abs(pitch)>=45) pitch*=45/abs(pitch)
-		if alt==0 then pitch=max(pitch,0) end
-end
-
-function movebank()
-  if btn(0) then
-    if onground and tas<30 then --nosewheel steering <30 knots
-					 heading-=0.6
-				else
-				  blag=max(blag-1,-50)
-      bank-=1.8-tas/250
-				end
-  elseif btn(1) then
-    if onground and tas<30 then
-					 heading+=0.6
-				else
-				  blag=min(blag+1,50)
-      bank+=1.8-tas/250
-				end
-  elseif blag!=0 then
-    bank+=0.03*blag
-    blag-=blag/abs(blag)
-  end
-  if (abs(bank)<4 and blag==0) bank/=1.1 --bank stability
-  if(abs(bank)>20) pitch-=0.3*abs(sin(bank/360))
-  if(abs(bank)>160) pitch-=0.15
-  if(bank>180) bank-=360
-  if(bank<-180) bank+=360
-		if(alt==0) bank/=1.3 --level off at ground contact
-end
-
-function dispai()
-  ai[1][2]=72+pitch
-  ai[2][2]=72+pitch
-  ai[3][2]=-80+pitch
-  ai[4][2]=222+pitch
-  local ax,ay=rotatepoint(ai[1],aic,-bank)
-  local bx,by=rotatepoint(ai[2],aic,-bank)
-  local cx,cy=rotatepoint(ai[3],aic,-bank)
-  local dx,dy=rotatepoint(ai[4],aic,-bank)
-  clip(10,36,118,96)
-  trifill(ax,ay,bx,by,cx,cy,12)
-  trifill(ax,ay,bx,by,dx,dy,4)
-  line(ax,ay,bx,by,7)
-  clip(35,44,55,43)
-  for j=0,15 do
-    local tmp=aipitch[2]-j*aistep+pitch
-    local x1,y1=rotatepoint({aipitch[1],tmp},aic,-bank)
-    local x2,y2=rotatepoint({aipitch[1]+aiwidth,tmp},aic,-bank)
-    if(j!=7) line(x1,y1,x2,y2,7)
-  end
-  warn(-8,3)
-  warn(110,3)
-  clip()
-  --transparency
-  rectfillt(21,50,33,90)
-  rectfillt(95,50,111,90)
-  rectfill(0,33,127,42,6)
-  rectfill(0,33,9,127)
-  line(48,75,aic[1],aic[2],10) --aircraft symbol
-  line(80,75,aic[1],aic[2])
-end
-
-function warn(y,j)
-  for i=0,j do
-    local _y=y+i*aistep+pitch
-    local j=1
-    if(y>64) j=-1
-    local x1,y1=rotatepoint({aipitch[1],_y},aic,-bank)
-    local x2,y2=rotatepoint({aipitch[1]+aiwidth/2,_y+(aistep-2)*j},aic,-bank)
-    local x3,y3=rotatepoint({aipitch[1]+aiwidth,_y},aic,-bank)
-    line(x1,y1,x2,y2,8)
-    line(x3,y3,x2,y2)
-  end
-end
-
-function calcalt()
-  local coeff=88
-  if(vs<0) coeff=74
-  vs=tas*-(sin((pitch-aoa)/360))*coeff
-	 if(alt==0) vs=max(vs)
-  alt=max(alt+vs/1800,0)
-end
-
-function dispalt()
-	 local dy=alt/5
-		clip(95,50,16,41)
-		local n=alt>199 and flr(alt/100) or 2
-	 for i=n-2,n+2 do
-			 local x=i<100 and 96 or 92
-			 print(i*100,x,70-(i*20)+dy,6)
-			 line(95,62-(i*20)+dy,97,62-(i*20)+dy,6)
-	 end
-	 clip()
-		rectfill(95,68,111,74,0)
-  rectfill(103,65,111,77)
-  local _y=alt/10
-  local y=_y-flr(_y/10)*10
-  local y2,y3=flr(y+0.5),((y-0.5)*7)%7
-  clip(104,65,7,13)
-  print((y2%10)..0,104,66+y3,7)
-  print(((y2-1)%10)..0,104,72+y3)
-  print(((y2+1)%10)..0,104,60+y3)
-  clip()
-  local z
-  if alt>=9995 then
-    rectfill(91,68,94,74,0)
-    z=92
-  elseif alt<995 then
-    z=100
-  else
-    z=96
-  end
-  if(alt>=100) print(flr((_y+0.5)/10),z,69,7)
-end
-
-function dispvs()
-  local vsoffset=flr(vs/100+0.5)
-  vsoffset=mid(vsoffset,-19,21)
-  rectfill(115,68-vsoffset,126,74-vsoffset,0)
-  spr(23,112,68-vsoffset)
-  if(vsoffset!=0) print(flr(vs/100+0.5),115,69-vsoffset,7)
-end
-
-function calcheading()
-  if abs(bank)<=90 then heading+=bank*0.007
-  else heading+=(180-abs(bank))*bank/abs(bank)*0.007 end
-  heading=(heading+360)%360
-end
-
-function dispheading()
- local hdg=flr(heading+0.5)%360
- if hdg<10 then print("00"..hdg,58,89,7)
- elseif hdg<100 then print("0"..hdg,58,89,7)
- else print(hdg,58,89,7) end
-end
-
-function calcspeed()
-  local targetspeed=38.67+rpm/30-3.8*pitch
-  targetspeed=mid(targetspeed,-30,200)
-  if(flps==1) targetspeed-=10
-		if(alt==0) targetspeed-=40
-  tas+=(targetspeed-tas)/250
-  ias=tas/(1+alt/1000*0.02) --2% per 1000 ft
-end
-
-function dispspeed()
-	 local dy=ias*3
-		clip(22,50,32,41)
-		local n=ias>20 and flr(ias/10) or 2
-  for i=n,n+2 do
-    local x=i*10>99 and 22 or 26
-				print(i*10,x,70-(i*30)+dy,6)
-				line(31,72-(i*30)-15+dy,33,72-(i*30)-15+dy)
-  end
-		clip()
-		-- red or black
-  local c=ias>=163 and 8 or 0
-  rectfill(21,68,33,74,c)
-  rectfill(29,65,33,77)
-  local y=ias-flr(ias/10)*10
-  local y2=flr(y+0.5)
-  local y3=((y-0.5)*7)%7
-  if ias>=20 then
-		  clip(30,65,3,13)
-    print(y2%10,30,66+y3,7)
-    print((y2-1)%10,30,72+y3)
-    print((y2+1)%10,30,60+y3)
-    clip()
-				local z=ias>=99.5 and 22 or 26
-		  print(flr((ias+0.5)/10),z,69)
-		else
-		  print('---',22,69,7)
-		end
-  print(groundspeed,116,37,14)
-end
-
-function dispv()
-	 clip(34,50,8,41)
-	 for v in all(vspeeds) do
-    spr(v.s,34,(ias-v.ias)*3+69)
-  end
-  clip()
-end
-
-
-function calcaoa()
-  if ias>=71.1 then
-    aoa=13.2-0.12*ias
-  elseif ias>=46.7 then
-    aoa=26-0.3*ias
-  else
-    aoa=54-0.9*ias
-  end
-  aoa=max(aoa)
-end
-
-function calcposition()
-   local dx,dy=-groundspeed*sin(track/360)/2880,groundspeed*cos(track/360)/2880
-   lon+=dx
-   lat-=dy
-end
-
-function disptime()
-  timer+=1/30
-  local minutes=flr(timer/60)
-  local seconds=flr(timer-minutes*60)
-  if(minutes<10) minutes="0"..minutes
-  if(seconds<10) seconds="0"..seconds
-  print(minutes..":"..seconds,108,122)
-end
-
-function dispmap()
-  --based on 5nm/187.5 per 22px
-  latmin=lat+67.77
-  lonmin=lon-93.75 --187.5/2
-  for l in all(db) do
-		local p=disppoint(l)
-    if(checkonmap(p)) pset(p[1]+0.5,p[2],mapclr[l.type])
-  end
-  spr(33,20,110) --map plane symbol
-end
-
-function disppoint(p)
-  local mapx=11+22/187.5*(p.lon-lonmin) --scale to map
-  local mapy=119-22/187.5*(-p.lat+latmin)
-  local rotx,roty=rotatepoint({mapx,mapy},mapc,360-heading)
-  return {rotx,roty}
-end
-
 function checkonmap(p)
   return p[1]>11 and p[1]<33 and p[2]>97 and p[2]<120
-end
-
-function calcdistbrg()
-  local j=1
-  for l in all(db) do
-    local dy,dx=-(l.lat-lat)*16/600,(l.lon-lon)*16/600
-    brg[j]=90+(atan2(dx,dy)*360)-heading
-    brg[j]-=flr(brg[j]/360)*360
-    dist[j]=sqrt(dx*dx+dy*dy)
-    j+=1
-  end
-end
-
-function disphsi()
-  --transparency
-  circfillt(64,111,15)
-  circ(64,111,8,7)
-  spr(19,62,95) --tick mark
-  --cardinal directions
-  for l in all(nesw) do
-    local x,y=rotatepoint(l,hsic,-heading)
-    spr(l[3],x-1,y-1)
-  end
-  --bearing pointer
-  polyliner(bp,hsic,brg[nav2],12)
-  --cdi
-  crs=db[nav1].angle-heading
-  cdii.v[7][1]=cdi+64
-  cdii.v[8][1]=cdi+64
-  polyliner(cdii,hsic,crs,11)
-  spr(33,62,110) --heading plane symbol
 end
 
 -- draw a rotated poly line
@@ -519,73 +598,12 @@ function rotatepoint(p,c,angle)
   return x*cs+y*ss+c[1],-x*ss+y*cs+c[2]
 end
 
-function dispdist(j,x,y,c)
-  if dist[j]<10 then
-    print(flr(dist[j]*10)/10,x,y,c)
+function dispdist(d,x,y,c)
+  if d<10 then
+    print(flr(d*10)/10,x,y,c)
   else
-    print(flr(dist[j]),x,y,c)
+    print(flr(d),x,y,c)
   end
-end
-
-function dispnav()
-  print(db[nav1].name,28,37,11)
-  print("d",48,37,14) --dto symbol
-  print(db[dto].name,56,37)
-  print(db[nav2].name,89,122,12)
-  dispdist(nav2,89,116,7)
-  dispdist(dto,88,37,14)
-end
-
-function stall()
-  local critical=18+4*flps
-  if aoa>=critical then
-    slag=45
-    plag=0
-    if(alt>0) blag=-10
-  end
-  if alt>0 then
-			 pitch-=slag*0.008
-		else
-			 pitch-=slag*0.003
-		end
-  if (slag>=1) slag-=1
-end
-
-function calcgs() --glideslope
-  local alpha=atan2(alt/6072,dist[nav1])*360-270
-  gsy=mid(63+10/0.7*(alpha-3),50,74)
-end
-
-function dispgs() --glideslope
-  if dist[nav1]<15 and alt< 9995 then
-    rectfillt(91,58,93,84)
-    for j=0,4 do pset(92,61+j*5,7) end
-    line(91,71,93,71,7)
-    spr(38,91,gsy+8)
-  end
-end
-
-function calccdi()
-  local cdangle=brg[nav1]-crs
-  cdangle=(cdangle+360)%360
-  if(cdangle>180) cdangle-=360
-  if cdangle>90 then cdangle=180-cdangle --backcourse
-  elseif cdangle<-90 then cdangle=-180-cdangle end
-  cdi=18/10*cdangle --5 deg full deflection
-  if(abs(cdi)>9) cdi=9*cdi/abs(cdi)
-end
-
-function checklanded()
-  if alt==0 and (onground==false) then
-   onground=true
-   frame2=frame+60 --message displayed for 2s
-			if vs>-300 and pitch>-0.5 and abs(bank)<5 then hardlanding=0
-			elseif vs>-1000 and pitch>-0.5 and abs(bank)<30 then hardlanding=1
-			else hardlanding=2 end
-	 end
-		if alt>0 and (onground==true) then
-			onground=false
-		end
 end
 
 function dispmessage()
@@ -609,54 +627,6 @@ function dispmessage()
 				rectfill(0,9,127,15,5)
 				print(message,10,10,c)
 		end
-end
-
-function flaps()
-  if btnp(5,1) then --q
-    flps=1-flps --toggle
-    plag=flps==1 and 70 or -70
-  end
-end
-
-function dispflaps()
-	line(4,74,4,79,5)
- line(5,74,5,79,13)
- if flps==1 then
-   rectfill(2,78,7,79,7)
- else
-   rectfill(2,74,7,75,7)
- end
-end
-
-function calcwind()
-  local wind=wx[wnd].dir
-  relwind=heading-wind[1]
-  relwind=(relwind+180)%360-180
-  relh=-wind[2]*cos(relwind/360)
-  relc=wind[2]*sin(relwind/360)
-  groundspeed=sqrt((tas/10+relh/10)^2+(relc/10)^2) --/10: avoid tas^2 overflow
-  groundspeed=flr(10*groundspeed+0.5)
-  wca=atan2(tas+relh,relc)*360
-  wca=(wca+180)%360-180
-		if(alt==0) wca=0
-		-- actual 2d velocity direction
-  track=heading+wca
-end
-
-function dispwind()
-  if relwind>=0 and relwind<90 then
-    spr(5,41,96)
-  elseif relwind<=0 and relwind>-90 then
-    spr(5,37,96,1,1,true,false)
-  elseif relwind>=90 and relwind<180 then
-    spr(5,41,92,1,1,false,true)
-  elseif relwind<=-90 and relwind>-180 then
-    spr(5,37,92,1,1,true,true)
-  end
-end
-
-function blackbox()
-  if(frame%150==1) add(flight, {lat,lon,alt})
 end
 
 function drawmenu()
@@ -706,6 +676,8 @@ function drawmap(message)
       elseif l.angle>102 and l.angle<148 then spr(55,x-1,y,1,1,true,false)
       else spr(22,x,y) end
       print(l.name,x+9,y+1,7)
+    else
+    		print(l.name,x+9,y+1,7)
     end
   end
 		--flight track
@@ -764,7 +736,7 @@ function _update()
   if menu==1 then --menu
     if btnp(5) then --x
       menu=3
-      scenario(scen)
+      sim=make_sim(scen)
     elseif btnp(3) then --down
       item+=1
       item%=2
@@ -802,27 +774,16 @@ function _update()
       _init()
     end
   else
-    setrpm()
-    movepitch()
-    movebank()
-    calcalt()
-    calcheading()
-    calcspeed()
-    calcaoa()
-    calcwind()
-    calcposition()
-    calcdistbrg()
-    stall()
-    calcgs()
-    calccdi()
-    checklanded()
-		flaps()
-    blackbox()
-   --3d
+    
+    sim:input()
+
+    sim:update()
+    
+    --3d
   	zbuf_clear()
 
 	  -- update cam
-	  cam:track({lat,(alt+4.4)/120,lon},-pitch/360,heading/360-0.25,-bank/360) --correction for height of pilot in airplane
+	  cam:track(sim:get_pos())
 
 	  zbuf_filter(actors)
 
@@ -837,9 +798,9 @@ function _draw()
     drawmenu()
 	 elseif menu==2 then
     message=dispmessage()
-				drawmap(message)
+		drawmap(message)
 	 elseif menu==3 then
-	   drawbriefing()
+	  drawbriefing()
 	 else
 	 	cls(0)
  		clip(0,0,127,40)
@@ -848,21 +809,8 @@ function _draw()
 	  zbuf_draw()
   	draw_clouds()
 
-    dispai()
-    drawstatic(world.cockpit)
-    disphsi()
-    disprpm()
-    dispspeed()
-		dispv()
-    dispalt()
-    dispvs()
-    dispheading()
-    disptime()
-    dispmap()
-    dispnav()
-    dispgs()
-    dispflaps()
-    dispwind()
+    sim:draw()
+
 		dispmessage()
     
     -- perf monitor!
@@ -1058,7 +1006,7 @@ function m_right(m)
 	return {m[1],m[2],m[3]}
 end
 
-local znear,zdir=1,-1
+local znear,zdir=0.25,-1
 function collect_drawables(model,m,pos,out)
   -- vertex cache
   local p={}
@@ -1200,9 +1148,9 @@ function make_cam(x0,y0,focal)
 	
 	local c={
 		pos={0,0,3},
-		track=function(self,pos,x,y,z)
-			self.pos=v_clone(pos)
-      self.m=make_m_from_euler(x,y,z)
+		track=function(self,pos,m)
+      self.pos=v_clone(pos)
+      self.m=m
       m_inv(self.m)
 		end,
     -- to camera space
@@ -1594,7 +1542,7 @@ unpack_models(0.0202)
 -- textured trifill
 -- perpsective correct
 -- per-pixel mip-map selection
--- based off @p01 (based off Chris Hecker :)
+-- based off @p01 (based off chris hecker :)
 local dither_pat=json_parse'[0b1111111111111111,0b0111111111111111,0b0111111111011111,0b0101111111011111,0b0101111101011111,0b0101101101011111,0b0101101101011110,0b0101101001011110,0b0101101001011010,0b0001101001011010,0b0001101001001010,0b0000101001001010,0b0000101000001010,0b0000001000001010,0b0000001000001000,0b0000000000000000]'
 
 function trapezefill(l,dl,r,dr,start,finish)
@@ -1628,17 +1576,21 @@ function trapezefill(l,dl,r,dr,start,finish)
       local dm=4*(shl(4*l[6],1)-m0)/len
       for i=l[1],l[5],4 do
         local mipmapi=mid(flr(m0),0,4)
-				local mipmap=mipmaps[mipmapi+1]
-				local c=sget(mipmap.x+shr(u0/w0,4-mipmapi)%mipmap.w,mipmap.y+shr(v0/w0,4-mipmapi)%mipmap.w)
+        local mipmap=mipmaps[mipmapi+1]
+        local sx,sy=shr(u0/w0,4-mipmapi)%mipmap.w,shr(v0/w0,4-mipmapi)%mipmap.w
+        -- shift u/v map from cam 
+        sx-=cam.pos[1]
+        sy-=cam.pos[3]
+				    local c=sget(mipmap.x+(sx+mipmap.w)%mipmap.w,mipmap.y+(sy+mipmap.w)%mipmap.w)
         if c!=0 then
           -- todo: include in dither array
-					fillp(dither_pat[c+1]+0x.ff)
-					rectfill(i-2,j,i+1,j)
+					     fillp(dither_pat[c+1]+0x.ff)
+					   rectfill(i-2,j,i+1,j)
 				end
 				u0+=du
 				v0+=dv
 				w0+=dw
-        m0+=dm
+    m0+=dm
 			end
   end 
 		for k,v in pairs(dl) do
@@ -1680,7 +1632,7 @@ __gfx__
 00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff1556ff5656700000015600000000000000000000000000000000000000000000
 00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff5677f67757700000056700000000000000000000000000000000000000000000
 0000000000000000ffffffff77777fffffbfffff00000000ff222fffffffffff1288f28828700000002800000000000000000000000000000000000000000000
-1d00000000000000fffffffff777fffffbffffff00000000f2e7e2ffff0fffff0000000029a00000014900000000000000000000000000000000000000000000
+1d00000000000000fffffffff777fffffbffffff00000000f2e7e2ffff0fffff9aaafff929a00000014900000000000000000000000000000000000000000000
 2e00000000000000ffffffffff7fffffbbbbbbbb000000002ee7ee2ff00fffff29aaff9a4a700000049a00000000000000000000000000000000000000000000
 3b000000000000000ffffffffffffffffbffffff000000002ee7ee2f000fffff33bbff3b3b700000013b00000000000000000000000000000000000000000000
 450000000000000000ffffffffffffffffbfffff000000002ee7ee2ff00fffff011cfffc1c700000011c00000000000000000000000000000000000000000000
@@ -1735,7 +1687,7 @@ ba73000000000000000037cffc83000500000000000000000000000000000000ff830369baa977bd
 4100000037bfc840489710000001467600000000000000000000000000000000ffc6369bfffffea6dfffffffdabfffff00000000000000000000000000000000
 10000000236bb964664200000000133300000000000000000000000000000000ffe637bfffffffcbffffffffc89bafff00000000000000000000000000000000
 0133311201025532100000000000000000000000000000000000000000000000fff967adcdcdeb98ab9adffd87676adf00000000000000000000000000000000
-1030c0b1f110f5f38a04000407f38c04000407f38a04002405f38c04002405f38d04000407f38f04000407f38d04002405f38f04002405048004000407048204
+2030c0b1f110f5f38a04000407f38c04000407f38a04002405f38c04002405f38d04000407f38f04000407f38d04002405f38f04002405048004000407048204
 000407048004002405048204002405048304000407048504000407048304002405048504002405f30104000400040f04000400f3010400d90c040f0400d90cf3
 8404000407f38604000407f38404002405f38604002405f38704000407f38904000407f38704002405f389040024050486040004070488040004070486040024
 05048804002405048904000407048b04000407048904002405048b04002405f38104000407f38304000407f38104002405f38304002405048c04000407048e04
@@ -1746,7 +1698,11 @@ ba73000000000000000037cffc83000500000000000000000000000000000000ff830369baa977bd
 0224088600b40e24089604d40224089604b40b2408760dd4052408760db40b24089607d40524089607b4083402760dd4053402760db40834029607d405340296
 072231111070233441107002d2e2106005f20310806223331080204353108020112110b0e131411080e163110083931080e1c3d310c02021a300b3e30004d310
 c032144410c0a0443410c060240410c060541410c041f35410c090e4c410b080746410b060849410b011b4a410b009f4b410b020c4d410b091a3c310c0402173
-002134107021e3f310c02073b30021240094a410b030648410b030d4f410b0200000000000000000000000000000000000000000000000000000000000000000
+002134107021e3f310c02073b30021240094a410b030648410b030d4f410b02030e0f142106170820400872fdf090400f631cea1040036179dd60400044edd83
+04008128af550400e05251800400604692c80400f0f0741f04001119e50004005127e6cd0400b1bcf64304001370672a0400b401a6db040006ec952a0400c7b5
+93090400183aba440400cdfe0c890400b7a8d2b90400eafebb5504009a9f3b6c0400f099d2de04009b1091201010907030201090b04030109051504010906160
+5010900170601090f080701090c09080109001a0901090c0b0a01090a0c0b01090b0d0c01090e0e0d01090d0f0e010901101f010901110011090b160f01090e4
+30c01090b490011090c3601110902330211090b10131109091f0411090a3c0511090929061109013000000000000000000000000000000000000000000000000
 __label__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
