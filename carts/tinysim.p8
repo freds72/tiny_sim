@@ -671,8 +671,8 @@ function drawmap(message)
 end
 
 function scalemap(_x,_y)
-  --based on 16nm*zoom per 128px
-  return ((_x-lon)/600)*128+64,128+((_y-lat)/600)*128-64
+  --based on 16nm per 128px
+  return _x/600*128,128+_y/600*128
 end
 
 function drawbriefing()
