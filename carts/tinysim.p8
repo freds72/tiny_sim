@@ -1577,34 +1577,29 @@ function trapezefill(l,dl,r,dr,start,finish)
 		start=0
 	end
 
+ -- removed support for mipmaps
+ -- cpu was > 100% with per pixel mipmap lookup
+ local mipmap=mipmaps[5]
+ local mx,my=mipmap.x,mipmap.y
 	-- rasterization
 	for j=start,min(finish,40) do
 		local len=l[5]-l[1]
 		if len>0 then
 			local w0,u0,v0=l[2],l[3],l[4]
 			local dw,du,dv=4*(l[6]-w0)/len,4*(l[7]-u0)/len,4*(l[8]-v0)/len
-      -- mipmap (5 levels)
-      -- bump up w to pick large mipmap
-      local m0=shl(4*w0,1)
-      local dm=4*(shl(4*l[6],1)-m0)/len
-      for i=l[1],l[5],4 do
-        local mipmapi=mid(flr(m0),0,4)
-        local mipmap=mipmaps[mipmapi+1]
-        local sx,sy=shr(u0/w0,4-mipmapi)%mipmap.w,shr(v0/w0,4-mipmapi)%mipmap.w
-        -- shift u/v map from cam+texture repeat
-        sx=sx*32-cam.pos[1]
-        sy=sy*32-cam.pos[3]
-				    local c=sget(mipmap.x+(sx+mipmap.w)%mipmap.w,mipmap.y+(sy+mipmap.w)%mipmap.w)
-        if c!=0 then
-          -- todo: include in dither array
-					     fillp(dither_pat[c+1]+0x.ff)
-					   rectfill(i-2,j,i+1,j)
-				end
-				u0+=du
-				v0+=dv
-				w0+=dw
-    m0+=dm
-			end
+   for i=l[1],l[5],4 do
+    local sx,sy=(u0/w0)%32,(v0/w0)%32
+    -- shift u/v map from cam+texture repeat
+    local c=sget(mx+band(sx*32-cam.pos[1],31),my+band(sy*32-cam.pos[3],31))
+    if c!=0 then
+     -- todo: include in dither array
+	    fillp(dither_pat[c+1]+0x.ff)
+	    rectfill(i-2,j,i+1,j)
+			 end
+			 u0+=du
+			 v0+=dv
+			 w0+=dw
+		 end
   end 
 		for k,v in pairs(dl) do
 			l[k]+=v
