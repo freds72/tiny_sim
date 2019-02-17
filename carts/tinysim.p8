@@ -97,10 +97,10 @@ function json_parse(str, pos, end_delim)
   end
 end
 
-local world=json_parse'{"scenarios":[{"name":"visual approach","args":[-417,326.3,85,12600,-1,0,25,112,3,2,1,false],"briefing":[{"fn":"print","args":["remain on runway axis. extend the\nflaps and keep speed at 65-70\nknots by using pitch and\nthrottle. at 50 feet, smoothly\nclose throttle and raise the\nnose to gently touch down\nbelow 65 knots.\ntoo easy? add some wind!",8,30,6]}]},{"name":"final approach","args":[-408.89,230.77,85,1000,1,0,75,112,3,2,1,false],"briefing":[{"fn":"print","args":["fly heading of approx. 085\nkeep localizer (  ) centered\n(the wind might push you away)\nmaintain 1000 ft\nintercept glide slope ( )\nreduce power and extend flaps\nstart 500 ft/min descent\nkeep localizer centered\nkeep glideslope centered\nat 200 ft reduce power & land",8,30,6]},{"fn":"spr","args":[20,71,36]},{"fn":"spr","args":[38,100,55]}]},{"name":"full approach","briefing":[{"fn":"print","args":["cross pco (  ) on heading 313\nintercept localizer (  )\nturn left heading 265\ndescend to 2000 ft\nturn right heading 310\nfly 1 minute\nturn left heading 130\nintercept localizer\nturn left heading 085\nfly final approach and land",8,30,6]},{"fn":"spr","args":[35,51,30]},{"fn":"spr","args":[20,91,36]}],"args":[-222.22,461.54,313,3000,0,0,91,112,3,2,1,false]},{"name":"engine failure!","briefing":[{"fn":"print","args":["you have just taken off\nfrom tinyville for a trip\nto the beach, when the\nengine suddenly quits at\nonly 500 feet! make a steep\nturn back to airport while\nmaintaining best glide\nspeed (65 knots). can you\nmake it back? good luck!",8,30,6]}],"args":[-422.2,408,85,500,10,0,0,65,4,2,5,false]},{"name":"unusual attitude","briefing":[{"fn":"print","args":["while checking the map you did\nnot pay attention to your\nattitude. when you look up,\nthe airplane is out of control\nat low altitude. oops!\ncan you recover?\nhint: bank first, then pull up",8,30,6]}],"args":[-222.22,461.54,330,450,99,99,100,112,3,2,1,false]},{"name":"free flight","briefing":[{"fn":"print","args":["you are cleared for take-off\non runway 08 at tinyville.\napply full power and raise\nthe nose at 50-55 knots.\nhave fun!",8,30,6]}],"args":[-421,370,85,0,0,0,0,0,3,2,1,true]}],"wx":[{"name":"clear, calm","dir":[0,0],"horiz":[2048,2048],"sky_gradient":[14,0,2,0,1,0]},{"name":"clouds, breezy","dir":[60,10],"ceiling":500,"horiz":[64,512],"sky_gradient":[5,0],"cloud_mipmaps":[{"x":60,"y":32,"w":2},{"x":56,"y":32,"w":4},{"x":48,"y":32,"w":8},{"x":32,"y":32,"w":16},{"x":0,"y":32,"w":32}],"light_ramp":68,"light_dist":12},{"name":"low clouds, stormy","dir":[10,30],"ceiling":200,"horiz":[32,512],"sky_gradient":[5,0],"cloud_mipmaps":[{"x":124,"y":32,"w":2},{"x":120,"y":32,"w":4},{"x":112,"y":32,"w":8},{"x":96,"y":32,"w":16},{"x":64,"y":32,"w":32}],"light_ramp":68,"light_dist":8}],"db":[{"lat":-251.11,"lon":430.77,"name":"pco","type":"vor"},{"lat":-422.2,"lon":370,"name":"itn","type":"ils","angle":85},{"lat":-422.2,"lon":384.6,"name":"tny","type":"apt","angle":85},{"lat":-322.2,"lon":266.6,"name":"smallville","type":"cty"},{"lat":-66.67,"lon":153.85,"name":"smv","type":"apt","angle":40},{"lat":-177.78,"lon":246.15,"name":"wee","type":"vor"}],"vspeeds":[{"ias":55,"s":40},{"ias":60,"s":56},{"ias":65,"s":41},{"ias":79,"s":57}],"hsic":[64,111],"bp":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124]],"e":[[1,2],[1,3],[1,4],[5,6]]},"nesw":[[64,99,52],[52,111,53],[64,123,36],[76,111,37]],"cdii":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124],[64,104],[64,118]],"e":[[1,2],[1,3],[1,4],[5,6],[7,8]]},"cockpit":[{"fn":"rectfill","args":[10,36,127,42,0]},{"fn":"print","args":["nav1",11,37,7]},{"fn":"line","args":[43,36,43,42,7]},{"fn":"spr","args":[7,47,37]},{"fn":"print","args":["dis",75,37,7]},{"fn":"print","args":["gs",107,37]},{"fn":"rectfill","args":[0,115,8,127,0]},{"fn":"line","args":[4,90,4,110,5]},{"fn":"line","args":[5,90,5,110,13]},{"fn":"line","args":[5,90,5,110,13]},{"fn":"rectfill","args":[11,97,33,119,0]},{"fn":"line","args":[41,71,45,71,10]},{"fn":"line","args":[83,71,87,71]},{"fn":"rectfill","args":[57,88,71,94,0]},{"fn":"pset","args":[70,89,7]},{"fn":"rectfill","args":[107,121,127,127,0]},{"fn":"line","args":[45,111,47,111,7]},{"fn":"line","args":[81,111,83,111,7]},{"fn":"spr","args":[18,71,120,1,1,true,false]},{"fn":"spr","args":[34,79,115,1,1,true,false]},{"fn":"rectfill","args":[87,115,100,127,0]},{"fn":"rectfill","args":[79,123,86,127]},{"fn":"spr","args":[35,79,122,1,1,true,false]},{"fn":"rectfill","args":[40,95,45,100,0]},{"fn":"spr","args":[49,4,27]},{"fn":"spr","args":[50,-4,29]},{"fn":"sspr","args":[15,24,1,8,12,26,116,8]}]}'
+local world=json_parse'{"scenarios":[{"name":"visual approach","args":[-417,326.3,85,600,-1,0,25,112,3,2,1],"weather":1,"briefing":[{"fn":"print","args":["remain on runway axis. extend the\nflaps and keep speed at 65-70\nknots by using pitch and\nthrottle. at 50 feet, smoothly\nclose throttle and raise the\nnose to gently touch down\nbelow 65 knots.\ntoo easy? add some wind!",8,30,6]}]},{"name":"final approach","args":[-408.89,230.77,85,1000,1,0,75,112,3,2,1],"weather":2,"briefing":[{"fn":"print","args":["fly heading of approx. 085\nkeep localizer (  ) centered\n(the wind might push you away)\nmaintain 1000 ft\nintercept glide slope ( )\nreduce power and extend flaps\nstart 500 ft/min descent\nkeep localizer centered\nkeep glideslope centered\nat 200 ft reduce power & land",8,30,6]},{"fn":"spr","args":[20,71,36]},{"fn":"spr","args":[38,100,55]}]},{"name":"full approach","args":[-222.22,461.54,313,3000,0,0,91,112,3,2,1],"weather":3,"briefing":[{"fn":"print","args":["cross pco (  ) on heading 313\nintercept localizer (  )\nturn left heading 265\ndescend to 2000 ft\nturn right heading 310\nfly 1 minute\nturn left heading 130\nintercept localizer\nturn left heading 085\nfly final approach and land",8,30,6]},{"fn":"spr","args":[35,51,30]},{"fn":"spr","args":[20,91,36]}]},{"name":"engine failure!","args":[-422.2,408,85,500,10,0,0,65,4,2,5],"weather":1,"briefing":[{"fn":"print","args":["you have just taken off\nfrom tinyville for a trip\nto the beach, when the\nengine suddenly quits at\nonly 500 feet! make a steep\nturn back to airport while\nmaintaining best glide\nspeed (65 knots). can you\nmake it back? good luck!",8,30,6]}]},{"name":"unusual attitude","args":[-222.22,461.54,330,450,99,99,100,112,3,2,1],"weather":1,"briefing":[{"fn":"print","args":["while checking the map you did\nnot pay attention to your\nattitude. when you look up,\nthe airplane is out of control\nat low altitude. oops!\ncan you recover?\nhint: bank first, then pull up",8,30,6]}]},{"name":"free flight","args":[-422.2,384.6,85,0,0,0,0,0,3,2,1,true],"weather":1,"briefing":[{"fn":"print","args":["you are cleared for take-off\non runway 08 at tinyville.\napply full power and raise\nthe nose at 50-55 knots.\nhave fun!",8,30,6]}]}],"wx":[{"name":"clear, calm","dir":[0,0],"horiz":[2048,2048],"sky_gradient":[14,0,2,0,1,0]},{"name":"clouds, breezy","dir":[60,10],"ceiling":500,"horiz":[64,512],"sky_gradient":[5,0],"cloud_mipmaps":[{"x":60,"y":32,"w":2},{"x":56,"y":32,"w":4},{"x":48,"y":32,"w":8},{"x":32,"y":32,"w":16},{"x":0,"y":32,"w":32}],"light_ramp":68,"light_dist":12},{"name":"low clouds, stormy","dir":[10,30],"ceiling":200,"horiz":[32,512],"sky_gradient":[5,0],"cloud_mipmaps":[{"x":124,"y":32,"w":2},{"x":120,"y":32,"w":4},{"x":112,"y":32,"w":8},{"x":96,"y":32,"w":16},{"x":64,"y":32,"w":32}],"light_ramp":68,"light_dist":8}],"db":[{"lat":-251.11,"lon":430.77,"name":"pco","type":"vor"},{"lat":-422.46,"lon":387.59,"name":"itn","type":"ils","angle":85},{"lat":-422.2,"lon":384.6,"name":"tny","type":"apt","angle":85},{"lat":-244,"lon":268.5,"name":"smallville","type":"cty"},{"lat":-66.67,"lon":153.85,"name":"smv","type":"apt","angle":40},{"lat":-177.78,"lon":246.15,"name":"wee","type":"vor"}],"vspeeds":[{"ias":55,"s":40},{"ias":60,"s":56},{"ias":65,"s":41},{"ias":79,"s":57}],"hsic":[64,111],"bp":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124]],"e":[[1,2],[1,3],[1,4],[5,6]]},"nesw":[[64,99,52],[52,111,53],[64,123,36],[76,111,37]],"cdii":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124],[64,104],[64,118]],"e":[[1,2],[1,3],[1,4],[5,6],[7,8]]},"cockpit":[{"fn":"rectfill","args":[10,36,127,42,0]},{"fn":"print","args":["nav1",11,37,7]},{"fn":"line","args":[43,36,43,42,7]},{"fn":"spr","args":[7,47,37]},{"fn":"print","args":["dis",75,37,7]},{"fn":"print","args":["gs",107,37]},{"fn":"rectfill","args":[0,115,8,127,0]},{"fn":"line","args":[4,90,4,110,5]},{"fn":"line","args":[5,90,5,110,13]},{"fn":"line","args":[5,90,5,110,13]},{"fn":"rectfill","args":[11,97,33,119,0]},{"fn":"line","args":[41,71,45,71,10]},{"fn":"line","args":[83,71,87,71]},{"fn":"rectfill","args":[57,88,71,94,0]},{"fn":"pset","args":[70,89,7]},{"fn":"rectfill","args":[107,121,127,127,0]},{"fn":"line","args":[45,111,47,111,7]},{"fn":"line","args":[81,111,83,111,7]},{"fn":"spr","args":[18,71,120,1,1,true,false]},{"fn":"spr","args":[34,79,115,1,1,true,false]},{"fn":"rectfill","args":[87,115,100,127,0]},{"fn":"rectfill","args":[79,123,86,127]},{"fn":"spr","args":[35,79,122,1,1,true,false]},{"fn":"rectfill","args":[40,95,45,100,0]},{"fn":"spr","args":[49,4,27]},{"fn":"spr","args":[50,-4,29]},{"fn":"sspr","args":[15,24,1,8,12,26,116,8]}]}'
 local all_models={}
 
---scenarios (name,lat,lon,hdg,alt,pitch,bank,throttle,tas,gps dto,nav1,nav2,onground)
+--scenarios (name,lat,lon,hdg,alt,pitch,bank,throttle,tas,dto,nav1,nav2,onground)
 
 --weather (name,wind,ceiling,bg color,sky gradient,light_ramp x offset, inverse light distance)
 
@@ -112,7 +112,7 @@ local scenarios,wx,db,hsic,bp,cdii,nesw,vspeeds=world.scenarios,world.wx,world.d
 --general settings and vars
 palt(15,true)
 palt(0,false)
-local frame,frame2=0,0
+local frame=0
 
 -- scenario + weather selection
 local scen,wnd=1,1
@@ -130,16 +130,14 @@ local sim
 local mipmaps
 
 function _init()
- menu=1
- item=0
- scen=1
- wnd=1
+ menu,item=1,0
+ scen,wnd=1,1
 
  --3d
  cam=make_cam(64,12,64)
-
- --
- actors={}
+ 
+ -- reset actors & engine
+ actors,sim={}
  for _,l in pairs(db) do
   -- registered model?
   if all_models[l.type] then
@@ -150,15 +148,13 @@ end
 
 -- create a simulator entity from the given scenario
 function make_sim(s)
-  local brg,dist,crs,cdi,flight={},{},0,0,{}
+  local brg,dist,crs,cdi={},{},0,0
   local rpm,vs,aoa,timer,flps,blag,plag,slag=2200,0,0,0,0,0,0,0
 
   -- plane pos/orientation
   local lat,lon,heading,alt,pitch,bank,throttle,tas,dto,nav1,nav2,onground=munpack(scenarios[s].args)
   -- safeguard
   assert(nav2,"missing scenario arg")
-
-  local hardlanding=0 --0: soft, 1: hard, 2:crash
 
   if(pitch==99) bank,pitch=unusual()
 
@@ -172,8 +168,8 @@ function make_sim(s)
   local mapc={22,111} --center
   local mapclr={apt=14,vor=12,ils=0}
 
-  local warn=function(y,j)
-    for i=0,j do
+  local warn=function(y)
+    for i=0,3 do
       local _y=y+i*aistep+pitch
       local j=1
       if(y>64) j=-1
@@ -185,12 +181,18 @@ function make_sim(s)
     end
   end
 
+		-- engine sound
+		local sfx_channel=-1
+		sfx(2)
+  
   return {
     -- pos and orientation
     get_pos=function()
       --correction for height of pilot in airplane
       return {lat,(alt+4.4)/120,lon},make_m_from_euler(-pitch/360,heading/360-0.25,-bank/360)
     end,
+    flight={},
+    crashed=false,
     input=function()
       -- rpm
       --set throttle
@@ -211,20 +213,21 @@ function make_sim(s)
       rpm=max(rpm,700)
     
       -- pitch
-      if btn(2) then --pitch dn
+      if btn(2) then -- dn
         plag=max(plag-2,-60)
         pitch-=0.25*cos(bank/360)
-      elseif btn(3) and aoa<18 then --pitch up
+      elseif btn(3) and aoa<18 then -- up
         plag=min(plag+2,60)
         pitch+=0.35*cos(bank/360)
       elseif plag!=0 then
         pitch+=0.004*plag*cos(bank/360)
         plag-=plag/abs(plag)
       end
-      if(abs(pitch)>=45) pitch*=45/abs(pitch)
+      pitch=mid(pitch,-45,45)
+		  if(onground) pitch=max(pitch) 
     
       if btn(0) then
-        if onground and tas<30 then --nosewheel steering <30 knots
+        if onground and tas<30 then --nosewheel steering
           heading-=0.6
         else
           blag=max(blag-1,-50)
@@ -254,18 +257,18 @@ function make_sim(s)
       end
     
       -- on ground check
-      if alt==0 then
-        bank/=1.3 --level off at ground contact
+      if onground then
+        bank/=1.3 --level off on ground
         pitch=max(pitch,0)
       end    
     end,
-    update=function()
+    update=function(self)
       -- calcalt
       local coeff=88
       if(vs<0) coeff=74
       vs=tas*-(sin((pitch-aoa)/360))*coeff
       if(alt==0) vs=max(vs)
-      alt=max(alt+vs/1800,0)
+      alt=max(alt+vs/1800)
     
       -- calcheading()
       if abs(bank)<=90 then heading+=bank*0.007
@@ -276,7 +279,7 @@ function make_sim(s)
       local targetspeed=38.67+rpm/30-3.8*pitch
       targetspeed=mid(targetspeed,-30,200)
       if(flps==1) targetspeed-=10
-      if(alt==0) targetspeed-=40
+      if(onground) targetspeed-=40
       tas+=(targetspeed-tas)/250
       ias=tas/(1+alt/1000*0.02) --2% per 1000 ft
     
@@ -296,11 +299,11 @@ function make_sim(s)
       relwind=(relwind+180)%360-180
       relh=-wind[2]*cos(relwind/360)
       relc=wind[2]*sin(relwind/360)
-      groundspeed=sqrt((tas/10+relh/10)^2+(relc/10)^2) --/10: avoid tas^2 overflow
+      groundspeed=sqrt((tas/10+relh/10)^2+(relc/10)^2) --avoid tas^2 overflow
       groundspeed=flr(10*groundspeed+0.5)
       wca=atan2(tas+relh,relc)*360
       wca=(wca+180)%360-180
-      if(alt==0) wca=0
+      if(onground) wca=0
       -- actual 2d velocity direction
       track=heading+wca
     
@@ -312,10 +315,10 @@ function make_sim(s)
       -- calcdistbrg()
       local j=1
       for l in all(db) do
-        local dy,dx=-(l.lat-lat)*16/600,(l.lon-lon)*16/600
+        local dy,dx=-(l.lat-lat)*0.01,(l.lon-lon)*0.01 --avoid overflow
         brg[j]=90+(atan2(dx,dy)*360)-heading
         brg[j]-=flr(brg[j]/360)*360
-        dist[j]=sqrt(dx*dx+dy*dy)
+        dist[j]=max(sqrt(dx*dx+dy*dy))*2.6667 --*100*16/600
         j+=1
       end
     
@@ -323,12 +326,12 @@ function make_sim(s)
       local critical=18+4*flps
       if aoa>=critical then
         slag,plag=45,0
-        if(alt>0) blag=-10
+        if(not onground) blag=-10
       end
-      if alt>0 then
-           pitch-=slag*0.008
-        else
+      if onground then
            pitch-=slag*0.003
+        else
+           pitch-=slag*0.008
         end
       if (slag>=1) slag-=1
     
@@ -342,24 +345,41 @@ function make_sim(s)
       if(cdangle>180) cdangle-=360
       if cdangle>90 then cdangle=180-cdangle --backcourse
       elseif cdangle<-90 then cdangle=-180-cdangle end
-      cdi=18/10*cdangle --5 deg full deflection
-      if(abs(cdi)>9) cdi=9*cdi/abs(cdi)
-    
+      cdi=mid(18/10*cdangle,-9,9) --5 deg full deflection
+
+			   -- sfx mgt
+      -- see: https://www.lexaloffle.com/bbs/?tid=2341
+      -- pitch+shl(instr,6)+shl(vol,9)
+      local pitch=band(18*(rpm-700)/1400,0x3f)
+      -- sfx 2
+      poke4(0x3288,bor(pitch+0x0d80,shr(pitch+0x0980,16)))
+ 	
       -- checklanded()
-      if alt==0 and (onground==false) then
+      if ias>180 then
+        make_msg("crash: exceeded maximum speed")
+        self.crashed=true
+        sfx(2,-2)
+        sfx(4)
+      elseif alt<=0 and not onground then
         onground=true
-        frame2=frame+60 --message displayed for 2s
-        if vs>-300 and pitch>-0.5 and abs(bank)<5 then hardlanding=0
-        elseif vs>-1000 and pitch>-0.5 and abs(bank)<30 then hardlanding=1
-        else hardlanding=2 end
+        if vs>-300 and pitch>-0.5 and abs(bank)<5 then 
+          make_msg("good landing!")
+        elseif vs>-1000 and pitch>-0.5 and abs(bank)<30 then 
+          make_msg("oops... hard landing")
+        else 
+          make_msg("crash: collision with ground")
+          self.crashed=true
+          sfx(2,-2)
+          sfx(3)
+        end
       end
-      if alt>0 and onground==true then
-        onground=false
+      if alt>0 and onground then
+        onground=nil
       end
      
       -- flaps(): moved to input
       -- blackbox()
-      if(frame%150==1) add(flight, {lat,lon,alt}) 
+      if(frame%150==1) add(self.flight, {lat,lon,alt}) 
   
     end,
     draw=function()
@@ -375,7 +395,7 @@ function make_sim(s)
       clip(10,36,118,96)
       trifill(ax,ay,bx,by,cx,cy,12)
       trifill(ax,ay,bx,by,dx,dy,4)
-      line(ax,ay,bx,by,7)
+      line(ax,ay,bx,by,7) --horizon
       clip(35,44,55,43)
       for j=0,15 do
         local tmp=aipitch[2]-j*aistep+pitch
@@ -383,15 +403,15 @@ function make_sim(s)
         local x2,y2=rotatepoint({aipitch[1]+aiwidth,tmp},aic,-bank)
         if(j!=7) line(x1,y1,x2,y2,7)
       end
-      warn(-8,3)
-      warn(110,3)
+      warn(-8)
+      warn(110)
       clip()
       --transparency
       rectfillt(21,50,33,90)
       rectfillt(95,50,111,90)
       rectfill(0,33,127,42,6)
       rectfill(0,33,9,127)
-      line(48,75,aic[1],aic[2],10) --aircraft symbol
+      line(48,75,aic[1],aic[2],10) --aircraft
       line(80,75,aic[1],aic[2])
     
       drawstatic(world.cockpit)
@@ -416,10 +436,8 @@ function make_sim(s)
       spr(33,62,110) --heading plane symbol
 
       -- disprpm()
-      local drpm,c=flr(rpm/10+0.5)*10
-      if drpm<=2000 then c=7 --white
-      elseif drpm<=2400 then c=11 --green
-      end
+      local drpm=flr(rpm/10+0.5)*10
+      local c=drpm<=2000 and 7 or 11
       if drpm>=1000 then
         print(sub(drpm,1,2),1,116,c)
         print(sub(drpm,3,4),1,122,c)
@@ -438,8 +456,8 @@ function make_sim(s)
             print(i*10,x,70-(i*30)+dy,6)
             line(31,72-(i*30)-15+dy,33,72-(i*30)-15+dy)
       end
-        clip()
-        -- red or black
+      clip()
+      -- red or black
       local c=ias>=163 and 8 or 0
       rectfill(21,68,33,74,c)
       rectfill(29,65,33,77)
@@ -606,35 +624,28 @@ function dispdist(d,x,y,c)
   end
 end
 
+local message,message_t
+function make_msg(msg)
+  message,message_t=msg,60
+end
 function dispmessage()
-  local message=false
-		if ias>180 then
-    menu=2
-    return "crash: exceeded maximum speed"
-  end
-  if onground then
-    if hardlanding==0 then
-        message="good landing!"
-    elseif hardlanding==1 then
-        message="oops... hard landing"
-				else
-					 menu=2
-						return "crash: collision with ground"
-    end
-  end
-		if frame<frame2 and message then
-				local c = frame%16<8 and 7 or 9
-				rectfill(0,9,127,15,5)
-				print(message,10,10,c)
-		end
+  -- update & draw
+  if message then
+    message_t-=1
+    if(message_t<0) message=nil return
+
+    local c = message_t%16<8 and 7 or 9
+		rectfill(0,9,127,15,5)
+		print(message,10,10,c)
+	end
 end
 
 function drawmenu()
   local c = frame%16<8 and 7 or 9
   cls()
-  spr(2,25,10)
-  spr(3,92,10)
-  print("tiny sim v0.60",35,10,7)
+  spr(2,34,10)
+  spr(3,78,10)
+  print("tiny sim",44,10,7)
   print("the world's smallest flight sim",2,20,6)
   print("flight:",8,37,item==0 and c or 7)
   print(scenarios[scen].name,44,37,7)
@@ -642,22 +653,21 @@ function drawmenu()
   print(wx[wnd].name,44,47,7)
   print("press ❎ for briefing",8,57,7)
   print("x/z: throttle",8,80,6)
-  print("q: toggle flaps",8,87,6)
-  print("tab: toggle map / pause",8,94,6)
+  print("q:   toggle flaps",8,87)
+  print("tab: toggle map / pause",8,94)
   rect(5,77,101,101,6)
-  rectfill(70,88,75,89,7) --flaps
+  rectfill(78,88,83,89,7) --flaps
   spr(4,62,80) --throttle
   print("@yellowbaron | 3d by @freds72",7,123,6)
 end
 
-function drawmap(message)
+function drawmap()
   local c = frame%16<8 and 7 or 9
   cls()
   for l in all(db) do
     local x,y=scalemap(l.lon,l.lat)
     x-=3 --correct for sprite size
     y-=3
-    --navaids
     if l.type=="vor" then
       spr(39,x,y)
       print(l.name,x+9,y+1,7)
@@ -668,7 +678,6 @@ function drawmap(message)
       local _x,_y=sin(b),cos(b)
       line(x+3,y+3,50*_x+x+3,50*_y+y+3,11)
       print(l.name,62*_x+x+2,62*_y+y+3,7)
-    --airports
     elseif l.type=="apt" then
       if l.angle>=0 and l.angle<23 then spr(22,x,y)
       elseif l.angle>22 and l.angle<68 then spr(55,x,y)
@@ -677,29 +686,23 @@ function drawmap(message)
       else spr(22,x,y) end
       print(l.name,x+9,y+1,7)
     else
-    		print(l.name,x+9,y+1,7)
+     -- city
+     spr(17,x,y)
     end
   end
-		--flight track
-  for l in all(flight) do
+  --flight track
+  for l in all(sim.flight) do
     local x,y=scalemap(l[2],l[1])
     pset(x,y,10)
   end
-  if message then
-    rectfill(0,9,127,15,5)
-    print(message,10,10,c)
-  else
-			 rectfill(0,9,127,15,5)
-				print("pause",10,10,c)
-		end
-  print("1 nm",112,110,7)
-  line(112,108,120,108,7)
-  print("tab: cockpit, z: exit to menu",0,123,6)
+  print("1 nm",105,110,7)
+  spr(21,105,107)
+  print(sim.crashed==true and "z: exit to menu" or "tab: fly, z: exit to menu",0,123,6)
 end
 
 function scalemap(_x,_y)
   --based on 16nm per 128px
-  return (_x/600)*128,128+(_y/600)*128
+  return _x*0.2133,128+_y*0.2133
 end
 
 -- trick from: https://gist.github.com/josefnpat/bfe4aaa5bbb44f572cd0
@@ -736,49 +739,59 @@ function _update()
   if menu==1 then --menu
     if btnp(5) then --x
       menu=3
-      sim=make_sim(scen)
     elseif btnp(3) then --down
       item+=1
       item%=2
+      sfx(1)
     elseif btnp(2) then --up
       item-=1
       item%=2
+      sfx(1)
     elseif btnp(1) then --right
       if item==0 then
         scen+=1
         if(scen==#scenarios+1) scen=1
+        wnd=scenarios[scen].weather
       elseif item==1 then
         wnd+=1
         if(wnd==#wx+1) wnd=1
       end
+      sfx(1)
     elseif btnp(0) then --left
       if item==0 then
         scen-=1
         if(scen==0) scen=#scenarios
+        wnd=scenarios[scen].weather
       elseif item==1 then
         wnd-=1
         if(wnd==0) wnd=#wx
       end
+      sfx(1)
     end
   elseif menu==2 then --pause/map screen
     if btnp(4) then --z
       _init()
     elseif btnp(4,1) then --tab
-						menu=0
+			menu=0
     end
   elseif menu==3 then --briefing
     if btnp(5) then --x
       menu=0
+      -- start game
+      sim=make_sim(scen)
+      -- ugly hack to get everything setup before _draw
       _update()
     elseif btnp(4) then --z
       _init()
     end
   else
-    
-    sim:input()
+  
+   sim:input()
 
-    sim:update()
-    
+   sim:update()
+   -- end of game?
+   if(sim.crashed==true) menu=2
+
     --3d
   	zbuf_clear()
 
@@ -797,8 +810,7 @@ function _draw()
   if menu==1 then
     drawmenu()
 	 elseif menu==2 then
-    message=dispmessage()
-		drawmap(message)
+		drawmap()
 	 elseif menu==3 then
 	  drawbriefing()
 	 else
@@ -811,8 +823,6 @@ function _draw()
 
     sim:draw()
 
-		dispmessage()
-    
     -- perf monitor!
     --[[
     local cpu=flr(100*stat(1)).."%"
@@ -820,6 +830,7 @@ function _draw()
     print(cpu,2,2,7)
     ]]
   end
+  dispmessage()
 end
 
 -->8
@@ -1056,7 +1067,7 @@ function collect_drawables(model,m,pos,out)
    -- is it a light line?
    if e.n then
      -- hide light glare at low angle
-     local bloom=lerp(24,12,mid(-10*v_dot({cam.m[3],cam.m[7],cam.m[11]},v_up),0,1))
+     local bloom=lerp(24,12,mid(-10*cam.m[7],0,1))
      lightline(p0[1],p0[2],p1[1],p1[2],c,0,p0[3],t*e.n,p1[3],bloom,out)
    else   
      --line(x0,y0,x1,y1,c)
@@ -1323,7 +1334,7 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,out)
    for y=y0,min(y1,40) do
 		  local u=flr(u0/w0)
     if prevu and prevu!=u then
- 				local col=sget(ramp+3*mid(w0/light_dist,0,1),c)
+ 				local col=sget(ramp+3*mid(w0/light_dist-u%2,0,1),c)
      if(col!=15) pset(x0,y,col)
       -- avoid too many lights!
       if bloom and w0>bloom then     
@@ -1353,7 +1364,7 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,out)
    for x=x0,min(x1,127) do	
 		  local u=flr(u0/w0)
       if prevu and prevu!=u then
-        local col=sget(ramp+3*mid(w0/light_dist,0,1),c)        
+        local col=sget(ramp+3*mid(w0/light_dist-u%2,0,1),c)        
         if(col!=15) pset(x,y0,col)
 	  	  if bloom and w0>bloom then     
 			    add(out,{key=-w0,x=x,y=y0,c=c,kind=0})
@@ -1618,12 +1629,10 @@ if(y2<y1)v1,v2,x1,x2,y1,y2=v2,v1,x2,x1,y2,y1
 	trapezefill(v0,v1,v0,v02,y0,y1)
 	-- lower trapeze
 	trapezefill(v1,v2,v02,v2,y1,y2)
-
 end
 
-
 __gfx__
-00000000fff7777f49777777777777e25fffffff7fffffff77ff777fffffffff0000000000000000000000000000000000000000000000000000000000000000
+00000000fff7777f49777777777777e25fffffff7fffffff77ff777fffffffff0000000000500000000000000000000000000000000000000000000000000000
 00000000ff7fffffffffffffffffffff55fffffff7f7ffff7f7f777ffffffeff0000000011c00000000100000000000000000000000000000000000000000000
 00000000f7ffffffff3b77777777d5ff555fffffff77ffff7f7f7f7feeeeeeef0000000022800000001200000000000000000000000000000000000000000000
 000000007fffffffffffffffffffffff55fffffff777fffffffffffffffffeff0000000053b00000005300000000000000000000000000000000000000000000
@@ -1631,14 +1640,14 @@ __gfx__
 00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000055600000001500000000000000000000000000000000000000000000
 00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff1556ff5656700000015600000000000000000000000000000000000000000000
 00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff5677f67757700000056700000000000000000000000000000000000000000000
-0000000000000000ffffffff77777fffffbfffff00000000ff222fffffffffff1288f28828700000002800000000000000000000000000000000000000000000
-1d00000000000000fffffffff777fffffbffffff00000000f2e7e2ffff0fffff9aaafff929a00000014900000000000000000000000000000000000000000000
-2e00000000000000ffffffffff7fffffbbbbbbbb000000002ee7ee2ff00fffff29aaff9a4a700000049a00000000000000000000000000000000000000000000
-3b000000000000000ffffffffffffffffbffffff000000002ee7ee2f000fffff33bbff3b3b700000013b00000000000000000000000000000000000000000000
-450000000000000000ffffffffffffffffbfffff000000002ee7ee2ff00fffff011cfffc1c700000011c00000000000000000000000000000000000000000000
-5600000000000000000fffffffffffffffffffff00000000f2e7e2ffff0fffff000000005d600000015d00000000000000000000000000000000000000000000
-6d0000000000000000000fffffffffffffffffff00000000ff222fffffffffff000000002e800000012e00000000000000000000000000000000000000000000
-760000000000000000000000ffffffffffffffff00000000ffffffffffffffff000000005f70000001df00000000000000000000000000000000000000000000
+00000000ffffffffffffffff77777fffffbfffff00000000ff222fffffffffff1288f28828700000002800000000000000000000000000000000000000000000
+1d000000ff9999fffffffffff777fffffbffffff00000000f2e7e2ffff0fffff499afff929a00000014900000000000000000000000000000000000000000000
+2e000000f9999999ffffffffff7fffffbbbbbbbb000000002ee7ee2ff00fffff29aaff9a4a700000049a00000000000000000000000000000000000000000000
+3b000000999999990ffffffffffffffffbffffff000000002ee7ee2f000fffff33bbff3b3b700000013b00000000000000000000000000000000000000000000
+450000009999999900ffffffffffffffffbfffff000000002ee7ee2ff00fffff011cfffc1c700000011c00000000000000000000000000000000000000000000
+560000009999999f000fffffffffffffffffffff00000000f2e7e2ffff0fffff000000005d600000015d00000000000000000000000000000000000000000000
+6d000000f99999ff00000fffffffffffffffffff00000000ff222fffffffffff000000002e800000012e00000000000000000000000000000000000000000000
+76000000ffffffff00000000ffffffffffffffff00000000ffffffffffffffff000000005f70000001df00000000000000000000000000000000000000000000
 8e000000ff7fffff00000fffffcfffff777fffff777ffffffbfffffffffffffffff00000fff00000000000000000000000000000000000000000000000000000
 9a00000077777fff00000ffffcffffff7fffffff77ffffffbbbfffffffcccfffff00ccc0ff000cc0000000000000000000000000000000000000000000000000
 a7000000ff7fffff000000ffccccccccff7fffff7ffffffffbfffffffcfffcfff000c0c0f000c000000000000000000000000000000000000000000000000000
@@ -1840,4 +1849,8 @@ __map__
 0808080808080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0808080800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __sfx__
-000600022223022230232002320024200242002320022200212002120021200212002120003700037000470004700057000570005700057000570005700057000470004700037000270002700027000170001700
+000b00020f23010230100501005010050100501005010050137501375013750212002120003700037000470004700057000570005700057000570005700057000470004700037000270002700027000170001700
+00060000223301c3300a2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000100041e6601e650216600863020600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000600002f6503367031670256701c67019660156600a650046400162003610016000361002600026000360001600016000160001600016000260002600026000360003600036000000000000000000000000000
+000400001d5501d5501d5501c5501a550185501555013550105500955005550015500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
