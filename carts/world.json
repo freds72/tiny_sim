@@ -114,7 +114,7 @@
     ],
     "wx": [
         {"name":"clear, calm","dir":[0,0],"horiz":[2048,2048],"sky_gradient":[0,14,0,5760,2,0,23040,1,0]},
-        {"name":"clouds, breezy","dir":[60,10],"ceiling":500,"horiz":[64,512],"sky_gradient":[0,213,-23131,600,5,0],
+        {"name":"clouds, breezy","dir":[60,10],"ceiling":500,"horiz":[128,1024],"sky_gradient":[0,213,-23131,500,5,0],
         "cloud_mipmaps":[
             {"x":60,"y":32,"w":2},
             {"x":56,"y":32,"w":4},
