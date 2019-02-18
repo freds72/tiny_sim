@@ -350,10 +350,12 @@ function make_sim(s)
 			   -- sfx mgt
       -- see: https://www.lexaloffle.com/bbs/?tid=2341
       -- pitch+shl(instr,6)+shl(vol,9)
-      local pitch=band(18*(rpm-700)/1400,0x3f)
+      local pitch=(rpm-700)/1400
+      local rpmvol,propvol=shl(band(0x7,2+2*pitch),9),shl(band(0x7,1+pitch),9)
       -- sfx 2
-      poke4(0x3288,bor(pitch+0x0d80,shr(pitch+0x0980,16)))
- 	
+      poke4(0x3288,bor(band(0x3f,7*pitch)+0x040+rpmvol,shr(band(0x3f,3*pitch)+0x040+rpmvol,16)))
+			poke4(0x328c,bor(0x018c+propvol,bor(0x018c,shr(0x1a0+propvol,16))))					
+       	
       -- checklanded()
       if ias>180 then
         make_msg("crash: exceeded maximum speed")
@@ -364,8 +366,16 @@ function make_sim(s)
         onground=true
         if vs>-300 and pitch>-0.5 and abs(bank)<5 then 
           make_msg("good landing!")
+        		-- hit sound
+        		sfx(5)
+        		-- rolling sound
+        		sfx(6)
         elseif vs>-1000 and pitch>-0.5 and abs(bank)<30 then 
           make_msg("oops... hard landing")
+        		-- hit sound
+        		sfx(5)
+        		-- rolling sound
+        		sfx(6)
         else 
           make_msg("crash: collision with ground")
           self.crashed=true
@@ -375,6 +385,8 @@ function make_sim(s)
       end
       if alt>0 and onground then
         onground=nil
+        -- stop rolling sound
+        sfx(6,-2)
       end
      
       -- flaps(): moved to input
@@ -418,7 +430,7 @@ function make_sim(s)
 
       -- disphsi()
       --transparency
-      circfillt(64,111,15)
+      circfillt(64,111,15.5)
       circ(64,111,8,7)
       spr(19,62,95) --tick mark
       --cardinal directions
@@ -1435,28 +1447,26 @@ function rectfillt(x0,y0,x1,y1)
  end
 end
 function circfillt(x0,y0,r,ramp)
-	if(r==0) return
-	x0,y0=flr(x0),flr(y0)
+ if(r==0) return
+ x0,y0=flr(x0),flr(y0)
+ local x,y=0,flr(r)
+ local d=3-shl(r,1)
+
 	-- default ramp or provided?
 	ramp=ramp or shades
-	local x,y,dx,dy=flr(r),0,1,1
- r*=2
- local err=dx-r
 
- -- ugly hack to avoid overdraw
- local strips={}
- while x>=y do
-		strips[y],strips[x]=x,y
-
-	 if err<=0 then
-   y+=1
-   err+=dy
-   dy+=2
-		end
-		if err>0 then
-   x-=1
-   dx+=2
-   err+=dx-r
+	local strips={}
+	-- avoid overdraw
+ while y>=x do
+		strips[y]=x
+		strips[x]=y
+		
+		x+=1
+		if(d>0) then
+			y-=1
+			d+=shl(x-y,2)+10
+		else
+			d+=shl(x,2)+6
 		end
 	end
 	for k,v in pairs(strips) do
@@ -1848,6 +1858,8 @@ __map__
 __sfx__
 000b00020f23010230100501005010050100501005010050137501375013750212002120003700037000470004700057000570005700057000570005700057000470004700037000270002700027000170001700
 00060000223301c3300a2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-000100041e6601e650216600863020600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000100040314008140206200c62020600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 000600002f6503367031670256701c67019660156600a650046400162003610016000361002600026000360001600016000160001600016000260002600026000360003600036000000000000000000000000000
 000400001d5501d5501d5501c5501a550185501555013550105500955005550015500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00020000090500a7500a050097500504002740010300372001010067000870006000077000670007700087000800006700077000670007000097000670005700070000770019000180001800019000097001a000
+000200200475001040040400573007750047400375005040047600574004030047400305003050030500306003740037500305003750037400305003750017400375006040057400574003740057500505003760
