@@ -183,7 +183,6 @@ function make_sim(s)
 
 		-- engine sound
 		local sfx_channel=-1
-		--sfx(2)
 
   return {
     -- pos and orientation
@@ -350,11 +349,12 @@ function make_sim(s)
 			   -- sfx mgt
       -- see: https://www.lexaloffle.com/bbs/?tid=2341
       -- pitch+shl(instr,6)+shl(vol,9)
-      local pitch=(rpm-700)/1400
+      local pitch=(rpm-700)/1000 --original was 1400
       local rpmvol,propvol=shl(band(0x7,2+2*pitch),9),shl(band(0x7,1+pitch),9)
       -- sfx 2
       poke4(0x3288,bor(band(0x3f,7*pitch)+0x040+rpmvol,shr(band(0x3f,3*pitch)+0x040+rpmvol,16)))
-			poke4(0x328c,bor(0x018c+propvol,bor(0x018c,shr(0x1a0+propvol,16))))
+      --removed the following, prop noise does not noticeably increase with rpm
+      --poke4(0x328c,bor(0x018c+propvol,bor(0x018c,shr(0x1a0+propvol,16))))
 
       -- checklanded()
       if ias>180 then
@@ -364,18 +364,12 @@ function make_sim(s)
         sfx(4)
       elseif alt<=0 and not onground then
         onground=true
+        -- hit sound
+        sfx(5)
         if vs>-300 and pitch>-0.5 and abs(bank)<5 then
           make_msg("good landing!")
-        		-- hit sound
-        		sfx(5)
-        		-- rolling sound
-        		sfx(6)
-        elseif vs>-1000 and pitch>-0.5 and abs(bank)<30 then 
+        elseif vs>-1000 and pitch>-0.5 and abs(bank)<30 then
           make_msg("oops... hard landing")
-        		-- hit sound
-        		sfx(5)
-        		-- rolling sound
-        		sfx(6)
         else
           make_msg("crash: collision with ground")
           self.crashed=true
@@ -383,6 +377,7 @@ function make_sim(s)
           sfx(3)
         end
       end
+      if(onground and not self.crashed) sfx(6) --rolling sound
       if alt>0 and onground then
         onground=nil
         -- stop rolling sound
@@ -589,7 +584,9 @@ function make_sim(s)
       end
 
       -- dispwind()
-      if relwind>=0 and relwind<90 then
+      if onground then
+        nop()
+      elseif relwind>=0 and relwind<90 then
         spr(5,41,96)
       elseif relwind<=0 and relwind>-90 then
         spr(5,37,96,1,1,true,false)
@@ -1859,7 +1856,7 @@ __map__
 __sfx__
 000b00021d23023230150500000010050100501005010050100501375013750137502120021200037000370004700047000570005700057000570005700057000570004700047000370002700027000270001700
 00060000223301c3300a2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-000100040314008140206200c62020600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000100040314008140206100c61020600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 000600002f6503367031670256701c67019660156600a650046400162003610016000361002600026000360001600016000160001600016000260002600026000360003600036000000000000000000000000000
 000400001d5501d5501d5501c5501a550185501555013550105500955005550015500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00020000090500a7500a050097500504002740010300372001010067000870006000077000670007700087000800006700077000670007000097000670005700070000770019000180001800019000097001a000
