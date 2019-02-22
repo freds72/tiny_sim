@@ -22,10 +22,10 @@ end
 
 function _draw()
 	cls(1)
-	circfill(64,64,3,20)
+	circfill(64,64,15,20)
 	
 	--rectfillt(33+x,56+y,67+x,89+y)
- circfillt(33+x,56+y,3)
+ circfillt3(33+x,56+y,30)
  
 	fillp(0xa5a5)
 	--rect(33+x,56+y,67+x,89+y,0x87)
@@ -80,14 +80,15 @@ function circfillt(x0,y0,r)
 	end
 end
 
-function circfillt(x0,y0,r)
+function circfillt2(x0,y0,r)
 	if(r==0) return
- local x,y=0,r
- local d=3-shl(r,1)
+ 	local x,y=0,r
+ 	local d=3-shl(r,1)
 
 	local strips={}
 	-- avoid overdraw
- while y>=x do
+	 while y>=x do
+		
 		strips[y]=x
 		strips[x]=y
 		
@@ -105,6 +106,29 @@ function circfillt(x0,y0,r)
 	end
 end
 
+function circfillt3(x0,y0,r)
+ if(r==0) return
+	local x,y,d=r,0,1-r
+
+ while x>=y do
+		linet(x0-x,y0+y,x0+x)
+		if y!=0 then
+			linet(x0-x,y0-y,x0+x)
+		end
+		y+=1
+
+		if(d<0) then
+			d+=shl(y,1)+1
+		else
+			if x>=y then
+				linet(x0-y+1,y0+x,x0+y-1)
+				linet(x0-y+1,y0-x,x0+y-1)
+			end
+			x-=1
+			d+=shl(y-x+1,1)
+		end
+	end
+end
 
 function linet(x0,y0,x1)
  if(band(y0,0xff80)!=0) return
