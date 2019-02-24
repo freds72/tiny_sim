@@ -2,6 +2,8 @@ import bpy
 import bmesh
 import argparse
 import sys
+import math
+from mathutils import Vector, Matrix
 
 argv = sys.argv
 if "--" not in argv:
@@ -20,6 +22,8 @@ scene = bpy.context.scene
 # select first mesh object
 obcontext = [o for o in scene.objects if o.type == 'MESH'][0]
 obdata = obcontext.data
+
+lightcontexts = [o for o in scene.objects if o.type == 'LAMP']
 
 # charset
 charset="_0123456789abcdefghijklmnopqrstuvwxyz"
@@ -53,20 +57,17 @@ def diffuse_to_p8color(rgb):
 # airport lights references
 # light type -> color + number of lights per meter
 lights_db = {
-    "ALS": { "color": 7, "n": 10, "kind":0 },
-    "RWYEnd": { "color": 8, "n": 1, "kind":0 },
-    "RWYStart": { "color": 11, "n": 1, "kind":0 },
-    "RWL-Left": { "color": 7, "n": 30, "kind":0 },
-    "RWL-Right": { "color": 7, "n": 30, "kind":0 },
-    "RWY-CLL": { "color": 6, "n": 15, "kind":0 },
-    "RWY-CLL-End": { "color": 8, "n": 8, "kind":0 },
-    "TAXI": { "color": 12, "n": 20, "kind":0 },
-    "TAXI-CLL": { "color": 11, "n": 5, "kind":0 },
-    "CITY": { "color": 9, "n": 30, "kind":0 },
-    "PAPI_1": { "color": 7, "n": 4, "kind": 1},
-    "PAPI_2": { "color": 7, "n": 3, "kind": 1},
-    "PAPI_3": { "color": 8, "n": 2, "kind": 1},
-    "PAPI_4": { "color": 8, "n": 1, "kind": 1} 
+    "ALS": { "color": 7, "n": 10},
+    "RWYEnd": { "color": 8, "n": 1},
+    "RWYStart": { "color": 11, "n": 1},
+    "RWL-Left": { "color": 7, "n": 30},
+    "RWL-Right": { "color": 7, "n": 30},
+    "RWY-CLL": { "color": 6, "n": 15},
+    "RWY-CLL-End": { "color": 8, "n": 8},
+    "TAXI": { "color": 12, "n": 20},
+    "TAXI-CLL": { "color": 11, "n": 5},
+    "RWY-Guard": { "color": 10, "n": 3},
+    "CITY": { "color": 9, "n": 30} 
 }
 
 # group data
@@ -93,9 +94,22 @@ bm.from_mesh(obdata)
 # create a map loop index -> vertex index (see: https://www.python.org/dev/peps/pep-0274/)
 loop_vert = {l.index:l.vertex_index for l in obdata.loops}
 
-s = s + "{:02x}".format(len(obdata.vertices))
+vlen = len(obdata.vertices) + len(lightcontexts)*2
+# vertices
+s = s + "{:02x}".format(vlen)
 for v in obdata.vertices:
     s = s + "{}{}{}".format(pack_double(v.co.x), pack_double(v.co.z), pack_double(v.co.y))
+# lamps
+front = Vector((0,-1,0))
+for l in lightcontexts:
+    # light position
+    s = s + "{}{}{}".format(pack_double(l.location.x), pack_double(l.location.z), pack_double(l.location.y))
+    # light direction
+    tmp = front.copy()
+    tmp.rotate(l.rotation_euler)
+    tmp += l.location
+    # light end point ("normal")
+    s = s + "{}{}{}".format(pack_double(tmp.x), pack_double(tmp.z), pack_double(tmp.y))
 
 # all edges (except pure edge face)
 es = ""
@@ -118,20 +132,27 @@ for e in bm.edges:
                 light_group_name=cg.pop()
                 light=lights_db[light_group_name]            
                 light_color_index=light['color']
-                light_kind=light['kind']
                 # light color + light type
-                es = es + "{:02x}{:02x}{:02x}{:02x}".format(v0+1, v1+1, light_kind, light_color_index)
-                # light or papi?
-                if light_kind==0:
-                    # + number of lights
-                    # find out number of lights according to segment length
-                    num_lights=int(round(max(e.calc_length()/light['n'],2)))
-                    if num_lights>255:
-                        raise Exception('Too many lights ({}) for edge: ({},{}) category: {}'.format(num_lights,obdata.vertices[v0].co,obdata.vertices[v1].co,light_group_name))
-                    es = es + "{:02x}".format(num_lights)
-                else:
-                     es = es + "{:02x}".format(light['n'])
+                es = es + "{:02x}{:02x}{:02x}{:02x}".format(v0+1, v1+1, 0, light_color_index)
+                # number of lights
+                # find out number of lights according to segment length
+                num_lights=int(round(max(e.calc_length()/light['n'],2)))
+                if num_lights>255:
+                    raise Exception('Too many lights ({}) for edge: ({},{}) category: {}'.format(num_lights,obdata.vertices[v0].co,obdata.vertices[v1].co,light_group_name))
+                es = es + "{:02x}".format(num_lights)
                 es_count = es_count + 1
+
+# PAPI lights
+lightindex = len(obdata.vertices)
+for l in lightcontexts:
+    # todo: use atan to get angle from floor (to light in any direction...)
+    # rebase light angle
+    angle = -l.rotation_euler.x-math.pi/2
+    # to degrees
+    angle = 180*angle/math.pi
+    es = es + "{:02x}{:02x}{:02x}{:02x}{}".format(lightindex+1, lightindex + 2, 1, diffuse_to_p8color(l.data.color), pack_double(angle))
+    lightindex += 2
+    es_count = es_count + 1
 
 s = s + "{:02x}".format(es_count) + es
 
