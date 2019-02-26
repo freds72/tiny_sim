@@ -97,7 +97,7 @@ function json_parse(str, pos, end_delim)
   end
 end
 
-local world=json_parse'{"scenarios":[{"name":"visual approach","args":[-417,326.3,85,600,-1,0,25,112,3,2,1],"weather":1,"briefing":[{"fn":"print","args":["remain on runway axis. extend the\nflaps and keep speed at 65-70\nknots by using pitch and\nthrottle. at 50 feet, smoothly\nclose throttle and raise the\nnose to gently touch down\nbelow 65 knots.\ntoo easy? add some wind!",8,30,6]}]},{"name":"final approach","args":[-408.89,230.77,85,1000,1,0,75,112,3,2,1],"weather":2,"briefing":[{"fn":"print","args":["fly heading of approx. 085\nkeep localizer (  ) centered\n(the wind might push you away)\nmaintain 1000 ft\nintercept glide slope ( )\nreduce power and extend flaps\nstart 500 ft/min descent\nkeep localizer centered\nkeep glideslope centered\nat 200 ft reduce power & land",8,30,6]},{"fn":"spr","args":[20,71,36]},{"fn":"spr","args":[38,100,55]}]},{"name":"full approach","args":[-222.22,461.54,313,3000,0,0,91,112,3,2,1],"weather":3,"briefing":[{"fn":"print","args":["cross pco (  ) on heading 313\nintercept localizer (  )\nturn left heading 265\ndescend to 2000 ft\nturn right heading 310\nfly 1 minute\nturn left heading 130\nintercept localizer\nturn left heading 085\nfly final approach and land",8,30,6]},{"fn":"spr","args":[35,51,30]},{"fn":"spr","args":[20,91,36]}]},{"name":"engine failure!","args":[-422.2,408,85,500,10,0,0,65,4,2,5],"weather":1,"briefing":[{"fn":"print","args":["you have just taken off\nfrom tinyville for a trip\nto the beach, when the\nengine suddenly quits at\nonly 500 feet! make a steep\nturn back to airport while\nmaintaining best glide\nspeed (65 knots). can you\nmake it back? good luck!",8,30,6]}]},{"name":"unusual attitude","args":[-222.22,461.54,330,450,99,99,100,112,3,2,1],"weather":1,"briefing":[{"fn":"print","args":["while checking the map you did\nnot pay attention to your\nattitude. when you look up,\nthe airplane is out of control\nat low altitude. oops!\ncan you recover?\nhint: bank first, then pull up",8,30,6]}]},{"name":"free flight","args":[-422.2,384.6,85,0,0,0,0,0,5,2,1,true],"weather":1,"briefing":[{"fn":"print","args":["you are cleared for take-off\non runway 08 at tinyville.\napply full power and raise\nthe nose at 50-55 knots.\nhave fun!",8,30,6]}]}],"wx":[{"name":"clear, calm","dir":[0,0],"horiz":[2048,2048],"sky_gradient":[0,14,0,3,2,0,12,1,0]},{"name":"clouds, breezy","dir":[60,10],"ceiling":500,"horiz":[128,1024],"sky_gradient":[0,213,-23131,12,5,0],"cloud_mipmaps":[{"x":60,"y":32,"w":2},{"x":56,"y":32,"w":4},{"x":48,"y":32,"w":8},{"x":32,"y":32,"w":16},{"x":0,"y":32,"w":32}],"light_ramp":68,"light_dist":12},{"name":"low clouds, stormy","dir":[10,30],"ceiling":200,"horiz":[32,512],"sky_gradient":[0,5,0],"cloud_mipmaps":[{"x":124,"y":32,"w":2},{"x":120,"y":32,"w":4},{"x":112,"y":32,"w":8},{"x":96,"y":32,"w":16},{"x":64,"y":32,"w":32}],"light_ramp":68,"light_dist":8}],"db":[{"lat":-251.11,"lon":430.77,"name":"pco","type":"vor"},{"lat":-422.46,"lon":387.59,"name":"itn","type":"ils","angle":85},{"lat":-422.2,"lon":384.6,"name":"tny","type":"apt","angle":85},{"lat":-244,"lon":268.5,"name":"smallville","type":"cty"},{"lat":-66.67,"lon":153.85,"name":"smv","type":"apt","angle":40},{"lat":-177.78,"lon":246.15,"name":"wee","type":"vor"}],"vspeeds":[{"ias":55,"s":40},{"ias":60,"s":56},{"ias":65,"s":41},{"ias":79,"s":57}],"hsic":[64,111],"bp":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124]],"e":[[1,2],[1,3],[1,4],[5,6]]},"nesw":[[64,99,52],[52,111,53],[64,123,36],[76,111,37]],"cdii":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124],[64,104],[64,118]],"e":[[1,2],[1,3],[1,4],[5,6],[7,8]]},"cockpit":[{"fn":"rectfill","args":[10,36,127,42,0]},{"fn":"print","args":["nav1",11,37,7]},{"fn":"line","args":[43,36,43,42,7]},{"fn":"spr","args":[7,47,37]},{"fn":"print","args":["dis",75,37,7]},{"fn":"print","args":["gs",107,37]},{"fn":"rectfill","args":[0,115,8,127,0]},{"fn":"line","args":[4,90,4,110,5]},{"fn":"line","args":[5,90,5,110,13]},{"fn":"line","args":[5,90,5,110,13]},{"fn":"rectfill","args":[11,97,33,119,0]},{"fn":"line","args":[41,71,45,71,10]},{"fn":"line","args":[83,71,87,71]},{"fn":"rectfill","args":[57,88,71,94,0]},{"fn":"pset","args":[70,89,7]},{"fn":"rectfill","args":[107,121,127,127,0]},{"fn":"line","args":[45,111,47,111,7]},{"fn":"line","args":[81,111,83,111,7]},{"fn":"spr","args":[18,71,120,1,1,true,false]},{"fn":"spr","args":[34,79,115,1,1,true,false]},{"fn":"rectfill","args":[87,115,100,127,0]},{"fn":"rectfill","args":[79,123,86,127]},{"fn":"spr","args":[35,79,122,1,1,true,false]},{"fn":"rectfill","args":[40,95,45,100,0]},{"fn":"spr","args":[49,4,27]},{"fn":"spr","args":[50,-4,29]},{"fn":"sspr","args":[15,24,1,8,12,26,116,8]}],"stars":[[-18.4,23.8,-11],[-4.2,12.9,-29],[-30,11.7,5.7],[-11.5,15.6,-25.5],[-17.1,14,-23.2],[-4.7,3.4,-31.5],[13.6,11.9,-26.4],[25.3,7.9,17.9],[26.3,11.3,-14.2],[6.7,19.8,24.2],[-23.7,9.9,19.1],[30.9,1,8],[-30.7,3.7,-8.9],[1,15.1,-28.2],[22.2,8.7,-21.3],[8.1,24.6,-18.7],[-16.8,7.2,26.6],[30.2,9.9,-3],[6.9,19.9,24],[21.1,10.9,-21.5],[-28.2,12,9.3],[28.8,13,-4.5],[19,2.8,-26.1],[-12.1,13.6,-26.4],[-17.3,12.7,-24.1],[16.3,9.4,26.4],[-16.7,7.1,-26.5],[13.5,28.1,-7],[-1.8,16.9,-27.1],[-18.9,8.8,-25],[21.4,6.8,-23.3],[25.8,8,-17],[21.8,1.1,-23.4],[-27,6,16.1],[-6.2,10.1,-29.8],[23,1.2,-22.3],[-25.3,16.4,-10.8],[-21.7,15.8,-17.5],[19.1,20.7,15],[18.6,12.4,-23.4],[25.2,5.5,19.4],[8.5,29.8,7.8],[-23.9,19.7,7.9],[29,4.2,12.7],[15.5,1.3,28.4],[17.6,6.1,25.9],[23.1,4,21.8],[14.7,11.4,26.5]]}'
+local world=json_parse'{"scenarios":[{"name":"visual approach","args":[-417,326.3,85,600,-1,0,25,112,3,2,1],"weather":1,"briefing":[{"fn":"print","args":["remain on runway axis. extend the\nflaps and keep speed at 65-70\nknots by using pitch and\nthrottle. at 50 feet, smoothly\nclose throttle and raise the\nnose to gently touch down\nbelow 65 knots.\ntoo easy? add some wind!",8,30,6]}]},{"name":"final approach","args":[-408.89,230.77,85,1000,1,0,75,112,3,2,1],"weather":2,"briefing":[{"fn":"print","args":["fly heading of approx. 085\nkeep localizer (  ) centered\n(the wind might push you away)\nmaintain 1000 ft\nintercept glide slope ( )\nreduce power and extend flaps\nstart 500 ft/min descent\nkeep localizer centered\nkeep glideslope centered\nat 200 ft reduce power & land",8,30,6]},{"fn":"spr","args":[20,71,36]},{"fn":"spr","args":[38,100,55]}]},{"name":"full approach","args":[-222.22,461.54,313,3000,0,0,91,112,3,2,1],"weather":3,"briefing":[{"fn":"print","args":["cross pco (  ) on heading 313\nintercept localizer (  )\nturn left heading 265\ndescend to 2000 ft\nturn right heading 310\nfly 1 minute\nturn left heading 130\nintercept localizer\nturn left heading 085\nfly final approach and land",8,30,6]},{"fn":"spr","args":[35,51,30]},{"fn":"spr","args":[20,91,36]}]},{"name":"engine failure!","args":[-422.2,408,85,500,10,0,0,65,4,2,5],"weather":1,"briefing":[{"fn":"print","args":["you have just taken off\nfrom tinyville for a trip\nto the beach, when the\nengine suddenly quits at\nonly 500 feet! make a steep\nturn back to airport while\nmaintaining best glide\nspeed (65 knots). can you\nmake it back? good luck!",8,30,6]}]},{"name":"unusual attitude","args":[-222.22,461.54,330,450,99,99,100,112,3,2,1],"weather":1,"briefing":[{"fn":"print","args":["while checking the map you did\nnot pay attention to your\nattitude. when you look up,\nthe airplane is out of control\nat low altitude. oops!\ncan you recover?\nhint: bank first, then pull up",8,30,6]}]},{"name":"free flight","args":[-422.2,384.6,85,0,0,0,0,0,5,2,1,true],"weather":1,"briefing":[{"fn":"print","args":["you are cleared for take-off\non runway 08 at tinyville.\napply full power and raise\nthe nose at 50-55 knots.\nhave fun!",8,30,6]}]}],"wx":[{"name":"clear, calm","dir":[0,0],"horiz":[2048,2048],"sky_gradient":[0,14,0,3,2,0,12,1,0]},{"name":"clouds, breezy","dir":[60,10],"ceiling":500,"horiz":[128,1024],"sky_gradient":[0,213,-23131,12,5,0],"cloud_mipmaps":[{"x":60,"y":32,"w":2},{"x":56,"y":32,"w":4},{"x":48,"y":32,"w":8},{"x":32,"y":32,"w":16},{"x":0,"y":32,"w":32}],"light_ramp":68,"light_scale":0.08},{"name":"low clouds, stormy","dir":[10,30],"ceiling":200,"horiz":[32,512],"sky_gradient":[0,5,0],"cloud_mipmaps":[{"x":124,"y":32,"w":2},{"x":120,"y":32,"w":4},{"x":112,"y":32,"w":8},{"x":96,"y":32,"w":16},{"x":64,"y":32,"w":32}],"light_ramp":68,"light_scale":0.125}],"db":[{"lat":-251.11,"lon":430.77,"name":"pco","type":"vor"},{"lat":-422.46,"lon":387.59,"name":"itn","type":"ils","angle":85},{"lat":-422.2,"lon":384.6,"name":"tny","type":"apt","angle":85},{"lat":-244,"lon":268.5,"name":"smallville","type":"cty"},{"lat":-66.67,"lon":153.85,"name":"smv","type":"apt","angle":40},{"lat":-177.78,"lon":246.15,"name":"wee","type":"vor"}],"vspeeds":[{"ias":55,"s":40},{"ias":60,"s":56},{"ias":65,"s":41},{"ias":79,"s":57}],"hsic":[64,111],"bp":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124]],"e":[[1,2],[1,3],[1,4],[5,6]]},"nesw":[[64,99,52],[52,111,53],[64,123,36],[76,111,37]],"cdii":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124],[64,104],[64,118]],"e":[[1,2],[1,3],[1,4],[5,6],[7,8]]},"cockpit":[{"fn":"rectfill","args":[10,36,127,42,0]},{"fn":"print","args":["nav1",11,37,7]},{"fn":"line","args":[43,36,43,42,7]},{"fn":"spr","args":[7,47,37]},{"fn":"print","args":["dis",75,37,7]},{"fn":"print","args":["gs",107,37]},{"fn":"rectfill","args":[0,115,8,127,0]},{"fn":"line","args":[4,90,4,110,5]},{"fn":"line","args":[5,90,5,110,13]},{"fn":"line","args":[5,90,5,110,13]},{"fn":"rectfill","args":[11,97,33,119,0]},{"fn":"line","args":[41,71,45,71,10]},{"fn":"line","args":[83,71,87,71]},{"fn":"rectfill","args":[57,88,71,94,0]},{"fn":"pset","args":[70,89,7]},{"fn":"rectfill","args":[107,121,127,127,0]},{"fn":"line","args":[45,111,47,111,7]},{"fn":"line","args":[81,111,83,111,7]},{"fn":"spr","args":[18,71,120,1,1,true,false]},{"fn":"spr","args":[34,79,115,1,1,true,false]},{"fn":"rectfill","args":[87,115,100,127,0]},{"fn":"rectfill","args":[79,123,86,127]},{"fn":"spr","args":[35,79,122,1,1,true,false]},{"fn":"rectfill","args":[40,95,45,100,0]},{"fn":"spr","args":[49,4,27]},{"fn":"spr","args":[50,-4,29]},{"fn":"sspr","args":[15,24,1,8,12,26,116,8]}],"stars":[[-18.4,23.8,-11],[-4.2,12.9,-29],[-30,11.7,5.7],[-11.5,15.6,-25.5],[-17.1,14,-23.2],[-4.7,3.4,-31.5],[13.6,11.9,-26.4],[25.3,7.9,17.9],[26.3,11.3,-14.2],[6.7,19.8,24.2],[-23.7,9.9,19.1],[30.9,1,8],[-30.7,3.7,-8.9],[1,15.1,-28.2],[22.2,8.7,-21.3],[8.1,24.6,-18.7],[-16.8,7.2,26.6],[30.2,9.9,-3],[6.9,19.9,24],[21.1,10.9,-21.5],[-28.2,12,9.3],[28.8,13,-4.5],[19,2.8,-26.1],[-12.1,13.6,-26.4],[-17.3,12.7,-24.1],[16.3,9.4,26.4],[-16.7,7.1,-26.5],[13.5,28.1,-7],[-1.8,16.9,-27.1],[-18.9,8.8,-25],[21.4,6.8,-23.3],[25.8,8,-17],[21.8,1.1,-23.4],[-27,6,16.1],[-6.2,10.1,-29.8],[23,1.2,-22.3],[-25.3,16.4,-10.8],[-21.7,15.8,-17.5],[19.1,20.7,15],[18.6,12.4,-23.4],[25.2,5.5,19.4],[8.5,29.8,7.8],[-23.9,19.7,7.9],[29,4.2,12.7],[15.5,1.3,28.4],[17.6,6.1,25.9],[23.1,4,21.8],[14.7,11.4,26.5]]}'
 local all_models={}
 
 --scenarios (name,lat,lon,hdg,alt,pitch,bank,throttle,tas,dto,nav1,nav2,onground)
@@ -1070,12 +1070,12 @@ function collect_drawables(model,m,pos,out)
     if e.kind==1 then -- papi light?
       local p0=cam:project2d(a)
       if p0[3]>0 then
-	      local n=v_dot(v_fwd,make_v(a,b))/0.0202
+	      local n=v_dot(a,a)-v_dot(a,b)
        c=n>0 and 7 or c
        local r=mid(p0[3]/4,0,3)
 	      add(out,{r=r,key=-p0[3],x=p0[1],y=p0[2],c=c}) 
        -- hightlight
-	      add(out,{r=r/2,key=-p0[3],x=p0[1],y=p0[2],c=c})      
+	      add(out,{r=r*0.75,key=-p0[3],x=p0[1],y=p0[2],c=c})      
       end      
     else -- lightline?      
       -- line clipping aginst near cam plane
@@ -1108,7 +1108,7 @@ function collect_drawables(model,m,pos,out)
       if viz then
         local p0,p1=cam:project2d(a),cam:project2d(b)
         local bloom=lerp(24,12,mid(-20*cam.m[7],0,1))    
-        lightline(p0[1],p0[2],p1[1],p1[2],c,0,p0[3],t*e.n,p1[3],bloom,out)
+        lightline(p0[1],p0[2],p1[1],p1[2],c,0,p0[3],t*e.n,p1[3],bloom,e.scale,out)
       end
     end
 	end
@@ -1340,10 +1340,11 @@ function project_texpoly(p)
 end
 
 -- draw a light line
-function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,out)
+function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,scale,out)
 
   -- get color ramp from weather
-  local ramp,light_dist=wx[wnd].light_ramp or 64,wx[wnd].light_dist or 2
+  local ramp=wx[wnd].light_ramp or 64
+  scale*=(wx[wnd].light_scale or 0.5)
 
  local w,h=abs(x1-x0),abs(y1-y0)
 
@@ -1366,7 +1367,7 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,out)
    for y=y0,min(y1,40) do
 		  local u=flr(u0/w0)
     if prevu and prevu!=u then
- 				local col=sget(ramp+3*mid(w0/light_dist-u%2,0,1),c)
+ 				local col=sget(ramp+3*mid(scale*w0-u%2,0,1),c)
      if(col!=0) pset(x0,y,col)
       -- avoid too many lights!
       if bloom and w0>bloom then
@@ -1396,7 +1397,7 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,out)
    for x=x0,min(x1,127) do
 		  local u=flr(u0/w0)
       if prevu and prevu!=u then
-        local col=sget(ramp+3*mid(w0/light_dist-u%2,0,1),c)
+        local col=sget(ramp+3*mid(scale*w0-u%2,0,1),c)
         if(col!=0) pset(x,y0,col)
 	  	  if bloom and w0>bloom then
 			    add(out,{key=-w0,x=x,y=y0,c=c})
@@ -1567,11 +1568,11 @@ function unpack_models(scale)
 				kind=unpack_int(),
 				-- color
         c=unpack_int()
-    }
-      -- number of light
-			-- or
-      -- papi angle
-      e.n=e.kind==1 and unpack_double() or unpack_int()
+      }
+      -- number of light + light intensity
+      if e.kind==0 then
+        e.n,e.scale=unpack_int(),unpack_float()
+      end
 
 			add(model.e,e)
 		end
@@ -1667,12 +1668,12 @@ __gfx__
 000000007fffffffffffffffffffffff55fffffff777fffffffffffffffffeff0000000053b00000005300000000000000000000000000000000000000000000
 00000000ffffffffffff1c7777c1ffff5fffffffffffffffffffffffffffffff0000000024900000002400000000000000000000000000000000000000000000
 00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000055600000001500000000000000000000000000000000000000000000
-00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff1556005656700000015600000000000000000000000000000000000000000000
-00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff5677067757700000056700000000000000000000000000000000000000000000
-00000000ffffffffffffffff77777fffffbfffff7ffffff7ff222fffffffffff1288028828800000002800000000000000000000000000000000000000000000
-1d000000fffffffffffffffff777fffffbffffff77777777f2e7e2ffff0fffff499a024929a00000014900000000000000000000000000000000000000000000
-2e000000ff555fffffffffffff7fffffbbbbbbbbffffffff2ee7ee2ff00fffff29aa009a4aa00000049a00000000000000000000000000000000000000000000
-3b000000ff555fff0ffffffffffffffffbffffffffffffff2ee7ee2f000fffff33bb003b3bb00000013b00000000000000000000000000000000000000000000
+00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff0156005656700000015600000000000000000000000000000000000000000000
+00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff0567067757700000056700000000000000000000000000000000000000000000
+00000000ffffffffffffffff77777fffffbfffff7ffffff7ff222fffffffffff0288028828800000002800000000000000000000000000000000000000000000
+1d000000fffffffffffffffff777fffffbffffff77777777f2e7e2ffff0fffff0149024929a00000014900000000000000000000000000000000000000000000
+2e000000ff555fffffffffffff7fffffbbbbbbbbffffffff2ee7ee2ff00fffff049a009a4aa00000049a00000000000000000000000000000000000000000000
+3b000000ff555fff0ffffffffffffffffbffffffffffffff2ee7ee2f000fffff033b003b3bb00000013b00000000000000000000000000000000000000000000
 45000000ff555fff00ffffffffffffffffbfffffffffffff2ee7ee2ff00fffff011c000c1cc00000011c00000000000000000000000000000000000000000000
 56000000ffffffff000ffffffffffffffffffffffffffffff2e7e2ffff0fffff000000005d600000015d00000000000000000000000000000000000000000000
 6d000000ffffffff00000fffffffffffffffffffffffffffff222fffffffffff000000002e800000012e00000000000000000000000000000000000000000000
@@ -1734,15 +1735,16 @@ ba73000000000000000037cffc83000500000000000000000000000000000000ff830369baa977bd
 0a040f0400e58e040f040016e2540f040066e225070400d40204000400732e04000400930c04c904007304548f0400730464490400730e64490400461e048704
 00f58a548e040056d004870400d551841e0400b50ea4120400a50a841e0400a50a841e2408a50aa4122408a50a841e2408b50ea4122408b50e841b2408a507a4
 152408a507841b2408c501a4152408c50184183402a507a4153402a50784183402c501a4153402c501048804002405a4120400b50e2507040095e074dc040095
-e07403040095ea64dc040066e27403040056cc74030400730674dc0400d49b74dc04008567143e040063a2143e04008343a30604000400a30604010410b30a04
-000400b30a04010410c30e04000400c30e04010410e30204000400e302040104101231110070231441007002c2d2006005e2f200806213230070203343007020
-112100b0e131410080e173830070e136c300c011e3b300c032241400c06004e300c060d33400c090c4a400b080544400b060647400b011948400b009a4b400b0
-9193a300c0402114007021260600c0a0e5f500c09063f300c04034e500c0a0162400c020f33600c020465600a093667600a0b0869610800483a6b610800433c6
-d6108004d2e6f61080048230e0f14210617082d237872fdf09d237f631cea1d23736179dd6d237044edd83d2378128af55d237e0525180d237604692c8d237f0
-f0741fd2371119e500d2375127e6cdd237b1bcf643d2371370672ad237b401a6dbd23706ec952ad237c7b59309d237183accced2377efc0c89d237b7a8d2b9d2
-37eafe8aa8d237caf03b6cd237f099d2ded2379b1091201000907030200090b040300090515040009061605000900170600090f080700090c09080009001a090
-0090c0b0a00090a0c0b00090b0d0c00090e0e0d00090d0f0e000901101f000901110010090b160f00090e430c00090b490010090c3601100900230210090b101
-31009091f041009013c0510090929061009013000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+e07403040095ea64dc040066e27403040056cc74030400730674dc0400d49b74dc04008567143e040063a2143e04008343a30604000400a30674af041ab30a04
+000400b30a74cf04d7c30e04000400c30e74ef0495e30204000400e30274ff0463123111007023a91441007002a9c2d20060050ae2f20080620a13230070200a
+33430070200a112100b0e10a31410080e10a73830070e10a36c300c01138e3b300c03238241400c0603804e300c06038d33400c09038c4a400b08038544400b0
+6038647400b01138948400b00938a4b400b0913893a300c040382114007021a9260600c0a038e5f500c0903863f300c0403834e500c0a038162400c02038f336
+00c02038465600a09338667600a0b03886961080a6b61080c6d61080e6f6108030e0f14210617082d237872fdf09d237f631cea1d23736179dd6d237044edd83
+d2378128af55d237e0525180d237604692c8d237f0f0741fd2371119e500d2375127e6cdd237b1bcf643d2371370672ad237b401a6dbd23706ec952ad237c7b5
+9309d237183accced2377efc0c89d237b7a8d2b9d237eafe8aa8d237caf03b6cd237f099d2ded2379b109120100090700a30200090b00a40300090510a504000
+90610a60500090010a70600090f00a80700090c00a90800090010aa0900090c00ab0a00090a00ac0b00090b00ad0c00090e00ae0d00090d00af0e00090110a01
+f00090110a10010090b10a60f00090e40a30c00090b40a90010090c30a60110090020a30210090b10a01310090910af0410090130ac0510090920a9061009013
+0a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __label__
 11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
 11111111111111111111111111111111111111116111111111111111111111111111111111111111111111111111111111111111111111111111111111111111

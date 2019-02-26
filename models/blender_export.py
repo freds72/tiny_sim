@@ -57,17 +57,17 @@ def diffuse_to_p8color(rgb):
 # airport lights references
 # light type -> color + number of lights per meter
 lights_db = {
-    "ALS": { "color": 7, "n": 10},
-    "RWYEnd": { "color": 8, "n": 1},
-    "RWYStart": { "color": 11, "n": 1},
-    "RWL-Left": { "color": 7, "n": 30},
-    "RWL-Right": { "color": 7, "n": 30},
-    "RWY-CLL": { "color": 6, "n": 15},
-    "RWY-CLL-End": { "color": 8, "n": 8},
-    "TAXI": { "color": 12, "n": 20},
-    "TAXI-CLL": { "color": 11, "n": 5},
-    "RWY-Guard": { "color": 10, "n": 3},
-    "CITY": { "color": 9, "n": 30} 
+    "ALS": { "color": 7, "n": 10, "intensity":1},
+    "RWYEnd": { "color": 8, "n": 1, "intensity":1},
+    "RWYStart": { "color": 11, "n": 1, "intensity":1},
+    "RWL-Left": { "color": 7, "n": 30, "intensity":0.8},
+    "RWL-Right": { "color": 7, "n": 30, "intensity":0.8},
+    "RWY-CLL": { "color": 6, "n": 15, "intensity":1},
+    "RWY-CLL-End": { "color": 8, "n": 8, "intensity":1},
+    "TAXI": { "color": 12, "n": 20, "intensity":0.1},
+    "TAXI-CLL": { "color": 11, "n": 5, "intensity":0.1},
+    "RWY-Guard": { "color": 10, "n": 3, "intensity":0.1},
+    "CITY": { "color": 9, "n": 30, "intensity":1} 
 }
 
 # group data
@@ -100,7 +100,7 @@ s = s + "{:02x}".format(vlen)
 for v in obdata.vertices:
     s = s + "{}{}{}".format(pack_double(v.co.x), pack_double(v.co.z), pack_double(v.co.y))
 # lamps
-front = Vector((0,-1,0))
+front = Vector((0,-128,0))
 for l in lightcontexts:
     # light position
     s = s + "{}{}{}".format(pack_double(l.location.x), pack_double(l.location.z), pack_double(l.location.y))
@@ -132,6 +132,7 @@ for e in bm.edges:
                 light_group_name=cg.pop()
                 light=lights_db[light_group_name]            
                 light_color_index=light['color']
+                light_scale=light['intensity']
                 # light color + light type
                 es = es + "{:02x}{:02x}{:02x}{:02x}".format(v0+1, v1+1, 0, light_color_index)
                 # number of lights
@@ -139,18 +140,13 @@ for e in bm.edges:
                 num_lights=int(round(max(e.calc_length()/light['n'],2)))
                 if num_lights>255:
                     raise Exception('Too many lights ({}) for edge: ({},{}) category: {}'.format(num_lights,obdata.vertices[v0].co,obdata.vertices[v1].co,light_group_name))
-                es = es + "{:02x}".format(num_lights)
+                es = es + "{:02x}{}".format(num_lights,pack_float(light_scale))
                 es_count = es_count + 1
 
 # PAPI lights
 lightindex = len(obdata.vertices)
 for l in lightcontexts:
-    # todo: use atan to get angle from floor (to light in any direction...)
-    # rebase light angle
-    angle = -l.rotation_euler.x-math.pi/2
-    # to degrees
-    angle = 180*angle/math.pi
-    es = es + "{:02x}{:02x}{:02x}{:02x}{}".format(lightindex+1, lightindex + 2, 1, diffuse_to_p8color(l.data.color), pack_double(angle))
+    es = es + "{:02x}{:02x}{:02x}{:02x}".format(lightindex+1, lightindex + 2, 1, diffuse_to_p8color(l.data.color))
     lightindex += 2
     es_count = es_count + 1
 

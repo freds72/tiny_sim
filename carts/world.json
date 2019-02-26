@@ -121,7 +121,7 @@
             {"x":48,"y":32,"w":8},
             {"x":32,"y":32,"w":16},
             {"x":0,"y":32,"w":32}],
-        "light_ramp":68,"light_dist":12},
+        "light_ramp":68,"light_scale":0.08},
         {"name":"low clouds, stormy","dir":[10,30],"ceiling":200,"horiz":[32,512],"sky_gradient":[0,5,0],
         "cloud_mipmaps":[
             {"x":124,"y":32,"w":2},
@@ -129,7 +129,7 @@
             {"x":112,"y":32,"w":8},
             {"x":96,"y":32,"w":16},
             {"x":64,"y":32,"w":32}],
-        "light_ramp":68,"light_dist":8}
+        "light_ramp":68,"light_scale":0.125}
     ],
     "db": [
         {
