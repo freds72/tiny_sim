@@ -151,7 +151,7 @@ end
 -- create a simulator entity from the given scenario
 function make_sim(s)
   local brg,dist,crs,cdi={},{},0,0
-  local rpm,vs,aoa,timer,flps,blag,plag,slag=2200,0,0,0,0,0,0,0
+  local rpm,vs,aoa,timer,flps,blag,plag,slag,relwind=2200,0,0,0,0,0,0,0
 
   -- plane pos/orientation
   local lat,lon,heading,alt,pitch,bank,throttle,tas,dto,nav1,nav2,onground=munpack(scenarios[s].args)
@@ -266,8 +266,7 @@ function make_sim(s)
     end,
     update=function(self)
       -- calcalt
-      local coeff=88
-      if(vs<0) coeff=74
+      local coeff=vs<0 and 74 or 88
       vs=tas*-(sin((pitch-aoa)/360))*coeff
       if(alt==0) vs=max(vs)
       alt=max(alt+vs/1800)
