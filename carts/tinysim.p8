@@ -817,6 +817,8 @@ function _update()
 			-- switch l/r cockpit
    if btnp(4,1) then --tab
     menu=menu==0 and 2 or 0
+   	-- offset pilot pos when looking right
+   	pilot_pos[1]=menu==0 and 0 or 0.03
    end
   end
 end
@@ -914,14 +916,6 @@ function zbuf_filter(array)
 	end
 end
 
-function clone(src,dst)
-	dst=dst or {}
-	for k,v in pairs(src) do
-		if(not dst[k]) dst[k]=v
-	end
-	return dst
-end
-
 function lerp(a,b,t)
 	return a*(1-t)+b*t
 end
@@ -937,16 +931,6 @@ function v_clone(v)
 end
 function v_dot(a,b)
 	return a[1]*b[1]+a[2]*b[2]+a[3]*b[3]
-end
-function v_normz(v)
-	local d=v_dot(v,v)
-	if d>0.001 then
-		d=sqrt(d)
-		v[1]/=d
-		v[2]/=d
-		v[3]/=d
-	end
-	return d
 end
 function v_scale(v,scale)
 	v[1]*=scale
@@ -964,18 +948,6 @@ end
 function m_x_v(m,v)
 	local x,y,z=v[1],v[2],v[3]
 	v[1],v[2],v[3]=m[1]*x+m[5]*y+m[9]*z+m[13],m[2]*x+m[6]*y+m[10]*z+m[14],m[3]*x+m[7]*y+m[11]*z+m[15]
-end
-function m_x_xyz(m,x,y,z)
-	return
-		m[1]*x+m[5]*y+m[9]*z+m[13],
-		m[2]*x+m[6]*y+m[10]*z+m[14],
-		m[3]*x+m[7]*y+m[11]*z+m[15]
-end
--- inline matrix invert
--- inc. position
-function m_inv_x_v(m,v)
-	local x,y,z=v[1]-m[13],v[2]-m[14],v[3]-m[15]
-	v[1],v[2],v[3]=m[1]*x+m[2]*y+m[3]*z,m[5]*x+m[6]*y+m[7]*z,m[9]*x+m[10]*y+m[11]*z
 end
 
 function make_m_from_euler(x,y,z)
@@ -1002,17 +974,9 @@ end
 function m_set_pos(m,v)
 	m[13],m[14],m[15]=v[1],v[2],v[3]
 end
--- returns foward vector from matrix
-function m_fwd(m)
-	return {m[9],m[10],m[11]}
-end
 -- returns up vector from matrix
 function m_up(m)
 	return {m[5],m[6],m[7]}
-end
--- right vector
-function m_right(m)
-	return {m[1],m[2],m[3]}
 end
 
 local znear,zdir=0.25,-1
@@ -1139,11 +1103,8 @@ function make_actor(model,p,angle)
 end
 
 function make_cam(x0,y0,focal)
-	-- clip planes
- local znear=0.25
-
 	local c={
-		pos={0,0,3},
+		pos={0,0,0},
 		track=function(self,pos,m)
     self.pos=v_clone(pos)
 			
@@ -1159,10 +1120,11 @@ function make_cam(x0,y0,focal)
     -- world to cam
     v_add(v,self.pos,-1)
     
-    -- pilot height
+		m_x_v(self.m,v)
+
+    -- pilot height (cam space)
 		v_add(v,pilot_pos,-1)
 				
-		m_x_v(self.m,v)
     return v
   end,
 		-- project cam-space points into 2d
@@ -1528,8 +1490,8 @@ function unpack_models()
 			add(model.e,e)
 		end
 
-		-- merge with existing model
-		all_models[name]=clone(model,all_models[name])
+		-- index by name
+		all_models[name]=model
 	end
 end
 -- unpack stars
