@@ -127,6 +127,8 @@ local v_fwd,v_right,v_up={0,0,1},{1,0,0},{0,1,0}
 
 -- models & actors
 local all_models,actors,stars,cam={},{},{}
+-- pilot pos (in camera space)
+local pilot_pos={0,0.037,0}
 -- main game engine
 local sim
 
@@ -192,8 +194,7 @@ function make_sim(s)
   return {
     -- pos and orientation
     get_pos=function()
-      --correction for height of pilot in airplane
-      return {lat,(alt+4.4)/120,lon},make_m_from_euler(-pitch/360,heading/360-0.25,-bank/360)
+      return {lat,alt/120,lon},make_m_from_euler(-pitch/360,heading/360-0.25,-bank/360)
     end,
     flight={},
     crashed=false,
@@ -925,19 +926,6 @@ function lerp(a,b,t)
 	return a*(1-t)+b*t
 end
 
--- edge cases:
--- a: -23	-584	-21
--- b: 256	-595	256
-function sqr_dist(a,b)
-	local dx,dy,dz=b[1]-a[1],b[2]-a[2],b[3]-a[3]
-	if abs(dx)>128 or abs(dy)>128 or abs(dz)>128 then
-		return 32000
-	end
-	local d=dx*dx+dy*dy+dz*dz
-	-- overflow?
-	return d<0 and 32000 or d
-end
-
 function make_v(a,b)
 	return {
 		b[1]-a[1],
@@ -1050,16 +1038,20 @@ function collect_drawables(model,m,pos,out)
     end
     
     if e.kind==1 then -- papi light?
-      local p0=cam:project2d(a)
-      if p0[3]>0 then
-	      local n=v_dot(a,a)-v_dot(a,b)
-       c=n>0 and 7 or c
-       local r=mid(p0[3]/4,0,3)
-	      add(out,{r=r,key=-p0[3],x=p0[1],y=p0[2],c=c}) 
-       -- hightlight
-	      add(out,{r=r*0.75,key=-p0[3],x=p0[1],y=p0[2],c=c})      
-      end      
-    else -- lightline?      
+     local p0=cam:project2d(a)
+     local x0,y0,w0=p0[1],p0[2],p0[3]
+     if w0>0 then
+      local n=v_dot(a,a)-v_dot(a,b)
+      c=n>0 and 7 or c
+      -- dist dithering
+      local ramp=wx[wnd].light_ramp or 64
+      c=sget(ramp+3*mid(w0/8,0,1),c)
+      local r=mid(w0/4,0,3)
+      add(out,{r=r,key=-w0,x=x0,y=y0,c=c}) 
+      -- hightlight
+      add(out,{r=r*0.75,key=-w0,x=x0,y=y0,c=c})      
+     end      
+    elseif e.kind==0 then -- lightline?          
       -- line clipping aginst near cam plane
       -- swap end points
       -- simplified sutherland-atherton
@@ -1153,20 +1145,26 @@ function make_cam(x0,y0,focal)
 	local c={
 		pos={0,0,3},
 		track=function(self,pos,m)
-      self.pos=v_clone(pos)
-      self.m=m
-      m_inv(self.m)
-		end,
-    -- to camera space
-    modelview=function(self,m,v)
-      v=v_clone(v)
-      -- relative to world
-      m_x_v(m,v)
-      -- world to cam
-      v_add(v,self.pos,-1)
-      m_x_v(self.m,v)
-      return v
-    end,
+    self.pos=v_clone(pos)
+			
+		-- inverse view matrix
+    self.m=m
+    m_inv(self.m)
+	 end,
+  -- to camera space
+  modelview=function(self,m,v)
+    v=v_clone(v)
+    -- relative to world
+    m_x_v(m,v)
+    -- world to cam
+    v_add(v,self.pos,-1)
+    
+    -- pilot height
+		v_add(v,pilot_pos,-1)
+				
+		m_x_v(self.m,v)
+    return v
+  end,
 		-- project cam-space points into 2d
     project2d=function(self,v)
   	  -- view to screen
@@ -1236,18 +1234,20 @@ function draw_ground(self)
 	local x0,z0=cam.pos[1],cam.pos[3]
 	local dx,dy=x0%scale,z0%scale
 
+  color(1)
 	for i=-4,4 do
 		local ii=scale*i-dx+x0
 		for j=-4,4 do
 			local jj=scale*j-dy+z0
 			local v={ii,0,jj}
 			v_add(v,cam.pos,-1)
-   m_x_v(cam.m,v)
-  	v=cam:project2d(v)
+      m_x_v(cam.m,v)
+      v_add(v,pilot_pos,-1)
+      v=cam:project2d(v)
 			if v[3]>0 then
-				pset(v[1],v[2],1)
+				pset(v[1],v[2])
 			end
-  end
+    end
 	end
 	
  -- start alt.,color,pattern
@@ -1513,7 +1513,9 @@ function unpack_models()
 				unpack_int(),
 				-- end
 				unpack_int(),
-				-- kind
+        -- kind
+        -- 0: lightline
+        -- 1: papi light
 				kind=unpack_int(),
 				-- color
         c=unpack_int()
@@ -1539,8 +1541,7 @@ unpack_models()
 
 -->8
 -- textured trifill
--- perpsective correct
--- per-pixel mip-map selection
+-- perspective correct
 -- based off @p01 (based off chris hecker :)
 local dither_pat=json_parse'[0b1111111111111111,0b0111111111111111,0b0111111111011111,0b0101111111011111,0b0101111101011111,0b0101101101011111,0b0101101101011110,0b0101101001011110,0b0101101001011010,0b0001101001011010,0b0001101001001010,0b0000101001001010,0b0000101000001010,0b0000001000001010,0b0000001000001000,0b0000000000000000]'
 
