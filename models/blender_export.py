@@ -19,11 +19,6 @@ except Exception as e:
     sys.exit(repr(e))
 
 scene = bpy.context.scene
-# select first mesh object
-obcontext = [o for o in scene.objects if o.type == 'MESH'][0]
-obdata = obcontext.data
-
-lightcontexts = [o for o in scene.objects if o.type == 'LAMP']
 
 # charset
 charset="_0123456789abcdefghijklmnopqrstuvwxyz"
@@ -70,14 +65,112 @@ lights_db = {
     "CITY": { "color": 9, "n": 30, "intensity":1} 
 }
 
-# group data
-# create vertex group lookup dictionary for names
-vgroup_names = {vgroup.index: vgroup.name for vgroup in obcontext.vertex_groups}
-# create dictionary of vertex group assignments per vertex
-vgroups = {v.index: [vgroup_names[g.group] for g in v.groups] for v in obdata.vertices}
+def export_layer(l):
+    # data
+    s = ""
+    layer = [ob for ob in scene.objects if ob.layers[l]]
+    if len(layer)>0:
+        obcontext = [o for o in layer if o.type == 'MESH'][0]
+        lightcontexts = [o for o in layer if o.type == 'LAMP']
+        obdata = obcontext.data
+        bm = bmesh.new()
+        bm.from_mesh(obdata)
+
+        # create vertex group lookup dictionary for names
+        vgroup_names = {vgroup.index: vgroup.name for vgroup in obcontext.vertex_groups}
+        # create dictionary of vertex group assignments per vertex
+        vgroups = {v.index: [vgroup_names[g.group] for g in v.groups] for v in obdata.vertices}
+
+        # create a map loop index -> vertex index (see: https://www.python.org/dev/peps/pep-0274/)
+        loop_vert = {l.index:l.vertex_index for l in obdata.loops}
+
+        vlen = len(obdata.vertices) + len(lightcontexts)*2
+        # vertices
+        s = s + "{:02x}".format(vlen)
+        for v in obdata.vertices:
+            s = s + "{}{}{}".format(pack_double(v.co.x), pack_double(v.co.z), pack_double(v.co.y))
+        # lamp vertices
+        front = Vector((0,-48,0))
+        for l in lightcontexts:
+            # light position
+            s = s + "{}{}{}".format(pack_double(l.location.x), pack_double(l.location.z), pack_double(l.location.y))
+            # light direction
+            tmp = front.copy()
+            tmp.rotate(l.rotation_euler)
+            tmp += l.location
+            # light end point ("normal")
+            s = s + "{}{}{}".format(pack_double(tmp.x), pack_double(tmp.z), pack_double(tmp.y))
+
+        # faces
+        s = s + "{:02x}".format(len(obdata.polygons))
+        for f in obdata.polygons:
+            # color
+            if len(obcontext.material_slots)>0:
+                slot = obcontext.material_slots[f.material_index]
+                mat = slot.material
+                s = s + "{:02x}".format(diffuse_to_p8color(mat.diffuse_color))
+            else:
+                s = s + "{:02x}".format(1) # default color
+            # + vertex count
+            s = s + "{:02x}".format(len(f.loop_indices))
+            # + vertex id (= edge loop)
+            for li in f.loop_indices:
+                s = s + "{:02x}".format(loop_vert[li]+1)
+
+        # normals
+        s = s + "{:02x}".format(len(obdata.polygons))
+        for f in obdata.polygons:
+            s = s + "{}{}{}".format(pack_float(f.normal.x), pack_float(f.normal.z), pack_float(f.normal.y))
+
+        # all edges (except pure edge face)
+        es = ""
+        es_count = 0
+        # select pure edges
+        edges = [e for e in bm.edges if e.is_wire]
+        for e in edges:
+            v0 = e.verts[0].index
+            v1 = e.verts[1].index
+            # get vertex groups
+            g0 = vgroups[v0]
+            g1 = vgroups[v1]
+            # light line?
+            if len(g0)>0 and len(g1)>0:
+                if len(g0)>0 and len(g1)>0:
+                    # find common group (if any)
+                    cg = set(g0).intersection(g1)
+                    if len(cg)>1:
+                        raise Exception('Multiple vertex groups for the same edge ({},{}): {} x {} -> {}'.format(obdata.vertices[v0].co,obdata.vertices[v1].co,g0,g1,cg))
+                    if len(cg)==1:
+                        # get light specifications
+                        light_group_name=cg.pop()
+                        light=lights_db[light_group_name]            
+                        light_color_index=light['color']
+                        light_scale=light['intensity']
+                        # light color + light type
+                        es = es + "{:02x}{:02x}{:02x}{:02x}".format(v0+1, v1+1, 0, light_color_index)
+                        # number of lights
+                        # find out number of lights according to segment length
+                        num_lights=int(round(max(e.calc_length()/light['n'],2)))
+                        if num_lights>255:
+                            raise Exception('Too many lights ({}) for edge: ({},{}) category: {}'.format(num_lights,obdata.vertices[v0].co,obdata.vertices[v1].co,light_group_name))
+                        es = es + "{:02x}{}".format(num_lights,pack_float(light_scale))
+                        es_count = es_count + 1
+
+        # PAPI lights
+        lightindex = len(obdata.vertices)
+        for l in lightcontexts:
+            es = es + "{:02x}{:02x}{:02x}{:02x}".format(lightindex+1, lightindex + 2, 1, diffuse_to_p8color(l.data.color))
+            lightindex += 2
+            es_count = es_count + 1
+
+        s = s + "{:02x}".format(es_count) + es
+    return s
 
 # model data
 s = ""
+
+# select first mesh object
+obcontext = [o for o in scene.objects if o.type == 'MESH' and o.layers[0]][0]
 
 # object name
 name = obcontext.name.lower()
@@ -88,69 +181,17 @@ for c in name:
 # scale (custom model property)
 s = s + "{:02x}".format(obcontext.get("scale", 1))
 
-bm = bmesh.new()
-bm.from_mesh(obdata)
-
-# create a map loop index -> vertex index (see: https://www.python.org/dev/peps/pep-0274/)
-loop_vert = {l.index:l.vertex_index for l in obdata.loops}
-
-vlen = len(obdata.vertices) + len(lightcontexts)*2
-# vertices
-s = s + "{:02x}".format(vlen)
-for v in obdata.vertices:
-    s = s + "{}{}{}".format(pack_double(v.co.x), pack_double(v.co.z), pack_double(v.co.y))
-# lamps
-front = Vector((0,-128,0))
-for l in lightcontexts:
-    # light position
-    s = s + "{}{}{}".format(pack_double(l.location.x), pack_double(l.location.z), pack_double(l.location.y))
-    # light direction
-    tmp = front.copy()
-    tmp.rotate(l.rotation_euler)
-    tmp += l.location
-    # light end point ("normal")
-    s = s + "{}{}{}".format(pack_double(tmp.x), pack_double(tmp.z), pack_double(tmp.y))
-
-# all edges (except pure edge face)
-es = ""
-es_count = 0
-for e in bm.edges:
-    v0 = e.verts[0].index
-    v1 = e.verts[1].index
-    # get vertex groups
-    g0 = vgroups[v0]
-    g1 = vgroups[v1]
-    # pure edge or light line?
-    if e.is_wire or (len(g0)>0 and len(g1)>0):
-        if len(g0)>0 and len(g1)>0:
-            # find common group (if any)
-            cg = set(g0).intersection(g1)
-            if len(cg)>1:
-                raise Exception('Multiple vertex groups for the same edge ({},{}): {} x {} -> {}'.format(obdata.vertices[v0].co,obdata.vertices[v1].co,g0,g1,cg))
-            if len(cg)==1:
-                # get light specifications
-                light_group_name=cg.pop()
-                light=lights_db[light_group_name]            
-                light_color_index=light['color']
-                light_scale=light['intensity']
-                # light color + light type
-                es = es + "{:02x}{:02x}{:02x}{:02x}".format(v0+1, v1+1, 0, light_color_index)
-                # number of lights
-                # find out number of lights according to segment length
-                num_lights=int(round(max(e.calc_length()/light['n'],2)))
-                if num_lights>255:
-                    raise Exception('Too many lights ({}) for edge: ({},{}) category: {}'.format(num_lights,obdata.vertices[v0].co,obdata.vertices[v1].co,light_group_name))
-                es = es + "{:02x}{}".format(num_lights,pack_float(light_scale))
-                es_count = es_count + 1
-
-# PAPI lights
-lightindex = len(obdata.vertices)
-for l in lightcontexts:
-    es = es + "{:02x}{:02x}{:02x}{:02x}".format(lightindex+1, lightindex + 2, 1, diffuse_to_p8color(l.data.color))
-    lightindex += 2
-    es_count = es_count + 1
-
-s = s + "{:02x}".format(es_count) + es
+# layers = lod
+ln = 0
+ls = ""
+for i in range(2):
+    layer_data = export_layer(i)
+    if len(layer_data)>0:
+        ln += 1
+        ls = ls + layer_data
+# number of active lods
+s = s + "{:02x}".format(ln)
+s = s + ls
 
 #
 with open(args.out, 'w') as f:
