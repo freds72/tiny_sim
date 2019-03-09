@@ -117,7 +117,7 @@
         {"name":"clouds, breezy","dir":[60,10],"ceiling":500,"horiz":56,"sky_gradient":[0,213,-23131,500,5,0],
         "tex": {"x":0,"y":32},
         "light_ramp":68,"light_scale":0.125},
-        {"name":"low clouds, stormy","dir":[10,30],"ceiling":200,"horiz":28,"sky_gradient":[0,5,0],
+        {"name":"low clouds, stormy","dir":[10,20],"ceiling":200,"horiz":28,"sky_gradient":[0,5,0],
         "tex":{"x":64,"y":32},
         "light_ramp":68,"light_scale":0.08}
     ],
@@ -160,6 +160,13 @@
             "lon": 246.15,
             "name": "wee",
             "type": "vor"
+        },
+        {
+            "lat": 60,
+            "lon": 1200,
+            "name": "pti",
+            "type": "apt",
+            "angle": 170
         }
     ],
     "vspeeds":[
@@ -297,21 +304,65 @@
             ]
         ]
     },
+    "apsymbol": {
+        "v": [
+            [
+                55,
+                87
+            ],
+            [
+                61,
+                87
+            ],
+            [
+                58,
+                86
+            ],
+            [
+                58,
+                91
+            ],
+            [
+                57,
+                91
+            ],
+            [
+                59,
+                91
+            ]
+        ],
+        "e": [
+            [
+                1,
+                2
+            ],
+            [
+                3,
+                4
+            ],
+            [
+                5,
+                6
+            ]
+        ]
+    },
     "lcockpit": [
         {"fn":"map","args":[0,0,-4,26,17,3]},
         {"fn":"map","args":[0,3,-4,48,2,11]},
-        {"fn":"spr","args":[18,71,120]}, 
+        {"fn":"spr","args":[18,71,120]},
         {"fn":"spr","args":[34,79,115]},
         {"fn":"rectfill","args":[107,121,127,127,0]},
         {"fn":"rectfill","args":[87,115,100,127,0]},
-        {"fn":"spr","args":[35,79,122]} 
+        {"fn":"spr","args":[35,79,122]}
     ],
     "rcockpit":[
         {"fn":"clip","args":[]},
-        {"fn":"map","args":[17,0,-5,26,17,3]},
+        {"fn":"map","args":[17,0,-5,26,27,3]},
         {"fn":"map","args":[32,3,115,50,2,10]},
-        {"fn":"print","args":["1 nm",101,122,7]},
-        {"fn":"spr","args":[21,101,119]}
+        {"fn":"spr","args":[21,101,1230]},
+        {"fn":"spr","args":[5,109,120]},
+        {"fn":"print","args":["1nm",101,123,12]},
+        {"fn":"line","args":[3,36,3,42,0]}
     ],
     "briefing":[
         {"fn":"print","args":["press ❎ to   fly",8,112,7]},
@@ -330,8 +381,8 @@
         {"fn":"print","args":["q:   toggle flaps",8,87]},
         {"fn":"print","args":["tab: toggle map / pause",8,94]},
         {"fn":"rect","args":[5,77,101,101,6]},
-        {"fn":"rectfill","args":[78,88,83,89,7]}, 
-        {"fn":"spr","args":[4,62,80]}, 
+        {"fn":"rectfill","args":[78,88,83,89,7]},
+        {"fn":"spr","args":[4,62,80]},
         {"fn":"print","args":["@yellowbaron | 3d by @freds72",7,123,6]}
     ],
     "gs":[
