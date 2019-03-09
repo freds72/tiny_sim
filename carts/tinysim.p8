@@ -174,10 +174,9 @@ function make_sim(s)
   local mapclr={apt=14,vor=12,ils=0,cty=5}
 
   local warn=function(y)
+    local j=y>64 and -1 or 1
     for i=0,3 do
       local _y=y+i*aistep+pitch
-      local j=1
-      if(y>64) j=-1
       local x1,y1=rotatepoint({aipitch[1],_y},aic,-bank)
       local x2,y2=rotatepoint({aipitch[1]+aiwidth/2,_y+(aistep-2)*j},aic,-bank)
       local x3,y3=rotatepoint({aipitch[1]+aiwidth,_y},aic,-bank)
@@ -269,7 +268,7 @@ function make_sim(s)
     update=function(self)
       -- calcalt
       local coeff=vs<0 and 74 or 88
-      vs=tas*-(sin((pitch-aoa)/360))*coeff
+      vs=tas*-sin((pitch-aoa)/360)*coeff
       if(alt==0) vs=max(vs)
       alt=max(alt+vs/1800)
 
@@ -336,9 +335,6 @@ function make_sim(s)
            pitch-=slag*0.008
         end
       if (slag>=1) slag-=1
-
-      -- public var
-      self.pitch=pitch
 
       -- calcgs()
       local alpha=atan2(alt/6072,dist[nav1])*360-270
@@ -474,9 +470,8 @@ function make_sim(s)
         spr(4,1,108-throttle/5)
 
         -- dispspeed()
-        local dy=ias*3
         clip(22,50,32,41)
-        local n=ias>20 and flr(ias/10) or 2
+        local dy,n=ias*3,ias>20 and flr(ias/10) or 2
         for i=n,n+2 do
           local x=i*10>99 and 22 or 26
           print(i*10,x,70-(i*30)+dy,6)
@@ -509,9 +504,8 @@ function make_sim(s)
         clip()
 
         -- dispalt()
-        local dy=alt/5
         clip(95,50,16,41)
-        local n=alt>199 and flr(alt/100) or 2
+        local dy,n=alt/5,alt>199 and flr(alt/100) or 2
         for i=n-2,n+2 do
             local x=i<100 and 96 or 92
             print(i*100,x,70-(i*20)+dy,6)
@@ -534,7 +528,6 @@ function make_sim(s)
         elseif alt<995 then
           z=100
         end
-        -- todo: dubious 0.5/10 flooring
         if(alt>=100) print(flr((alt/10+0.5)/10),z,69,7)
 
         -- dispvs()
@@ -601,9 +594,8 @@ function make_sim(s)
         end
 
       elseif menu==2 then
-       clip(0,43,117,85)
        drawmap(heading)
-       clip()
+       -- clip included in rcockpit
        drawstatic(world.rcockpit)
        print(db[dto].name,16,37,14)
        color(14)
@@ -611,9 +603,6 @@ function make_sim(s)
        print(groundspeed,53,37)
 
       end
-      -- moved to dispnav():
-      --print(db[nav1].name,28,37,11)
-      --print(db[dto].name,56,37,14)
     end
   }
 end
@@ -691,6 +680,7 @@ end
 function drawmap(hdg)
  local dx,dy=scalemap(cam.pos[3],cam.pos[1])
  -- 58/87 are screen center coords for moving map
+ clip(0,43,117,85)       
  camera(-58+dx,-87+dy)
  map(34,0,-30,-128,47,31)
 
@@ -699,8 +689,8 @@ function drawmap(hdg)
   x-=3 --correct for sprite size
   y-=3
   if l.type=="vor" then
-    spr(39,x,y)
-    print(l.name,x+9,y+1,7)
+   spr(39,x,y)
+   print(l.name,x+9,y+1,7)
   elseif l.type=="ils" then
    local a,b=(l.angle-3)/360,(l.angle+3)/360
    local _x,_y=sin(a),cos(a)
@@ -1128,12 +1118,11 @@ function make_actor(model,p,angle)
 	-- instance
 	local a={
 		pos=v_clone(p),
+    model=all_models[model],
 		-- north is up
 		m=make_m_from_euler(0,angle-0.25,0)
   }
 
-  a.model=all_models[model]
-	a.update=a.update or nop
 	-- init position
   m_set_pos(a.m,p)
 	return a
@@ -1174,7 +1163,7 @@ function make_cam(x0,y0,focal)
 	return c
 end
 
-local clipplanes=json_parse'[[0,0,1],[0,0,8],[0,0,-1],[0,0,0.25],[0.707,0,-0.707],[0.25,0,0],[-0.707,0,-0.707],[-0.25,0,0],[0,0.707,-0.707],[0,0.25,0],[0,-0.707,-0.707],[0,-0.25,0]]'
+local clipplanes=json_parse'[[0,0,1],[0,0,8],[0.707,0,-0.707],[0.25,0,0],[-0.707,0,-0.707],[-0.25,0,0],[0,0.707,-0.707],[0,0.25,0],[0,-0.707,-0.707],[0,-0.25,0],[0,0,-1],[0,0,0.25]]'
 
 function draw_clouds()
  local weather=wx[wnd]
@@ -1192,13 +1181,13 @@ function draw_clouds()
     return
  end
 
- local cloudy,zfar=ceiling/120-cam.pos[2],512
+ local cloudy=ceiling/120-cam.pos[2]
  -- plane coords + u/v (32x32 texture)
  local cloudplane={
-		{zfar,cloudy,zfar,0,0},
-		{-zfar,cloudy,zfar,32,0},
-		{-zfar,cloudy,-zfar,32,32},
-		{zfar,cloudy,-zfar,0,32}}
+		{512,cloudy,512,0,0},
+		{-512,cloudy,512,32,0},
+		{-512,cloudy,-512,32,32},
+		{512,cloudy,-512,0,32}}
   for _,v in pairs(cloudplane) do
    m_x_v(cam.m,v)
   end
@@ -1224,8 +1213,7 @@ function draw_ground(self)
 	-- cam up in world space
 	local n=m_up(cam.m)
 
-  local sky_gradient=wx[wnd].sky_gradient
-	local cy=cam.pos[2]
+  local sky_gradient,cy=wx[wnd].sky_gradient,cam.pos[2]
 
 	-- ground dots
 	local scale=3*max(ceil(cy/32),1)
