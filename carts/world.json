@@ -113,23 +113,13 @@
         }
     ],
     "wx": [
-        {"name":"clear, calm","dir":[0,0],"horiz":[2048,2048],"sky_gradient":[0,14,0,3,2,0,12,1,0]},
-        {"name":"clouds, breezy","dir":[60,10],"ceiling":500,"horiz":[128,1024],"sky_gradient":[0,213,-23131,12,5,0],
-        "cloud_mipmaps":[
-            {"x":60,"y":32,"w":2},
-            {"x":56,"y":32,"w":4},
-            {"x":48,"y":32,"w":8},
-            {"x":32,"y":32,"w":16},
-            {"x":0,"y":32,"w":32}],
-        "light_ramp":68,"light_scale":0.08},
-        {"name":"low clouds, stormy","dir":[10,20],"ceiling":200,"horiz":[32,512],"sky_gradient":[0,5,0],
-        "cloud_mipmaps":[
-            {"x":124,"y":32,"w":2},
-            {"x":120,"y":32,"w":4},
-            {"x":112,"y":32,"w":8},
-            {"x":96,"y":32,"w":16},
-            {"x":64,"y":32,"w":32}],
-        "light_ramp":68,"light_scale":0.125}
+        {"name":"clear, calm","dir":[0,0],"sky_gradient":[0,14,0,360,2,0,1440,1,0]},
+        {"name":"clouds, breezy","dir":[60,10],"ceiling":500,"horiz":56,"sky_gradient":[0,213,-23131,500,5,0],
+        "tex": {"x":0,"y":32},
+        "light_ramp":68,"light_scale":0.125},
+        {"name":"low clouds, stormy","dir":[10,20],"ceiling":200,"horiz":28,"sky_gradient":[0,5,0],
+        "tex":{"x":64,"y":32},
+        "light_ramp":68,"light_scale":0.08}
     ],
     "db": [
         {
