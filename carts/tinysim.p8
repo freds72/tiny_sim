@@ -834,9 +834,11 @@ function _draw()
    sim:draw()
 
    -- perf monitor!
-   local cpu=flr(100*stat(0)/2048).."%"
+   --[[
+   local cpu=flr(100*stat(1)).."%"
    print(cpu,2,3,2)
    print(cpu,2,2,7)
+   ]]
   end
   dispmessage()
 end
@@ -859,27 +861,28 @@ function sort(data)
 end
 
 -- light blooms
--- todo: unpack?
+-- note: cannot be packed into gfx, takes too much space
+-- y=0
 local light_shades={}
-function unpack_ramp(x,y)
+function unpack_ramp(x)
  local shades={}
   -- brightness pairs
 	for i=0,15 do
 		for j=0,15 do
-			shades[i+16*j]=sget(x,y+i)+16*sget(x,y+j)
+			shades[i+16*j]=sget(x,i)+16*sget(x,j)
 	 end
 	end
 	return shades
 end
 
 for c=0,15 do
-  -- set base color
-  sset(74,0,sget(72,c))
-	light_shades[c]=unpack_ramp(74,0)
+ -- set base color
+ sset(74,0,sget(72,c))
+	light_shades[c]=unpack_ramp(74)
 end
 
 -- zbuffer (kind of)
-local drawables={}
+local drawables,znear={},0.25
 function zbuf_clear()
 	drawables={}
 end
@@ -891,8 +894,6 @@ function zbuf_draw()
 		collect_drawables(d.model,d.m,d.pos,objs)
 	end
 	
-	print(#objs,2,8,7)
-	
 	-- z-sorting
 	sort(objs)
 	
@@ -902,13 +903,10 @@ function zbuf_draw()
 		local d=objs[i]
   if d.kind==3 then
 			-- front clip plane only
-			local v=plane_poly_clip({0,0,-1},{0,0,0.25},d.v)
-			-- todo: ceiling pos in camera space
-			if(ceiling) v=plane_poly_clip({0,1,0},{0,ceiling/120,0},v)
-			project_poly(v,d.c)
+			project_poly(plane_poly_clip({0,0,-1},{0,0,znear},d.v),d.c)
 		else
   	local r=d.r or min(3,-24/d.key)
-		if(r>0) circfillt(d.x,d.y,r,light_shades[d.c])
+		 circfillt(d.x,d.y,r,light_shades[d.c])
  	end
  end
 end
@@ -992,7 +990,6 @@ function m_up(m)
 	return {m[5],m[6],m[7]}
 end
 
-local znear,zdir=0.25,-1
 function collect_drawables(model,m,pos,out)
  -- vertex cache
  local p={}
@@ -1003,6 +1000,7 @@ function collect_drawables(model,m,pos,out)
 
  -- select lod
  local safe_pos=v_clone(cam_pos)
+ -- todo: using nm?
  v_scale(safe_pos,1/64)
  local d=v_dot(safe_pos,safe_pos)
  
@@ -1018,18 +1016,18 @@ function collect_drawables(model,m,pos,out)
     local viz
     -- project vertices
     for k=1,#f.vi do
-					local ak=f.vi[k]
-					local a=p[ak]
+ 		  local ak=f.vi[k]
+ 			 local a=p[ak]
      if not a then
       a=cam:modelview(m,model.v[ak])
       p[ak]=a
       z+=a[3]
       -- at least one point within viewport?
-      if(a[3]>0.25) viz=true
+      if(a[3]>znear) viz=true
      end
  		  add(vertices,a)
 		  end
-			 if(viz) add(out,{key=-#f.vi/z,v=vertices,c=f.c,kind=3})
+			if(viz) add(out,{key=-#f.vi/z,v=vertices,c=f.c,kind=3})
 		end
 	end
 	
@@ -1071,10 +1069,9 @@ function collect_drawables(model,m,pos,out)
       -- inlined for speed
       local az,bz=a[3],b[3]
       if(az<bz) a,b,az,bz=b,a,bz,az
-      local den=zdir*(bz-az)
-      local t,viz=1
+      local den,t,viz=az-bz,1
       if az>znear and bz<znear then
-       t=zdir*(znear-az)/den
+       t=(az-znear)/den
        if t>=0 and t<=1 then
          -- intersect pos
          local s=make_v(a,b)
@@ -1103,14 +1100,15 @@ end
 
 -- sutherland-hodgman clipping
 function plane_poly_clip(n,p,v)
-	local dist,allin={},true
+	local dist,allin={},0
 	for i=1,#v do
 		dist[i]=v_dot(make_v(v[i],p),n)
-		allin=band(allin,dist[i]>0)
+		if(dist[i]>0) allin+=1
 	end
-	-- early exit
-	if(allin==true) return v
-
+ -- early exit
+	if(allin==#v) return v
+ if(allin==0) return {}
+ 
 	local res={}
 	local v0,d0,v1,d1,t,r=v[#v],dist[#v]
  -- use local closure
@@ -1301,21 +1299,36 @@ end
 -- draw a light line
 function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,scale,out)
 
-  -- get color ramp from weather
-  local ramp=wx[wnd].light_ramp or 64
-  scale*=(wx[wnd].light_scale or 0.5)
+ -- get color ramp from weather
+ local ramp=wx[wnd].light_ramp or 64
+ scale*=(wx[wnd].light_scale or 0.5)
 
  local w,h=abs(x1-x0),abs(y1-y0)
 
- local prevu=-1
+ local prevu,du,dw=-1
+ -- inner loop function
+ local light=function(x,y,u)
+  if prevu and prevu!=u then
+			local col=sget(ramp+3*mid(scale*w0-u%2,0,1),c)
+   if(col!=0) pset(x,y,col)
+   -- avoid too many lights!
+   if bloom and w0>bloom then
+    add(out,{key=-w0,x=x,y=y,c=c})
+   end
+  end
+  u0+=du
+  w0+=dw
+  prevu=u
+ end
+ 
  if h>w then
   -- order points on y
   if(y0>y1) x0,y0,x1,y1,u0,u1,w0,w1=x1,y1,x0,y0,u1,u0,w1,w0
   w,h=x1-x0,y1-y0
-	 local du,dw=(u1*w1-u0*w0)/h,(w1-w0)/h
+	 du,dw=(u1*w1-u0*w0)/h,(w1-w0)/h
 
-   -- y-major
-    u0*=w0
+  -- y-major
+  u0*=w0
 	 if y0<0 then
 		 local t=-y0/h
 		 -- todo: unroll lerp
@@ -1323,26 +1336,15 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,scale,out)
 	  prevu=nil
   end
 
-   for y=y0,min(y1,40) do
-		  local u=flr(u0/w0)
-    if prevu and prevu!=u then
- 				local col=sget(ramp+3*mid(scale*w0-u%2,0,1),c)
-     if(col!=0) pset(x0,y,col)
-      -- avoid too many lights!
-      if bloom and w0>bloom then
-       add(out,{key=-w0,x=x0,y=y,c=c})
-      end
-     end
-     x0+=w/h
-     u0+=du
-     w0+=dw
-     prevu=u
-    end
-  else
+  for y=y0,min(y1,40) do
+		 light(x0,y,flr(u0/w0))	
+   x0+=w/h
+  end
+ else
    -- x-major
 	  if(x0>x1) x0,y0,x1,y1,u0,u1,w0,w1=x1,y1,x0,y0,u1,u0,w1,w0
 	  w,h=x1-x0,y1-y0
-	  local du,dw=(u1*w1-u0*w0)/w,(w1-w0)/w
+	  du,dw=(u1*w1-u0*w0)/w,(w1-w0)/w
 
 	  u0*=w0
 	  if x0<0 then
@@ -1354,18 +1356,8 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,scale,out)
 	  end
 
    for x=x0,min(x1,127) do
-		  local u=flr(u0/w0)
-      if prevu and prevu!=u then
-        local col=sget(ramp+3*mid(scale*w0-u%2,0,1),c)
-        if(col!=0) pset(x,y0,col)
-	  	  if bloom and w0>bloom then
-			    add(out,{key=-w0,x=x,y=y0,c=c})
-			  end
-			end
+				light(x,y0,flr(u0/w0))	
 		  y0+=h/w
-		  u0+=du
-		  w0+=dw
-		  prevu=u
 	  end
 	end
 end
@@ -1415,7 +1407,7 @@ end
 -- transparent drawing functions
 
 -- init transparent colors
-local shades=unpack_ramp(1,8)
+local shades=unpack_ramp(79)
 
 function rectfillt(x0,y0,x1,y1)
 	x0,x1=max(flr(x0)),min(flr(x1),127)
@@ -1477,7 +1469,7 @@ function linet(x0,y0,x1,ramp)
 end
 
 -->8
--- unpack models
+-- unpack data & models
 local mem=0x1000
 -- w: number of bytes (1 or 2)
 function unpack_int(w)
@@ -1486,91 +1478,102 @@ function unpack_int(w)
 	mem+=w
 	return i
 end
+-- unpack a float from 1 byte
 function unpack_float(scale)
 	local f=shr(unpack_int()-128,5)
 	return f*(scale or 1)
 end
+-- unpack a float from 2 bytes
 function unpack_double(scale)
 	local f=shr(unpack_int(2)-0x4000,4)
 	return f*(scale or 1)
+end
+-- unpack an array of bytes
+function unpack_array(fn)
+	for i=1,unpack_int() do
+		fn(i)
+	end
 end
 -- valid chars for model names
 local itoa='_0123456789abcdefghijklmnopqrstuvwxyz'
 function unpack_string()
 	local s=""
-	for i=1,unpack_int() do
+	unpack_array(function()
 		local c=unpack_int()
 		s=s..sub(itoa,c,c)
-	end
+	end)
 	return s
 end
+
 function unpack_models()
 	-- for all models
-	for m=1,unpack_int() do
-    local model,name,scale={lods={}},unpack_string(),1/unpack_int()
+	unpack_array(function()
+  local model,name,scale={lods={}},unpack_string(),1/unpack_int()
    
 		-- level of details
-		for l=1,unpack_int() do
-      local lod={v={},f={},n={},cp={},e={}}
-      -- vertices
-      for i=1,unpack_int() do
-        add(lod.v,{unpack_double(scale),unpack_double(scale),unpack_double(scale)})
-      end
-      
-      -- faces
-      for i=1,unpack_int() do
-        local f={ni=i,vi={},c=unpack_int()}
-        -- vertex indices
-        for i=1,unpack_int() do
-          add(f.vi,unpack_int())
-        end
-        add(lod.f,f)
-      end
-      
-      -- normals
-      for i=1,unpack_int() do
-        add(lod.n,{unpack_float(),unpack_float(),unpack_float()})			
-      end
-      
-      -- n.p cache	
-      for i=1,#lod.f do
-        local f=lod.f[i]
-        add(lod.cp,v_dot(lod.n[i],lod.v[f.vi[1]]))
-      end	
-      
-      -- edges
-      for i=1,unpack_int() do
-       local e={
-          -- start
-          unpack_int(),
-          -- end
-          unpack_int(),
-      -- kind
-      -- 0: lightline
-      -- 1: papi light
-          -- 2: regular
-          kind=unpack_int(),
-          -- color
-        c=unpack_int()
-        }
-        -- number of light + light intensity
-        if e.kind==0 then
-          e.n,e.scale=unpack_int(),unpack_float()
-        end
- 		
- 			  add(lod.e,e)
-       end
-       
- 		  add(model.lods,lod)
-    end
+		unpack_array(function()
+   local lod={v={},f={},n={},cp={},e={}}
+   -- vertices
+   unpack_array(function()
+    add(lod.v,{unpack_double(scale),unpack_double(scale),unpack_double(scale)})
+   end)
+   
+   -- faces
+   unpack_array(function(i)
+    local f={ni=i,vi={},c=unpack_int()}
+    -- vertex indices
+    unpack_array(function()
+     add(f.vi,unpack_int())
+    end)
+    add(lod.f,f)
+   end)
+   
+   -- normals
+   unpack_array(function()
+    add(lod.n,{unpack_float(),unpack_float(),unpack_float()})			
+   end)
+   
+   -- n.p cache	
+   for i=1,#lod.f do
+    local f=lod.f[i]
+    add(lod.cp,v_dot(lod.n[i],lod.v[f.vi[1]]))
+   end	
+   
+   -- edges
+   unpack_array(function()
+    local e={
+       -- start
+       unpack_int(),
+       -- end
+       unpack_int(),
+   -- kind
+   -- 0: lightline
+   -- 1: papi light
+       -- 2: regular
+       kind=unpack_int(),
+       -- color
+     c=unpack_int()
+     }
+     -- number of light + light intensity
+     if e.kind==0 then
+       e.n,e.scale=unpack_int(),unpack_float()
+     end
+
+	   add(lod.e,e)
+   end)
+    
+  add(model.lods,lod)
+  end)
 		-- index by name
 		all_models[name]=model
-	end
+	end)
 end
+
 -- unpack stars
-for i=1,unpack_int() do
-  add(stars,{unpack_float(),unpack_float(),unpack_float()})
-end
+unpack_array(function()
+ add(stars,{unpack_float(),unpack_float(),unpack_float()})
+end)
+
 -- unpack models 
 unpack_models()
 
@@ -1649,29 +1652,29 @@ end
 
 __gfx__
 00000000fff7777f49777777777777e25fffffff0000000077ff777fffffffff000000000000000000000000ffffffffffffffff666666667777777770ffffff
-00000000ff7fffffffffffffffffffff55ffffff000000007f7f777ffffffeff001100010110000000010000fffffffffff66666777777771c66666660ffffff
-00000000f7ffffffff3b77777777d5ff555fffff000000007f7f7f7feeeeeeef000000002280000000120000ffffffff6667777755555555cc66666660ffffff
-000000007fffffffffffffffffffffff55ffffff00000000fffffffffffffeff0000000053b0000000530000ffffff667775555511111111c777777760ffffff
-00000000ffffffffffff1c7777c1ffff5fffffff00000000ffffffffffffffff000000002490000000240000ffff667755511111000000001777777760ffffff
-00000000ffffffffffffffffffffffffffffffff00000000ffffffffffffffff000000005560000000150000ffff77551110000000000000c555555560ffffff
-00000000ffffffffffffffffffffffffffffffff00000000ffffffffffffffff015600565670000001560000ffff55110000000000000000c555555560ffffff
-00000000ffffffffffffffffffffffffffffffff00000000ffffffffffffffff567706775770000005670000ffff11000000000066666666cc05550660ffffff
-00000000ffffffffffffffff77777fffffbfffff7ffffff7ff222fffffffffff128802882880000000280000ffff000000066666666666661c10001660ffffff
-1d000000fffffffffffffffff777fffffbffffff77777777f2e7e2ffff0fffff4449054929a0000001490000ffff000066666666666666667710001660ffffff
-2e000000ff555fffffffffffff7fffffbbbbbbbbffffffff2ee7ee2ff00fffff449a009a4aa00000049a0000ffff006666666000000000007751115660ffffff
-3b000000ff555ffffffffff0fffffffffbffffffffffffff2ee7ee2f000fffff033b003b3bb00000013b0000ffff666666666000000000006765556660ffffff
-45000000ff555fffffffff00ffffffffffbfffffffffffff2ee7ee2ff00fffff011c000c1cc00000011c0000ffff666666666000000000007766666660ffffff
-56000000fffffffffffff000fffffffffffffffffffffffff2e7e2ffff0fffff000000005d600000015d0000ffff666666666000000000007766666660ffffff
-6d000000fffffffffff00000ffffffffffffffffffffffffff222fffffffffff000000002ed00000012e0000ffff666666666000000000006766666660ffffff
-76000000ffffffff00000000ffffffffffffffffffffffffffffffffffffffff000000005f70000001df0000ffff66666666600000000000ddddddddd0ffffff
-8e000000ff7ffffffff0000000000000777fffff777ffffffbfffffffffffffffff00000fff0000000000000ffff666666666000000000007777777700000000
-9a00000077777ffffff0000000000c007fffffff77ffffffbbbfffffffcccfffff00ccc0ff000cc000000000ffff6666666660ffffffffff1c66666600000000
-a7000000ff7fffffff000000000000c0ff7fffff7ffffffffbfffffffcfffcfff000c0c0f000c00000000000ffff6666666660ffffffffffcc66666600000000
-b6000000ff7fffffff000000cccccccc777fffff777ffffffffffffffcfcfcff0000cc000000c00000000000ffff6666666660ffffffffffcc66666600000000
-cd000000f777ffffff000000000000c0fffffffffffffffffffffffffcfffcfff000c0c0f000c0c000000000ffff6666666660ffffffffff1c66666600000000
-d6000000fffffffff000000000000c00ffffffffffffffffffffffffffcccfffff00c0c0ff00ccc000000000ffff6666666660ffffffffffcc66666600000000
-ef000000fffffffff000000000000000fffffffffffffffffffffffffffffffffff00000fff0000000000000ffff6666666660ffffffffffcc65556600000000
-f6000000ffffffff0000000000000000ffffffffffffffffffffffffffffffffffffffffffffffff00000000ffff6666666660ffffffffffcc51115600000000
+00000000ff7fffffffffffffffffffff55ffffff000000007f7f777ffffffeff001100010110001d00000000fffffffffff66666777777771c66666660ffffff
+00000000f7ffffffff3b77777777d5ff555fffff000000007f7f7f7feeeeeeef000000002280002e00000000ffffffff6667777755555555cc66666660ffffff
+000000007fffffffffffffffffffffff55ffffff00000000fffffffffffffeff0000000053b0003b00000000ffffff667775555511111111c777777760ffffff
+00000000ffffffffffff1c7777c1ffff5fffffff00000000ffffffffffffffff000000002490004500000000ffff667755511111000000001777777760ffffff
+00000000ffffffffffffffffffffffffffffffff00000000ffffffffffffffff000000005560005600000000ffff77551110000000000000c555555560ffffff
+00000000ffffffffffffffffffffffffffffffff00000000ffffffffffffffff015600565670006d00000000ffff55110000000000000000c555555560ffffff
+00000000ffffffffffffffffffffffffffffffff00000000ffffffffffffffff567706775770007600000000ffff11000000000066666666cc05550660ffffff
+00000000ffffffffffffffff77777fffffbfffff7ffffff7ff222fffffffffff128802882880008e00000000ffff000000066666666666661c10001660ffffff
+00000000fffffffffffffffff777fffffbffffff77777777f2e7e2ffff0fffff4449054929a0009a00000000ffff000066666666666666667710001660ffffff
+00000000ff555fffffffffffff7fffffbbbbbbbbffffffff2ee7ee2ff00fffff449a009a4aa000a700000000ffff006666666000000000007751115660ffffff
+00000000ff555ffffffffff0fffffffffbffffffffffffff2ee7ee2f000fffff033b003b3bb000b600000000ffff666666666000000000006765556660ffffff
+00000000ff555fffffffff00ffffffffffbfffffffffffff2ee7ee2ff00fffff011c000c1cc000cd00000000ffff666666666000000000007766666660ffffff
+00000000fffffffffffff000fffffffffffffffffffffffff2e7e2ffff0fffff000000005d6000d600000000ffff666666666000000000007766666660ffffff
+00000000fffffffffff00000ffffffffffffffffffffffffff222fffffffffff000000002ef000ef00000000ffff666666666000000000006766666660ffffff
+00000000ffffffff00000000ffffffffffffffffffffffffffffffffffffffff000000005f7000f600000000ffff66666666600000000000ddddddddd0ffffff
+00000000ff7ffffffff0000000000000777fffff777ffffffbfffffffffffffffff00000fff0000000000000ffff666666666000000000007777777700000000
+0000000077777ffffff0000000000c007fffffff77ffffffbbbfffffffcccfffff00ccc0ff000cc000000000ffff6666666660ffffffffff1c66666600000000
+00000000ff7fffffff000000000000c0ff7fffff7ffffffffbfffffffcfffcfff000c0c0f000c00000000000ffff6666666660ffffffffffcc66666600000000
+00000000ff7fffffff000000cccccccc777fffff777ffffffffffffffcfcfcff0000cc000000c00000000000ffff6666666660ffffffffffcc66666600000000
+00000000f777ffffff000000000000c0fffffffffffffffffffffffffcfffcfff000c0c0f000c0c000000000ffff6666666660ffffffffff1c66666600000000
+00000000fffffffff000000000000c00ffffffffffffffffffffffffffcccfffff00c0c0ff00ccc000000000ffff6666666660ffffffffffcc66666600000000
+00000000fffffffff000000000000000fffffffffffffffffffffffffffffffffff00000fff0000000000000ffff6666666660ffffffffffcc65556600000000
+00000000ffffffff0000000000000000ffffffffffffffffffffffffffffffffffffffffffffffff00000000ffff6666666660ffffffffffcc51115600000000
 aaaaaaaa9999999944444444000fffff77ffffff7f7fffffff222fffff222ffffff00000fff0000033333333ff000000666660ff0000ffff1c10001600000000
 aaaaaaaa9999999944444444070fffff7f7fffff7f7ffffff2eee2fff2eee2ffff00c0c0ff00c0c033333333ff000000666660ff0000ffff7710001600000000
 aaaaaaaa9999999944444444070fffff7f7fffff777fffff2eeeee2f2eee7e2ff000c0c0f000c0c033333333ff005555666660ff5550ffff770ddd0600000000
