@@ -402,9 +402,9 @@ function make_sim(s)
         sfx(6,-2)
       end
 
+      timer+=1/30
       -- flaps(): moved to input
-      -- blackbox()
-      --if(frame%150==1) add(self.flight, {lat,lon,alt})
+      -- blackbox(): removed
     end,
     draw=function()
       if menu==0 then
@@ -553,7 +553,6 @@ function make_sim(s)
         else print(hdg,58,89,7) end
 
         -- old: disptime()
-        timer+=1/30
         disptime(timer,108,122)
 
 								-- dispnav
