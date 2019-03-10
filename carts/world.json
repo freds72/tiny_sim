@@ -361,8 +361,14 @@
         {"fn":"map","args":[32,3,115,50,2,10]},
         {"fn":"spr","args":[21,101,1230]},
         {"fn":"spr","args":[5,109,120]},
-        {"fn":"print","args":["1nm",101,123,12]}
+        {"fn":"print","args":["1nm",101,123,12]},
         {"fn":"line","args":[3,36,3,42,0]}
+    ],
+    "briefing":[
+        {"fn":"print","args":["press ❎ to   fly",8,112,7]},
+        {"fn":"spr","args":[2,54,112]},
+        {"fn":"spr","args":[3,77,112]},
+        {"fn":"print","args":["z: back to menu",8,119,6]}
     ],
     "intro":[
         {"fn":"cls","args":[]},
