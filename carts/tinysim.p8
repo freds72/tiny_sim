@@ -821,9 +821,10 @@ function _draw()
 	 	cls()
  		clip(0,0,127,40)
    -- 3d
-	  draw_ground()
+   local ceiling=wx[wnd].ceiling
+	  draw_ground(ceiling)
 	  zbuf_draw()
-  	draw_clouds()
+  	if(ceiling) draw_clouds(ceiling)
 
    sim:draw()
 
@@ -889,7 +890,6 @@ function zbuf_draw()
 	sort(objs)
 	
  -- actual draw
-	local ceiling=wx[wnd].ceiling
 	for i=1,#objs do
 		local d=objs[i]
   if d.kind==3 then
@@ -1165,22 +1165,8 @@ end
 
 local clipplanes=json_parse'[[0,0,1],[0,0,8],[0.707,0,-0.707],[0.25,0,0],[-0.707,0,-0.707],[-0.25,0,0],[0,0.707,-0.707],[0,0.25,0],[0,-0.707,-0.707],[0,-0.25,0],[0,0,-1],[0,0,0.25]]'
 
-function draw_clouds()
+function draw_clouds(ceiling)
  local weather=wx[wnd]
- local ceiling=weather.ceiling
- -- clear sky?
- if not ceiling then
-    -- stars
-    for _,v in pairs(stars) do
-      v=v_clone(v)
-      m_x_v(cam.m,v)
-		  v=cam:project2d(v)
-		  if(v[3]>0) pset(v[1],v[2],6)
-    end
-    -- no clouds
-    return
- end
-
  local cloudy=ceiling/120-cam.pos[2]
  -- plane coords + u/v (32x32 texture)
  local cloudplane={
@@ -1201,7 +1187,7 @@ function draw_clouds()
   project_texpoly(cloudplane)
 end
 
-function draw_ground(self)
+function draw_ground(ceiling)
 	-- draw horizon
 	local horiz=wx[wnd].horiz
 	local zfar=horiz and -horiz or -128
@@ -1213,7 +1199,7 @@ function draw_ground(self)
 	-- cam up in world space
 	local n=m_up(cam.m)
 
-  local sky_gradient,cy=wx[wnd].sky_gradient,cam.pos[2]
+ local sky_gradient,cy=wx[wnd].sky_gradient,cam.pos[2]
 
 	-- ground dots
 	local scale=3*max(ceil(cy/32),1)
@@ -1225,8 +1211,7 @@ function draw_ground(self)
 	for i=-4,4 do
 		local ii=scale*i-dx+x0
 		for j=-4,4 do
-			local jj=scale*j-dy+z0
-			local v={ii,0,jj}
+			local v={ii,0,scale*j-dy+z0}
 			v_add(v,cam.pos,-1)
       m_x_v(cam.m,v)
       v_add(v,pilot_pos,-1)
@@ -1251,6 +1236,17 @@ function draw_ground(self)
 		project_poly(farplane,sky_gradient[i+1])
 	end
  fillp()
+ 
+ -- stars (clear ceiling only)
+ if not ceiling then
+  -- stars
+  for _,v in pairs(stars) do
+    v=v_clone(v)
+    m_x_v(cam.m,v)
+    v=cam:project2d(v)
+    if(v[3]>0) pset(v[1],v[2],6)
+  end
+ end
 end
 
 function project_poly(p,c)
