@@ -378,8 +378,9 @@
         {"fn":"print","args":["press ❎ for briefing",8,57,7]},
         {"fn":"print","args":["x/z: throttle",8,80,6]},
         {"fn":"print","args":["q:   toggle flaps",8,87]},
-        {"fn":"print","args":["tab: toggle map / pause",8,94]},
-        {"fn":"rect","args":[5,77,101,101,6]},
+        {"fn":"print","args":["tab: toggle instruments / map",8,94]},
+        {"fn":"print","args":["e:   cycle gps waypoint",8,101]},
+        {"fn":"rect","args":[5,77,101,125,6]},
         {"fn":"rectfill","args":[78,88,83,89,7]},
         {"fn":"spr","args":[4,62,80]},
         {"fn":"print","args":["@yellowbaron | 3d by @freds72",7,123,6]}
