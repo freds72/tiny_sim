@@ -380,8 +380,8 @@ function make_sim(s)
       end
 
       -- checklanded()
-      if ias>180 then
-        make_msg("crash: exceeded maximum speed")
+      if (ias>180 and not self.crashed) then
+        make_msg("crash: exceeded maximum speed\nz: exit to menu",180)
         self.crashed=true
         sfx(4)
       elseif alt<=0 and not onground then
@@ -393,7 +393,7 @@ function make_sim(s)
         elseif vs>-1000 and pitch>-0.5 and abs(bank)<30 then
           make_msg("oops... hard landing")
         else
-          make_msg("crash: collision with ground")
+          make_msg("crash: collision with ground\nz: exit to menu",180)
           self.crashed=true
           sfx(3)
         end
@@ -404,6 +404,7 @@ function make_sim(s)
         -- stop rolling sound
         sfx(6,-2)
       end
+      if(self.crashed and btn(4)) make_msg() menu=1
 
       timer+=1/30
       -- flaps(): moved to input
@@ -657,17 +658,19 @@ function disptime(t,x,y)
 end
 
 local message,message_t
-function make_msg(msg)
-  message,message_t=msg,60
+function make_msg(msg,t)
+  if(t==nil) t=60
+  message,message_t=msg,t
 end
 function dispmessage()
   -- update & draw
   if message then
     message_t-=1
-    if(message_t<0) message=nil return
+    if(message_t<0) message=nil sim.crashed=nil return
 
     local c = message_t%16<8 and 7 or 9
-		rectfill(0,9,127,15,5)
+  rectfill(0,9,127,15,5)
+  if(#message>20) rectfill(0,15,127,21,5)
 		print(message,10,10,c)
 	end
 end
@@ -804,8 +807,7 @@ function _update()
 
    sim:update()
 
-   -- todo: end of game
-   if(sim.crashed==true) sfx(2,-2) sfx(7,-2) sfx(6,-2) menu=2
+   if(sim.crashed==true) sfx(2,-2) sfx(7,-2) sfx(6,-2)
 
 	  -- update cam
 	  cam:track(sim:get_pos())
