@@ -512,7 +512,7 @@ function make_sim(s)
             line(95,62-(i*20)+dy,97,62-(i*20)+dy,6)
         end
         clip()
-          rectfill(95,68,111,74,0)
+        rectfill(95,68,111,74,0)
         rectfill(103,65,111,77)
         local y=alt/10-flr(alt/100)*10
         local y2,y3=ceil(y),(y*7)%7
@@ -594,7 +594,7 @@ function make_sim(s)
         end
 
       elseif menu==2 then
-       drawmap(heading)
+       drawmap(lat,lon,heading)
        -- clip included in rcockpit
        drawstatic(world.rcockpit)
        print(db[dto].name,16,37,14)
@@ -677,38 +677,41 @@ function drawmenu()
 
 end
 
-function drawmap(hdg)
- local dx,dy=scalemap(cam.pos[3],cam.pos[1])
+function drawmap(lat,lon,hdg)
+ local dx,dy=scalemap(lon,lat)
  -- 58/87 are screen center coords for moving map
  clip(0,43,117,85)       
  camera(-58+dx,-87+dy)
  map(34,0,-30,-128,47,31)
-
+ 
  for l in all(db) do
-  local x,y=scalemap(l.lon,l.lat)
+  local name,angle,x,y=l.name,l.angle,scalemap(l.lon,l.lat)
   x-=3 --correct for sprite size
   y-=3
+  -- helper function (save tokens)
+  local draw_ils=function(a,txt)
+   local _x,_y=sin(a),cos(a)
+   line(x+3,y+3,50*_x+x+3,50*_y+y+3,11)		
+   print(txt,62*_x+x+2,62*_y+y+3,7)
+  end
   if l.type=="vor" then
    spr(39,x,y)
-   print(l.name,x+9,y+1,7)
+   print(name,x+9,y+1,7)
   elseif l.type=="ils" then
-   local a,b=(l.angle-3)/360,(l.angle+3)/360
-   local _x,_y=sin(a),cos(a)
-   line(x+3,y+3,50*_x+x+3,50*_y+y+3,11)
-   local _x,_y=sin(b),cos(b)
-   line(x+3,y+3,50*_x+x+3,50*_y+y+3,11)
-   print(l.name,62*_x+x+2,62*_y+y+3,7)
+   local a,b=(angle-3)/360,(angle+3)/360
+   draw_ils(a,"")
+   draw_ils(b,name)   
   elseif l.type=="apt" then
-   if l.angle>=0 and l.angle<23 then spr(22,x,y)
-   elseif l.angle>22 and l.angle<68 then spr(55,x,y)
-   elseif l.angle>67 and l.angle<103 then spr(54,x,y)
-   elseif l.angle>102 and l.angle<148 then spr(55,x-1,y,1,1,true,false)
+   if angle>=0 and angle<23 then spr(22,x,y)
+   elseif angle>22 and angle<68 then spr(55,x,y)
+   elseif angle>67 and angle<103 then spr(54,x,y)
+   elseif angle>102 and angle<148 then spr(55,x-1,y,1,1,true)
    else spr(22,x,y) end
-   print(l.name,x+9,y+1,7)
+   print(name,x+9,y+1,7)
   else
    -- city
    spr(17,x,y)
-   print(l.name,x-40,y+1)
+   print(name,x-40,y+1,5)
   end
  end
  print("tiny\nbay",265,-1,1)
