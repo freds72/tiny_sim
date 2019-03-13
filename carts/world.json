@@ -2,7 +2,7 @@
     "scenarios": [
         {
             "name": "visual approach",
-            "args": [-417,326.3,85,600,-1,0,25,112,3,2,1],
+            "args": [-417,326.3,85,600,-1,0,25,112,3,2],
             "weather":1,
             "briefing": [
                 {
@@ -18,7 +18,7 @@
         },
         {
             "name": "final approach",
-            "args": [-408.89,230.77,85,1000,1,0,75,112,3,2,1],
+            "args": [-408.89,230.77,85,1000,1,0,75,112,3,2],
             "weather":2,
             "briefing": [
                 {
@@ -50,7 +50,7 @@
         },
         {
             "name": "full approach",
-            "args": [-222.22,461.54,313,3000,0,0,91,112,3,2,1],
+            "args": [-222.22,461.54,313,3000,0,0,91,112,1,2],
             "weather":3,
             "briefing": [
                 {
@@ -67,7 +67,7 @@
         },
         {
             "name": "engine failure!",
-            "args": [-422.2,408,85,500,10,0,0,65,4,2,5],
+            "args": [-422.2,408,85,500,10,0,0,65,3,2],
             "weather":1,
             "briefing": [
                 {
@@ -83,7 +83,7 @@
         },
         {
             "name": "unusual attitude",
-            "args": [-222.22,461.54,330,450,99,99,100,112,3,2,1],
+            "args": [-222.22,461.54,330,450,99,99,100,112,3,2],
             "weather":1,
             "briefing": [
                 {
@@ -98,7 +98,7 @@
             ]
         },
         {"name": "free flight",
-            "args": [-422.2,384.6,85,0,0,0,0,0,5,2,1,true],
+            "args": [-422.2,384.6,85,0,0,0,0,0,5,2,true],
             "weather":1,
             "briefing": [
                 {
@@ -359,9 +359,8 @@
         {"fn":"clip","args":[]},
         {"fn":"map","args":[17,0,-5,26,27,3]},
         {"fn":"map","args":[32,3,115,50,2,10]},
-        {"fn":"spr","args":[21,101,1230]},
-        {"fn":"spr","args":[5,109,120]},
-        {"fn":"print","args":["1nm",101,123,12]},
+        {"fn":"spr","args":[21,106,120]},
+        {"fn":"spr","args":[42,114,120]},
         {"fn":"line","args":[3,36,3,42,0]}
     ],
     "briefing":[
@@ -379,8 +378,9 @@
         {"fn":"print","args":["press ❎ for briefing",8,57,7]},
         {"fn":"print","args":["x/z: throttle",8,80,6]},
         {"fn":"print","args":["q:   toggle flaps",8,87]},
-        {"fn":"print","args":["tab: toggle map / pause",8,94]},
-        {"fn":"rect","args":[5,77,101,101,6]},
+        {"fn":"print","args":["tab: toggle instruments / map",8,94]},
+        {"fn":"print","args":["e:   cycle gps waypoint",8,101]},
+        {"fn":"rect","args":[5,77,101,125,6]},
         {"fn":"rectfill","args":[78,88,83,89,7]},
         {"fn":"spr","args":[4,62,80]},
         {"fn":"print","args":["@yellowbaron | 3d by @freds72",7,123,6]}
