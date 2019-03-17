@@ -1565,8 +1565,6 @@ function unpack_models()
 	-- for all models
 	unpack_array(function()
   local model,name,scale={lods={}},unpack_string(),1/unpack_int()
-  printh("-----")
-  printh(name)
   
 		-- level of details
 		unpack_array(function()
@@ -1583,7 +1581,6 @@ function unpack_models()
     unpack_array(function()
      add(f.vi,unpack_int())
     end)
-    printh(#f.vi)
     add(lod.f,f)
     -- collision group
     if(f.gid>0) lod.groups[f.gid]=1+(lod.groups[f.gid] or 0)
