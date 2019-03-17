@@ -101,7 +101,7 @@ function json_parse(str, pos, end_delim)
   end
 end
 
-local world=json_parse'{"scenarios":[{"name":"visual approach","args":[-417,326.3,85,600,-1,0,25,112,3,2],"weather":1,"briefing":[{"fn":"print","args":["remain on runway axis. extend the\nflaps and keep speed at 65-70\nknots by using pitch and\nthrottle. at 50 feet, smoothly\nclose throttle and raise the\nnose to gently touch down\nbelow 65 knots.\ntoo easy? add some wind!",8,30,6]}]},{"name":"final approach","args":[-408.89,230.77,85,1000,1,0,75,112,3,2],"weather":2,"briefing":[{"fn":"print","args":["fly heading of approx. 085\nkeep localizer (  ) centered\n(the wind might push you away)\nmaintain 1000 ft\nintercept glide slope ( )\nreduce power and extend flaps\nstart 500 ft/min descent\nkeep localizer centered\nkeep glideslope centered\nat 200 ft reduce power & land",8,30,6]},{"fn":"spr","args":[20,71,36]},{"fn":"spr","args":[38,100,55]}]},{"name":"full approach","args":[-222.22,461.54,313,3000,0,0,91,112,1,2],"weather":3,"briefing":[{"fn":"print","args":["cross pco (  ) on heading 313\nintercept localizer (  )\nturn left heading 265\ndescend to 2000 ft\nturn right heading 310\nfly 1 minute\nturn left heading 130\nintercept localizer\nturn left heading 085\nfly final approach and land",8,30,6]},{"fn":"spr","args":[35,51,30]},{"fn":"spr","args":[20,91,36]}]},{"name":"engine failure!","args":[-422.2,408,85,500,10,0,0,65,3,2],"weather":1,"briefing":[{"fn":"print","args":["you have just taken off\nfrom tinyville for a trip\nto the beach, when the\nengine suddenly quits at\nonly 500 feet! make a steep\nturn back to airport while\nmaintaining best glide\nspeed (65 knots). can you\nmake it back? good luck!",8,30,6]}]},{"name":"unusual attitude","args":[-222.22,461.54,330,450,99,99,100,112,3,2],"weather":1,"briefing":[{"fn":"print","args":["while checking the map you did\nnot pay attention to your\nattitude. when you look up,\nthe airplane is out of control\nat low altitude. oops!\ncan you recover?\nhint: bank first, then pull up",8,30,6]}]},{"name":"free flight","args":[-422.2,384.6,85,0,0,0,0,0,5,2,true],"weather":1,"briefing":[{"fn":"print","args":["you are cleared for take-off\non runway 08 at tinyville.\napply full power and raise\nthe nose at 50-55 knots.\nhave fun!",8,30,6]}]}],"wx":[{"name":"clear, calm","dir":[0,0],"sky_gradient":[0,14,0,360,2,0,1440,1,0]},{"name":"clouds, breezy","dir":[60,10],"ceiling":500,"horiz":56,"sky_gradient":[0,213,-23131,500,5,0],"tex":{"x":0,"y":32},"light_ramp":68,"light_scale":0.125},{"name":"low clouds, stormy","dir":[10,20],"ceiling":200,"horiz":28,"sky_gradient":[0,5,0],"tex":{"x":64,"y":32},"light_ramp":68,"light_scale":0.08}],"db":[{"lat":-251.11,"lon":430.77,"name":"pco","type":"vor"},{"lat":-422.46,"lon":387.59,"name":"itn","type":"ils","angle":85},{"lat":-422.2,"lon":384.6,"name":"tny","type":"apt","angle":85},{"lat":-244,"lon":268.5,"name":"smallville","type":"cty"},{"lat":-66.67,"lon":153.85,"name":"smv","type":"apt","angle":40},{"lat":-177.78,"lon":246.15,"name":"wee","type":"vor"},{"lat":-70.17,"lon":531.28,"name":"pti","type":"apt","angle":170},{"lat":0,"lon":0,"name":"","type":"grnd"},{"lat":-169.64,"lon":100.27,"name":"mnt. big","type":"mnt_big"}],"vspeeds":[{"ias":55,"s":40},{"ias":60,"s":56},{"ias":65,"s":41},{"ias":79,"s":57}],"hsic":[64,111],"bp":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124]],"e":[[1,2],[1,3],[1,4],[5,6]]},"nesw":[[64,99,52],[52,111,53],[64,123,36],[76,111,37]],"cdii":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124],[64,104],[64,118]],"e":[[1,2],[1,3],[1,4],[5,6],[7,8]]},"apsymbol":{"v":[[55,87],[61,87],[58,86],[58,91],[57,91],[59,91]],"e":[[1,2],[3,4],[5,6]]},"lcockpit":[{"fn":"map","args":[0,0,-4,26,17,3]},{"fn":"map","args":[0,3,-4,48,2,11]},{"fn":"spr","args":[18,71,120]},{"fn":"spr","args":[34,79,115]},{"fn":"rectfill","args":[107,121,127,127,0]},{"fn":"rectfill","args":[87,115,100,127,0]},{"fn":"spr","args":[35,79,122]}],"rcockpit":[{"fn":"clip","args":[]},{"fn":"map","args":[17,0,-4,26,27,3]},{"fn":"map","args":[32,3,116,50,2,10]},{"fn":"spr","args":[21,106,120]},{"fn":"spr","args":[42,114,120]},{"fn":"line","args":[3,36,3,42,0]}],"briefing":[{"fn":"print","args":["press ❎ to   fly",8,112,7]},{"fn":"spr","args":[2,54,112]},{"fn":"spr","args":[3,77,112]},{"fn":"print","args":["z: back to menu",8,119,6]}],"intro":[{"fn":"cls","args":[]},{"fn":"spr","args":[2,34,10]},{"fn":"spr","args":[3,78,10]},{"fn":"print","args":["tiny sim",44,10,7]},{"fn":"print","args":["the world\'s smallest flight sim",2,20,6]},{"fn":"print","args":["press ❎ for briefing",8,57,7]},{"fn":"print","args":["x/z: throttle",8,80,6]},{"fn":"print","args":["q:   toggle flaps",8,87]},{"fn":"print","args":["tab: toggle instruments / map",8,94]},{"fn":"print","args":["e:   cycle gps waypoint",8,101]},{"fn":"rect","args":[5,77,101,125,6]},{"fn":"rectfill","args":[78,88,83,89,7]},{"fn":"spr","args":[4,62,80]},{"fn":"print","args":["@yellowbaron | 3d by @freds72",7,123,6]}],"gs":[{"fn":"pset","args":[92,61,7]},{"fn":"pset","args":[92,66,7]},{"fn":"pset","args":[92,71,7]},{"fn":"pset","args":[92,76,7]},{"fn":"pset","args":[92,81,7]},{"fn":"line","args":[91,71,93,71,7]}]}'
+local world=json_parse'{"scenarios":[{"name":"visual approach","args":[-417,326.3,85,600,-1,0,25,112,3,2],"weather":1,"briefing":[{"fn":"print","args":["remain on runway axis. extend the\nflaps and keep speed at 65-70\nknots by using pitch and\nthrottle. at 50 feet, smoothly\nclose throttle and raise the\nnose to gently touch down\nbelow 65 knots.\ntoo easy? add some wind!",8,30,6]}]},{"name":"final approach","args":[-408.89,230.77,85,1000,1,0,75,112,3,2],"weather":2,"briefing":[{"fn":"print","args":["fly heading of approx. 085\nkeep localizer (  ) centered\n(the wind might push you away)\nmaintain 1000 ft\nintercept glide slope ( )\nreduce power and extend flaps\nstart 500 ft/min descent\nkeep localizer centered\nkeep glideslope centered\nat 200 ft reduce power & land",8,30,6]},{"fn":"spr","args":[20,71,36]},{"fn":"spr","args":[38,100,55]}]},{"name":"full approach","args":[-222.22,461.54,313,3000,0,0,91,112,1,2],"weather":3,"briefing":[{"fn":"print","args":["cross pco (  ) on heading 313\nintercept localizer (  )\nturn left heading 265\ndescend to 2000 ft\nturn right heading 310\nfly 1 minute\nturn left heading 130\nintercept localizer\nturn left heading 085\nfly final approach and land",8,30,6]},{"fn":"spr","args":[35,51,30]},{"fn":"spr","args":[20,91,36]}]},{"name":"engine failure!","args":[-422.2,408,85,500,10,0,0,65,3,2],"weather":1,"briefing":[{"fn":"print","args":["you have just taken off\nfrom tinyville for a trip\nto the beach, when the\nengine suddenly quits at\nonly 500 feet! make a steep\nturn back to airport while\nmaintaining best glide\nspeed (65 knots). can you\nmake it back? good luck!",8,30,6]}]},{"name":"unusual attitude","args":[-222.22,461.54,330,450,99,99,100,112,3,2],"weather":1,"briefing":[{"fn":"print","args":["while checking the map you did\nnot pay attention to your\nattitude. when you look up,\nthe airplane is out of control\nat low altitude. oops!\ncan you recover?\nhint: bank first, then pull up",8,30,6]}]},{"name":"free flight","args":[-422.2,384.6,85,0,0,0,0,0,5,2,true],"weather":1,"briefing":[{"fn":"print","args":["you are cleared for take-off\non runway 08 at tinyville.\napply full power and raise\nthe nose at 50-55 knots.\nhave fun!",8,30,6]}]}],"wx":[{"name":"clear, calm","dir":[0,0],"sky_gradient":[0,14,0,360,2,0,1440,1,0]},{"name":"clouds, breezy","dir":[60,10],"ceiling":500,"horiz":56,"sky_gradient":[0,213,-23131,500,5,0],"tex":{"x":0,"y":32},"light_ramp":68,"light_scale":0.125},{"name":"low clouds, stormy","dir":[10,20],"ceiling":200,"horiz":28,"sky_gradient":[0,5,0],"tex":{"x":64,"y":32},"light_ramp":68,"light_scale":0.08}],"db":[{"lat":-251.11,"lon":430.77,"name":"pco","type":"vor"},{"lat":-422.46,"lon":387.59,"name":"itn","type":"ils","angle":85},{"lat":-422.2,"lon":384.6,"name":"tny","type":"apt","angle":85},{"lat":-244,"lon":268.5,"name":"smallville","type":"cty"},{"lat":-66.67,"lon":153.85,"name":"smv","type":"apt","angle":40},{"lat":-177.78,"lon":246.15,"name":"wee","type":"vor"},{"lat":-70.17,"lon":531.28,"name":"pti","type":"apt","angle":170},{"lat":0,"lon":0,"name":"","type":"grnd"},{"lat":-169.64,"lon":100.27,"name":"mt. big","type":"mnt_big"}],"vspeeds":[{"ias":55,"s":40},{"ias":60,"s":56},{"ias":65,"s":41},{"ias":79,"s":57}],"hsic":[64,111],"bp":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124]],"e":[[1,2],[1,3],[1,4],[5,6]]},"nesw":[[64,99,52],[52,111,53],[64,123,36],[76,111,37]],"cdii":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124],[64,104],[64,118]],"e":[[1,2],[1,3],[1,4],[5,6],[7,8]]},"apsymbol":{"v":[[55,87],[61,87],[58,86],[58,91],[57,91],[59,91]],"e":[[1,2],[3,4],[5,6]]},"lcockpit":[{"fn":"map","args":[0,0,-4,26,17,3]},{"fn":"map","args":[0,3,-4,48,2,11]},{"fn":"spr","args":[18,71,120]},{"fn":"spr","args":[34,79,115]},{"fn":"rectfill","args":[107,121,127,127,0]},{"fn":"rectfill","args":[87,115,100,127,0]},{"fn":"spr","args":[35,79,122]}],"rcockpit":[{"fn":"clip","args":[]},{"fn":"map","args":[17,0,-4,26,27,3]},{"fn":"map","args":[32,3,116,50,2,10]},{"fn":"spr","args":[21,107,120]},{"fn":"spr","args":[42,115,120]},{"fn":"line","args":[4,36,4,42,0]}],"briefing":[{"fn":"print","args":["press ❎ to   fly",8,112,7]},{"fn":"spr","args":[2,54,112]},{"fn":"spr","args":[3,77,112]},{"fn":"print","args":["z: back to menu",8,119,6]}],"intro":[{"fn":"cls","args":[]},{"fn":"spr","args":[2,34,10]},{"fn":"spr","args":[3,78,10]},{"fn":"print","args":["tiny sim",44,10,7]},{"fn":"print","args":["the world\'s smallest flight sim",2,20,6]},{"fn":"print","args":["press ❎ for briefing",8,57,7]},{"fn":"print","args":["x/z: throttle",8,80,6]},{"fn":"print","args":["q:   toggle flaps",8,87]},{"fn":"print","args":["tab: toggle instruments / map",8,94]},{"fn":"print","args":["e:   cycle gps waypoint",8,101]},{"fn":"rect","args":[5,77,125,108,6]},{"fn":"rectfill","args":[78,88,83,89,7]},{"fn":"spr","args":[4,62,80]},{"fn":"print","args":["@yellowbaron | 3d by @freds72",7,123,6]}],"gs":[{"fn":"pset","args":[92,61,7]},{"fn":"pset","args":[92,66,7]},{"fn":"pset","args":[92,71,7]},{"fn":"pset","args":[92,76,7]},{"fn":"pset","args":[92,81,7]},{"fn":"line","args":[91,71,93,71,7]}]}'
 -- dither pattern 4x4 kernel
 local dither_pat=json_parse'[0xffff.8,0x7fff.8,0x7fdf.8,0x5fdf.8,0x5f5f.8,0x5b5f.8,0x5b5e.8,0x5a5e.8,0x5a5a.8,0x1a5a.8,0x1a4a.8,0x0a4a.8,0x0a0a.8,0x020a.8,0x0208.8,0x0000.8]'
 
@@ -249,7 +249,7 @@ function make_sim(s)
       if (abs(bank)<4 and blag==0) bank/=1.1 --bank stability
       if(abs(bank)>20) pitch-=0.3*abs(sin(bank/360))
       if(abs(bank)>160) pitch-=0.15
-      
+
       if(bank>180) bank-=360
       if(bank<-180) bank+=360
 
@@ -264,7 +264,7 @@ function make_sim(s)
         dto+=1
         if(dto==#db+1) dto=1
         local t=db[dto].type
-        if(t=='cty' or t=='ils') dto+=1
+        if(t!='apt' and t!='vor') dto+=1
       end
 
       -- on ground check
@@ -334,7 +334,7 @@ function make_sim(s)
         slag,plag=45,0
         if(not onground) blag=-10
       end
-      pitch-=slag*(onground and 0.003 or 0.008) 
+      pitch-=slag*(onground and 0.003 or 0.008)
       if (slag>=1) slag-=1
 
       -- calcgs()
@@ -379,7 +379,7 @@ function make_sim(s)
       -- alternative: make the map boundaries a no fly zone!
       local mx,my=flr(16*lon/600)+46,flr(16*(600+lat)/600)+8
       local tile=fget(mget(mx,my))
-      
+
       if ias>180 and not self.crashed then
         make_msg("crash: exceeded maximum speed\nz: exit to menu",300)
         self.crashed=true
@@ -390,7 +390,7 @@ function make_sim(s)
           make_msg("splash: landed on water")
           self.crashed=true
           -- todo: better splash sound?
-          sfx(8)       	
+          sfx(8)
         elseif vs>-300 and pitch>-0.5 and abs(bank)<5 then
           make_msg("good landing!")
           sfx(6) --rolling sound
@@ -451,6 +451,8 @@ function make_sim(s)
 
         line(48,75,aic[1],aic[2],10) --aircraft
         line(80,75,aic[1],aic[2])
+        line(40,71,45,71) --small horizon lines
+        line(83,71,88,71)
 
         drawstatic(world.lcockpit)
 
@@ -614,13 +616,13 @@ function make_sim(s)
 							 spr(s,40,95)
       elseif menu==2 then
        drawmap(lat,lon,heading)
-       
+
        -- clip included in rcockpit
        drawstatic(world.rcockpit)
-       print(db[dto].name,16,37,14)
+       print(db[dto].name,17,37,14)
        color(14)
-       disptime(flr(dist[dto]/groundspeed*3600),93,37)
-       print(groundspeed,53,37)
+       disptime(flr(dist[dto]/groundspeed*3600),94,37)
+       print(groundspeed,54,37)
 
       end
     end
@@ -702,10 +704,10 @@ end
 function drawmap(lat,lon,hdg)
  local dx,dy=scalemap(lon,lat)
  -- 58/87 are screen center coords for moving map
- clip(0,43,118,85)       
+ clip(0,43,118,85)
  camera(-58+dx,-87+dy)
  map(34,0,-33,-128,47,31)
- 
+
  for _,l in pairs(db) do
   local name,angle,x,y=l.name,l.angle,scalemap(l.lon,l.lat)
   x-=3 --correct for sprite size
@@ -713,7 +715,7 @@ function drawmap(lat,lon,hdg)
   -- helper function (save tokens)
   local draw_ils=function(a,txt)
    local _x,_y=sin(a),cos(a)
-   line(x+3,y+3,50*_x+x+3,50*_y+y+3,11)		
+   line(x+3,y+3,50*_x+x+3,50*_y+y+3,11)
    print(txt,62*_x+x+2,62*_y+y+3,7)
   end
   if l.type=="vor" then
@@ -721,7 +723,7 @@ function drawmap(lat,lon,hdg)
    print(name,x+9,y+1,7)
   elseif l.type=="ils" then
    draw_ils((angle-3)/360,"")
-   draw_ils((angle+3)/360,name)  
+   draw_ils((angle+3)/360,name)
   elseif l.type=="apt" then
    if angle>=0 and angle<23 then spr(22,x,y)
    elseif angle>22 and angle<68 then spr(55,x,y)
@@ -737,7 +739,7 @@ function drawmap(lat,lon,hdg)
  end
  print("tiny\nbay",265,-1,1)
  camera()
-  
+
  -- rotated plane
  polyliner(apsymbol,{58,87},hdg,7)
 end
@@ -851,7 +853,7 @@ function _draw()
    print(cpu,2,3,2)
    print(cpu,2,2,7)
    ]]
-   
+
   end
   dispmessage()
 end
@@ -1013,7 +1015,7 @@ function collect_drawables(model,m,pos,out)
   groups[f.gid]=0
  end
 
-  -- faces 
+  -- faces
 	for i=1,#model.f do
 	  local f,n=model.f[i],model.n[i]
    -- front facing?
@@ -1039,13 +1041,13 @@ function collect_drawables(model,m,pos,out)
 			  if(#vertices<2) viz=nil break
 			  vertices=plane_poly_clip(clipplanes2[k],vertices)
       end
-      if (viz) add(out,{key=-64*#f.vi/z,v=vertices,c=f.c,kind=3})    
+      if (viz) add(out,{key=-64*#f.vi/z,v=vertices,c=f.c,kind=3})
     end
    else
     groups[f.gid]+=1
    end
 	 end
-  
+
   -- collision check
  	for k,v in pairs(model.groups) do
 			if v==groups[k] then
@@ -1055,7 +1057,7 @@ function collect_drawables(model,m,pos,out)
    	break
    end
  	end
- 	
+
  -- edges
  for i=1,#model.e do
 		local e=model.e[i]
@@ -1088,7 +1090,7 @@ function collect_drawables(model,m,pos,out)
       add(out,{r=r/2,key=-w0,x=x0,y=y0,c=c})
      end
     else
-     
+
  			 a[4],b[4]=0,e.n or 0
      local v={a,b,a}
 		  for i=1,#clipplanes2 do
@@ -1096,8 +1098,8 @@ function collect_drawables(model,m,pos,out)
 			  v=plane_poly_clip(clipplanes2[i],v)
     end
     a,b=v[1],v[2]
-    
-    
+
+
       --[[ line clipping aginst near cam plane
       -- swap end points
       -- simplified sutherland-atherton
@@ -1119,24 +1121,24 @@ function collect_drawables(model,m,pos,out)
   	      local s=make_v(a,b)
    	     v_scale(s,t)
     	    v_add(s,a)
-     	   b=s 
-      	  c=8  
+     	   b=s
+      	  c=8
        	else
          c=11
-        end   
+        end
        else
         viz=false
        end
       end
       ]]
-      
+
      -- hide light glare at low angle
      -- dot(cam up, up) --> 0,180 degrees
      -- *20 --> 0,9 degrees
      -- todo: explicit 'bloom' figure
      if a and b then
       local p0,p1=cam:project2d(a),cam:project2d(b)
-      if e.kind==0 then 
+      if e.kind==0 then
 	      local bloom=lerp(24,12,mid(-20*cam.m[7],0,1))
  	     lightline(p0[1],p0[2],p1[1],p1[2],c,p0[4],p0[3],p1[4],p1[3],bloom,e.scale,out)
  	    else
@@ -1588,16 +1590,16 @@ function unpack_models()
 
    -- normals
    unpack_array(function()
-    add(lod.n,{unpack_float(),unpack_float(),unpack_float()})			
-   end)  
+    add(lod.n,{unpack_float(),unpack_float(),unpack_float()})
+   end)
 
-   -- n.p cache	
+   -- n.p cache
    for i=1,#lod.f do
     local f=lod.f[i]
     local cp=v_dot(lod.n[i],lod.v[f.vi[1]])
     add(lod.cp,cp)
-   end	
-   
+   end
+
    -- edges
    unpack_array(function()
     local e={
