@@ -177,7 +177,7 @@
         {
             "lat": -169.64,
             "lon": 100.27,
-            "name": "mnt. big",
+            "name": "mt. big",
             "type": "mnt_big"
         }
     ],
@@ -371,9 +371,9 @@
         {"fn":"clip","args":[]},
         {"fn":"map","args":[17,0,-4,26,27,3]},
         {"fn":"map","args":[32,3,116,50,2,10]},
-        {"fn":"spr","args":[21,106,120]},
-        {"fn":"spr","args":[42,114,120]},
-        {"fn":"line","args":[3,36,3,42,0]}
+        {"fn":"spr","args":[21,107,120]},
+        {"fn":"spr","args":[42,115,120]},
+        {"fn":"line","args":[4,36,4,42,0]}
     ],
     "briefing":[
         {"fn":"print","args":["press ❎ to   fly",8,112,7]},
@@ -392,7 +392,7 @@
         {"fn":"print","args":["q:   toggle flaps",8,87]},
         {"fn":"print","args":["tab: toggle instruments / map",8,94]},
         {"fn":"print","args":["e:   cycle gps waypoint",8,101]},
-        {"fn":"rect","args":[5,77,101,125,6]},
+        {"fn":"rect","args":[5,77,125,108,6]},
         {"fn":"rectfill","args":[78,88,83,89,7]},
         {"fn":"spr","args":[4,62,80]},
         {"fn":"print","args":["@yellowbaron | 3d by @freds72",7,123,6]}
