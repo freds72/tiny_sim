@@ -43,7 +43,7 @@ for i in range(48):
     s = s + "{}{}{}".format(pack_float(v[0]),pack_float(v[1]),pack_float(v[2]))
 
 # 3d models
-file_list = ['landing_strip','city1']
+file_list = ['landing_strip','city1','ground']
 s = s + "{:02x}".format(len(file_list))
 for blend_file in file_list:
     print("Exporting: {}.blend".format(blend_file))

@@ -49,6 +49,19 @@ def diffuse_to_p8color(rgb):
         # unknown color
         raise Exception('Unknown color: 0x{}'.format(h))
 
+# colliders (up to 8)
+# ID must start at 1
+solid_db = {
+ "SOLID_1": 1,
+ "SOLID_2": 2,
+ "SOLID_3": 3,
+ "SOLID_4": 4,
+ "SOLID_5": 5,
+ "SOLID_6": 6,
+ "SOLID_7": 7,
+ "SOLID_8": 8
+}
+
 # airport lights references
 # light type -> color + number of lights per meter
 lights_db = {
@@ -103,7 +116,8 @@ def export_layer(l):
 
         # faces
         s = s + "{:02x}".format(len(obdata.polygons))
-        for f in obdata.polygons:
+        for i in range(len(obdata.polygons)):
+            f=obdata.polygons[i]
             # color
             if len(obcontext.material_slots)>0:
                 slot = obcontext.material_slots[f.material_index]
@@ -111,12 +125,25 @@ def export_layer(l):
                 s = s + "{:02x}".format(diffuse_to_p8color(mat.diffuse_color))
             else:
                 s = s + "{:02x}".format(1) # default color
+            # is face part of a solid?
+            face_verts = {loop_vert[li]:li for li in f.loop_indices}
+            solid_group = {vgroups[k][0]:v for k,v in face_verts.items() if len(vgroups[k])==1}
+            solid_group = set([solid_db[k] for k,v in solid_group.items()])
+            if len(solid_group)>1:
+                raise Exception('Multiple vertex groups for the same face') 
+            if len(solid_group)==1:
+                # get group ID
+                solid_group=solid_group.pop()
+                s = s + "{:02x}".format(solid_group)
+            else:
+                s = s + "{:02x}".format(0)
+
             # + vertex count
             s = s + "{:02x}".format(len(f.loop_indices))
             # + vertex id (= edge loop)
             for li in f.loop_indices:
                 s = s + "{:02x}".format(loop_vert[li]+1)
-
+    
         # normals
         s = s + "{:02x}".format(len(obdata.polygons))
         for f in obdata.polygons:
@@ -135,26 +162,25 @@ def export_layer(l):
             g1 = vgroups[v1]
             # light line?
             if len(g0)>0 and len(g1)>0:
-                if len(g0)>0 and len(g1)>0:
-                    # find common group (if any)
-                    cg = set(g0).intersection(g1)
-                    if len(cg)>1:
-                        raise Exception('Multiple vertex groups for the same edge ({},{}): {} x {} -> {}'.format(obdata.vertices[v0].co,obdata.vertices[v1].co,g0,g1,cg))
-                    if len(cg)==1:
-                        # get light specifications
-                        light_group_name=cg.pop()
-                        light=lights_db[light_group_name]            
-                        light_color_index=light['color']
-                        light_scale=light['intensity']
-                        # light color + light type
-                        es = es + "{:02x}{:02x}{:02x}{:02x}".format(v0+1, v1+1, 0, light_color_index)
-                        # number of lights
-                        # find out number of lights according to segment length
-                        num_lights=int(round(max(e.calc_length()/light['n'],2)))
-                        if num_lights>255:
-                            raise Exception('Too many lights ({}) for edge: ({},{}) category: {}'.format(num_lights,obdata.vertices[v0].co,obdata.vertices[v1].co,light_group_name))
-                        es = es + "{:02x}{}".format(num_lights,pack_float(light_scale))
-                        es_count = es_count + 1
+                # find common group (if any)
+                cg = set(g0).intersection(g1)
+                if len(cg)>1:
+                    raise Exception('Multiple vertex groups for the same edge ({},{}): {} x {} -> {}'.format(obdata.vertices[v0].co,obdata.vertices[v1].co,g0,g1,cg))
+                if len(cg)==1:
+                    # get light specifications
+                    light_group_name=cg.pop()
+                    light=lights_db[light_group_name]            
+                    light_color_index=light['color']
+                    light_scale=light['intensity']
+                    # light color + light type
+                    es = es + "{:02x}{:02x}{:02x}{:02x}".format(v0+1, v1+1, 0, light_color_index)
+                    # number of lights
+                    # find out number of lights according to segment length
+                    num_lights=int(round(max(e.calc_length()/light['n'],2)))
+                    if num_lights>255:
+                        raise Exception('Too many lights ({}) for edge: ({},{}) category: {}'.format(num_lights,obdata.vertices[v0].co,obdata.vertices[v1].co,light_group_name))
+                    es = es + "{:02x}{}".format(num_lights,pack_float(light_scale))
+                    es_count = es_count + 1
 
         # PAPI lights
         lightindex = len(obdata.vertices)

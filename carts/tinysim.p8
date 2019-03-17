@@ -101,7 +101,7 @@ function json_parse(str, pos, end_delim)
   end
 end
 
-local world=json_parse'{"scenarios":[{"name":"visual approach","args":[-417,326.3,85,600,-1,0,25,112,3,2],"weather":1,"briefing":[{"fn":"print","args":["remain on runway axis. extend the\nflaps and keep speed at 65-70\nknots by using pitch and\nthrottle. at 50 feet, smoothly\nclose throttle and raise the\nnose to gently touch down\nbelow 65 knots.\ntoo easy? add some wind!",8,30,6]}]},{"name":"final approach","args":[-408.89,230.77,85,1000,1,0,75,112,3,2],"weather":2,"briefing":[{"fn":"print","args":["fly heading of approx. 085\nkeep localizer (  ) centered\n(the wind might push you away)\nmaintain 1000 ft\nintercept glide slope ( )\nreduce power and extend flaps\nstart 500 ft/min descent\nkeep localizer centered\nkeep glideslope centered\nat 200 ft reduce power & land",8,30,6]},{"fn":"spr","args":[20,71,36]},{"fn":"spr","args":[38,100,55]}]},{"name":"full approach","args":[-222.22,461.54,313,3000,0,0,91,112,1,2],"weather":3,"briefing":[{"fn":"print","args":["cross pco (  ) on heading 313\nintercept localizer (  )\nturn left heading 265\ndescend to 2000 ft\nturn right heading 310\nfly 1 minute\nturn left heading 130\nintercept localizer\nturn left heading 085\nfly final approach and land",8,30,6]},{"fn":"spr","args":[35,52,29]},{"fn":"spr","args":[20,91,36]}]},{"name":"engine failure!","args":[-422.2,408,85,500,10,0,0,65,3,2],"weather":1,"briefing":[{"fn":"print","args":["you have just taken off\nfrom tinyville for a trip\nto the beach, when the\nengine suddenly quits at\nonly 500 feet! make a steep\nturn back to airport while\nmaintaining best glide\nspeed (65 knots). can you\nmake it back? good luck!",8,30,6]}]},{"name":"unusual attitude","args":[-222.22,461.54,330,450,99,99,100,112,3,2],"weather":1,"briefing":[{"fn":"print","args":["while checking the map you did\nnot pay attention to your\nattitude. when you look up,\nthe airplane is out of control\nat low altitude. oops!\ncan you recover?\nhint: bank first, then pull up",8,30,6]}]},{"name":"free flight","args":[-422.2,384.6,85,0,0,0,0,0,5,2,true],"weather":1,"briefing":[{"fn":"print","args":["you are cleared for take-off\non runway 08 at tinyville.\napply full power and raise\nthe nose at 50-55 knots.\nhave fun!",8,30,6]}]}],"wx":[{"name":"clear, calm","dir":[0,0],"sky_gradient":[0,14,0,360,2,0,1440,1,0]},{"name":"clouds, breezy","dir":[60,10],"ceiling":500,"horiz":56,"sky_gradient":[0,213,-23131,500,5,0],"tex":{"x":0,"y":32},"light_ramp":68,"light_scale":0.125},{"name":"low clouds, stormy","dir":[10,20],"ceiling":200,"horiz":28,"sky_gradient":[0,5,0],"tex":{"x":64,"y":32},"light_ramp":68,"light_scale":0.08}],"db":[{"lat":-251.11,"lon":430.77,"name":"pco","type":"vor"},{"lat":-422.46,"lon":387.59,"name":"itn","type":"ils","angle":85},{"lat":-422.2,"lon":384.6,"name":"tny","type":"apt","angle":85},{"lat":-244,"lon":268.5,"name":"smallville","type":"cty"},{"lat":-66.67,"lon":153.85,"name":"smv","type":"apt","angle":40},{"lat":-177.78,"lon":246.15,"name":"wee","type":"vor"},{"lat":60,"lon":1200,"name":"pti","type":"apt","angle":170}],"vspeeds":[{"ias":55,"s":40},{"ias":60,"s":56},{"ias":65,"s":41},{"ias":79,"s":57}],"hsic":[64,111],"bp":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124]],"e":[[1,2],[1,3],[1,4],[5,6]]},"nesw":[[64,99,52],[52,111,53],[64,123,36],[76,111,37]],"cdii":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124],[64,104],[64,118]],"e":[[1,2],[1,3],[1,4],[5,6],[7,8]]},"apsymbol":{"v":[[55,87],[61,87],[58,86],[58,91],[57,91],[59,91]],"e":[[1,2],[3,4],[5,6]]},"lcockpit":[{"fn":"map","args":[0,0,-4,26,17,3]},{"fn":"map","args":[0,3,-4,48,2,11]},{"fn":"spr","args":[18,71,120]},{"fn":"spr","args":[34,79,115]},{"fn":"rectfill","args":[107,121,127,127,0]},{"fn":"rectfill","args":[87,115,100,127,0]},{"fn":"spr","args":[35,79,122]}],"rcockpit":[{"fn":"clip","args":[]},{"fn":"map","args":[17,0,-5,26,27,3]},{"fn":"map","args":[32,3,115,50,2,10]},{"fn":"spr","args":[21,106,120]},{"fn":"spr","args":[42,114,120]},{"fn":"line","args":[3,36,3,42,0]}],"briefing":[{"fn":"print","args":["press ❎ to   fly",8,112,7]},{"fn":"spr","args":[2,54,112]},{"fn":"spr","args":[3,77,112]},{"fn":"print","args":["z: back to menu",8,119,6]}],"intro":[{"fn":"cls","args":[]},{"fn":"spr","args":[2,34,10]},{"fn":"spr","args":[3,78,10]},{"fn":"print","args":["tiny sim",44,10,7]},{"fn":"print","args":["the world\'s smallest flight sim",2,20,6]},{"fn":"print","args":["press ❎ for briefing",8,57,7]},{"fn":"print","args":["x/z: throttle",8,80,6]},{"fn":"print","args":["q:   toggle flaps",8,87]},{"fn":"print","args":["tab: toggle instruments / map",8,94]},{"fn":"print","args":["e:   cycle gps waypoint",8,101]},{"fn":"rect","args":[5,77,125,108,6]},{"fn":"rectfill","args":[78,88,83,89,7]},{"fn":"spr","args":[4,62,80]},{"fn":"print","args":["@yellowbaron | 3d by @freds72",7,123,6]}],"gs":[{"fn":"pset","args":[92,61,7]},{"fn":"pset","args":[92,66,7]},{"fn":"pset","args":[92,71,7]},{"fn":"pset","args":[92,76,7]},{"fn":"pset","args":[92,81,7]},{"fn":"line","args":[91,71,93,71,7]}]}'
+local world=json_parse'{"scenarios":[{"name":"visual approach","args":[-417,326.3,85,600,-1,0,25,112,3,2],"weather":1,"briefing":[{"fn":"print","args":["remain on runway axis. extend the\nflaps and keep speed at 65-70\nknots by using pitch and\nthrottle. at 50 feet, smoothly\nclose throttle and raise the\nnose to gently touch down\nbelow 65 knots.\ntoo easy? add some wind!",8,30,6]}]},{"name":"final approach","args":[-408.89,230.77,85,1000,1,0,75,112,3,2],"weather":2,"briefing":[{"fn":"print","args":["fly heading of approx. 085\nkeep localizer (  ) centered\n(the wind might push you away)\nmaintain 1000 ft\nintercept glide slope ( )\nreduce power and extend flaps\nstart 500 ft/min descent\nkeep localizer centered\nkeep glideslope centered\nat 200 ft reduce power & land",8,30,6]},{"fn":"spr","args":[20,71,36]},{"fn":"spr","args":[38,100,55]}]},{"name":"full approach","args":[-222.22,461.54,313,3000,0,0,91,112,1,2],"weather":3,"briefing":[{"fn":"print","args":["cross pco (  ) on heading 313\nintercept localizer (  )\nturn left heading 265\ndescend to 2000 ft\nturn right heading 310\nfly 1 minute\nturn left heading 130\nintercept localizer\nturn left heading 085\nfly final approach and land",8,30,6]},{"fn":"spr","args":[35,51,30]},{"fn":"spr","args":[20,91,36]}]},{"name":"engine failure!","args":[-422.2,408,85,500,10,0,0,65,3,2],"weather":1,"briefing":[{"fn":"print","args":["you have just taken off\nfrom tinyville for a trip\nto the beach, when the\nengine suddenly quits at\nonly 500 feet! make a steep\nturn back to airport while\nmaintaining best glide\nspeed (65 knots). can you\nmake it back? good luck!",8,30,6]}]},{"name":"unusual attitude","args":[-222.22,461.54,330,450,99,99,100,112,3,2],"weather":1,"briefing":[{"fn":"print","args":["while checking the map you did\nnot pay attention to your\nattitude. when you look up,\nthe airplane is out of control\nat low altitude. oops!\ncan you recover?\nhint: bank first, then pull up",8,30,6]}]},{"name":"free flight","args":[-422.2,384.6,85,0,0,0,0,0,5,2,true],"weather":1,"briefing":[{"fn":"print","args":["you are cleared for take-off\non runway 08 at tinyville.\napply full power and raise\nthe nose at 50-55 knots.\nhave fun!",8,30,6]}]}],"wx":[{"name":"clear, calm","dir":[0,0],"sky_gradient":[0,14,0,360,2,0,1440,1,0]},{"name":"clouds, breezy","dir":[60,10],"ceiling":500,"horiz":56,"sky_gradient":[0,213,-23131,500,5,0],"tex":{"x":0,"y":32},"light_ramp":68,"light_scale":0.125},{"name":"low clouds, stormy","dir":[10,20],"ceiling":200,"horiz":28,"sky_gradient":[0,5,0],"tex":{"x":64,"y":32},"light_ramp":68,"light_scale":0.08}],"db":[{"lat":-251.11,"lon":430.77,"name":"pco","type":"vor"},{"lat":-422.46,"lon":387.59,"name":"itn","type":"ils","angle":85},{"lat":-422.2,"lon":384.6,"name":"tny","type":"apt","angle":85},{"lat":-244,"lon":268.5,"name":"smallville","type":"cty"},{"lat":-66.67,"lon":153.85,"name":"smv","type":"apt","angle":40},{"lat":-177.78,"lon":246.15,"name":"wee","type":"vor"},{"lat":60,"lon":1200,"name":"pti","type":"apt","angle":170}],"vspeeds":[{"ias":55,"s":40},{"ias":60,"s":56},{"ias":65,"s":41},{"ias":79,"s":57}],"hsic":[64,111],"bp":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124]],"e":[[1,2],[1,3],[1,4],[5,6]]},"nesw":[[64,99,52],[52,111,53],[64,123,36],[76,111,37]],"cdii":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124],[64,104],[64,118]],"e":[[1,2],[1,3],[1,4],[5,6],[7,8]]},"apsymbol":{"v":[[55,87],[61,87],[58,86],[58,91],[57,91],[59,91]],"e":[[1,2],[3,4],[5,6]]},"lcockpit":[{"fn":"map","args":[0,0,-4,26,17,3]},{"fn":"map","args":[0,3,-4,48,2,11]},{"fn":"spr","args":[18,71,120]},{"fn":"spr","args":[34,79,115]},{"fn":"rectfill","args":[107,121,127,127,0]},{"fn":"rectfill","args":[87,115,100,127,0]},{"fn":"spr","args":[35,79,122]}],"rcockpit":[{"fn":"clip","args":[]},{"fn":"map","args":[17,0,-4,26,27,3]},{"fn":"map","args":[32,3,116,50,2,10]},{"fn":"spr","args":[21,106,120]},{"fn":"spr","args":[42,114,120]},{"fn":"line","args":[3,36,3,42,0]}],"briefing":[{"fn":"print","args":["press ❎ to   fly",8,112,7]},{"fn":"spr","args":[2,54,112]},{"fn":"spr","args":[3,77,112]},{"fn":"print","args":["z: back to menu",8,119,6]}],"intro":[{"fn":"cls","args":[]},{"fn":"spr","args":[2,34,10]},{"fn":"spr","args":[3,78,10]},{"fn":"print","args":["tiny sim",44,10,7]},{"fn":"print","args":["the world\'s smallest flight sim",2,20,6]},{"fn":"print","args":["press ❎ for briefing",8,57,7]},{"fn":"print","args":["x/z: throttle",8,80,6]},{"fn":"print","args":["q:   toggle flaps",8,87]},{"fn":"print","args":["tab: toggle instruments / map",8,94]},{"fn":"print","args":["e:   cycle gps waypoint",8,101]},{"fn":"rect","args":[5,77,101,125,6]},{"fn":"rectfill","args":[78,88,83,89,7]},{"fn":"spr","args":[4,62,80]},{"fn":"print","args":["@yellowbaron | 3d by @freds72",7,123,6]}],"gs":[{"fn":"pset","args":[92,61,7]},{"fn":"pset","args":[92,66,7]},{"fn":"pset","args":[92,71,7]},{"fn":"pset","args":[92,76,7]},{"fn":"pset","args":[92,81,7]},{"fn":"line","args":[91,71,93,71,7]}]}'
 -- dither pattern 4x4 kernel
 local dither_pat=json_parse'[0xffff.8,0x7fff.8,0x7fdf.8,0x5fdf.8,0x5f5f.8,0x5b5f.8,0x5b5e.8,0x5a5e.8,0x5a5a.8,0x1a5a.8,0x1a4a.8,0x0a4a.8,0x0a0a.8,0x020a.8,0x0208.8,0x0000.8]'
 
@@ -249,6 +249,7 @@ function make_sim(s)
       if (abs(bank)<4 and blag==0) bank/=1.1 --bank stability
       if(abs(bank)>20) pitch-=0.3*abs(sin(bank/360))
       if(abs(bank)>160) pitch-=0.15
+      
       if(bank>180) bank-=360
       if(bank<-180) bank+=360
 
@@ -305,13 +306,10 @@ function make_sim(s)
       local wind=wx[wnd].dir
       relwind=heading-wind[1]
       relwind=(relwind+180)%360-180
-      relh=-wind[2]*cos(relwind/360)
-      relc=wind[2]*sin(relwind/360)
+      local relh,relc=-wind[2]*cos(relwind/360),wind[2]*sin(relwind/360)
       groundspeed=sqrt((tas/10+relh/10)^2+(relc/10)^2) --avoid tas^2 overflow
       groundspeed=ceil(10*groundspeed)
-      wca=atan2(tas+relh,relc)*360
-      wca=(wca+180)%360-180
-      if(onground) wca=0
+      local wca=ongroud and 0 or (atan2(tas+relh,relc)*360+180)%360-180
       -- actual 2d velocity direction
       track=heading+wca
 
@@ -322,7 +320,7 @@ function make_sim(s)
 
       -- calcdistbrg()
       local j=1
-      for l in all(db) do
+      for _,l in pairs(db) do
         local dy,dx=-(l.lat-lat)*0.01,(l.lon-lon)*0.01 --avoid overflow
         brg[j]=90+(atan2(dx,dy)*360)-heading
         brg[j]-=flr(brg[j]/360)*360
@@ -336,11 +334,7 @@ function make_sim(s)
         slag,plag=45,0
         if(not onground) blag=-10
       end
-      if onground then
-           pitch-=slag*0.003
-        else
-           pitch-=slag*0.008
-        end
+      pitch-=slag*(onground and 0.003 or 0.008) 
       if (slag>=1) slag-=1
 
       -- calcgs()
@@ -380,29 +374,46 @@ function make_sim(s)
       end
 
       -- checklanded()
-      if (ias>180 and not self.crashed) then
+      -- map tile
+      -- todo: boundary checks
+      -- alternative: make the map boundaries a no fly zone!
+      local mx,my=flr(16*lon/600)+46,flr(16*(600+lat)/600)+8
+      local tile=fget(mget(mx,my))
+      
+      if ias>180 and not self.crashed then
         make_msg("crash: exceeded maximum speed\nz: exit to menu",300)
         self.crashed=true
         sfx(4)
       elseif alt<=0 and not onground then
         onground=true
-        -- hit sound
-        sfx(5)
-        if vs>-300 and pitch>-0.5 and abs(bank)<5 then
+        if tile==2 then -- water!
+          make_msg("splash: landed on water")
+          self.crashed=true
+          -- todo: better splash sound?
+          sfx(8)       	
+        elseif vs>-300 and pitch>-0.5 and abs(bank)<5 then
           make_msg("good landing!")
+          sfx(6) --rolling sound
         elseif vs>-1000 and pitch>-0.5 and abs(bank)<30 then
           make_msg("oops... hard landing")
+          sfx(6) --rolling sound
         else
           make_msg("crash: collision with ground\nz: exit to menu",300)
           self.crashed=true
           sfx(3)
         end
       end
-      if(onground and not self.crashed) sfx(6) --rolling sound
       if alt>0 and onground then
         onground=nil
         -- stop rolling sound
         sfx(6,-2)
+      end
+      -- no fly zone
+      if tile==1 then
+       make_msg("no fly zone: licence revoked")
+       self.crashed=true
+       -- todo: better sound (?)
+       sfx(9)
       end
 
       timer+=1/30
@@ -449,7 +460,7 @@ function make_sim(s)
         circ(64,111,8,7)
         spr(19,62,95) --tick mark
         --cardinal directions
-        for l in all(nesw) do
+        for _,l in pairs(nesw) do
           local x,y=rotatepoint(l,hsic,-heading)
           spr(l[3],x-1,y-1)
         end
@@ -505,7 +516,7 @@ function make_sim(s)
         end
 
         clip(34,50,8,41)
-        for v in all(vspeeds) do
+        for _,v in pairs(vspeeds) do
           spr(v.s,34,(ias-v.ias)*3+69)
         end
         clip()
@@ -519,7 +530,7 @@ function make_sim(s)
             line(95,62-(i*20)+dy,97,62-(i*20)+dy,6)
         end
         clip()
-          rectfill(95,68,111,74,0)
+        rectfill(95,68,111,74,0)
         rectfill(103,65,111,77)
         local y=alt/10-flr(alt/100)*10
         local y2,y3=ceil(y),(y*7)%7
@@ -588,20 +599,22 @@ function make_sim(s)
         spr(flps==1 and 46 or 14,0,64,1,2)
 
         -- dispwind()
+								local s
         if onground then
-          spr(127,40,95)
+          s=127
         elseif relwind>=0 and relwind<90 then
-          spr(78,40,95)
+          s=78
         elseif relwind<=0 and relwind>-90 then
-          spr(79,40,95)
+          s=79
         elseif relwind>=90 and relwind<180 then
-          spr(94,40,95)
+          s=94
         elseif relwind<=-90 and relwind>-180 then
-          spr(95,40,95)
+          s=95
         end
-
+							 spr(s,40,95)
       elseif menu==2 then
-       drawmap(heading)
+       drawmap(lat,lon,heading)
+       
        -- clip included in rcockpit
        drawstatic(world.rcockpit)
        print(db[dto].name,16,37,14)
@@ -686,42 +699,46 @@ function drawmenu()
 
 end
 
-function drawmap(hdg)
- local dx,dy=scalemap(cam.pos[3],cam.pos[1])
+function drawmap(lat,lon,hdg)
+ local dx,dy=scalemap(lon,lat)
  -- 58/87 are screen center coords for moving map
- clip(0,43,117,85)
+ clip(0,43,118,85)       
  camera(-58+dx,-87+dy)
- map(34,0,-30,-128,47,31)
-
- for l in all(db) do
-  local x,y=scalemap(l.lon,l.lat)
+ map(34,0,-33,-128,47,31)
+ 
+ for _,l in pairs(db) do
+  local name,angle,x,y=l.name,l.angle,scalemap(l.lon,l.lat)
   x-=3 --correct for sprite size
   y-=3
+  -- helper function (save tokens)
+  local draw_ils=function(a,txt)
+   local _x,_y=sin(a),cos(a)
+   line(x+3,y+3,50*_x+x+3,50*_y+y+3,11)		
+   print(txt,62*_x+x+2,62*_y+y+3,7)
+  end
   if l.type=="vor" then
    spr(39,x,y)
-   print(l.name,x+9,y+1,7)
+   print(name,x+9,y+1,7)
   elseif l.type=="ils" then
-   local a,b=(l.angle-3)/360,(l.angle+3)/360
-   local _x,_y=sin(a),cos(a)
-   line(x+3,y+3,50*_x+x+3,50*_y+y+3,11)
-   local _x,_y=sin(b),cos(b)
-   line(x+3,y+3,50*_x+x+3,50*_y+y+3,11)
-   print(l.name,62*_x+x+2,62*_y+y+3,7)
+   local a,b=(angle-3)/360,(angle+3)/360
+   draw_ils(a,"")
+   draw_ils(b,name)   
   elseif l.type=="apt" then
-   if l.angle>=0 and l.angle<23 then spr(22,x,y)
-   elseif l.angle>22 and l.angle<68 then spr(55,x,y)
-   elseif l.angle>67 and l.angle<103 then spr(54,x,y)
-   elseif l.angle>102 and l.angle<148 then spr(55,x-1,y,1,1,true,false)
+   if angle>=0 and angle<23 then spr(22,x,y)
+   elseif angle>22 and angle<68 then spr(55,x,y)
+   elseif angle>67 and angle<103 then spr(54,x,y)
+   elseif angle>102 and angle<148 then spr(55,x-1,y,1,1,true)
    else spr(22,x,y) end
-   print(l.name,x+9,y+1,7)
+   print(name,x+9,y+1,7)
   else
    -- city
    spr(17,x,y)
-   print(l.name,x-40,y+1,6)
+   print(name,x-40,y+1,5)
   end
  end
  print("tiny\nbay",265,-1,1)
  camera()
+  
  -- rotated plane
  polyliner(apsymbol,{58,87},hdg,7)
 end
@@ -730,12 +747,6 @@ function scalemap(_x,_y)
   -- based on 16nm per 128px
   -- todo: remove 64/64 centering
   return 64+_x*0.2133,64+_y*0.2133
-end
-
--- trick from: https://gist.github.com/josefnpat/bfe4aaa5bbb44f572cd0
-function munpack(t, from, to)
-  local from,to=from or 1,to or #t
-  if(from<=to) return t[from], munpack(t, from+1, to)
 end
 
 function drawbriefing()
@@ -826,9 +837,8 @@ function _draw()
 	 elseif menu==3 then
 	  drawbriefing()
 	 else
-	 	cls()
- 		clip(0,0,127,40)
-   -- 3d
+	  cls()
+ 		-- 3d
    local ceiling=wx[wnd].ceiling
 	  draw_ground(ceiling)
 	  zbuf_draw()
@@ -838,10 +848,11 @@ function _draw()
 
    -- perf monitor!
    --[[
-   local cpu=flr(100*stat(1)).."%"
+   local cpu=(flr(1000*stat(1))/10).."%"
    print(cpu,2,3,2)
    print(cpu,2,2,7)
    ]]
+   
   end
   dispmessage()
 end
@@ -886,6 +897,8 @@ end
 
 -- zbuffer (kind of)
 local znear=0.25
+local clipplanes2=json_parse'[[0.707,0,-0.707,0.1767],[-0.707,0,-0.707,0.1767],[0,0.707,-0.707,0.1767],[0,-0.707,-0.707,0.1767],[0,0,-1,-0.25]]'
+
 function zbuf_draw()
 	local objs={}
 
@@ -901,11 +914,9 @@ function zbuf_draw()
 	for i=1,#objs do
 		local d=objs[i]
   if d.kind==3 then
-			-- front clip plane only
-			project_poly(plane_poly_clip({0,0,-1},{0,0,znear},d.v),d.c)
+			project_poly(d.v,d.c)
 		else
-  	local r=d.r or min(3,-24/d.key)
-		 circfillt(d.x,d.y,r,light_shades[d.c])
+  	circfillt(d.x,d.y,d.r,light_shades[d.c])
  	end
  end
 end
@@ -994,10 +1005,18 @@ function collect_drawables(model,m,pos,out)
  local d=v_dot(safe_pos,safe_pos)
 
  -- lod selection
- model=model.lods[d>0.25 and 2 or 1]
- -- faces
+ local lodid=min(#model.lods,d>0.25 and 2 or 1)
+ model=model.lods[lodid]
+
+ -- reset collision groups
+ local groups={}
+ for _,f in pairs(model.f) do
+  groups[f.gid]=0
+ end
+
+  -- faces 
 	for i=1,#model.f do
-  local f,n=model.f[i],model.n[i]
+   local f,n=model.f[i],model.n[i]
    -- front facing?
    if v_dot(n,cam_pos)>model.cp[i] then
     -- face vertices (for clipping)
@@ -1014,12 +1033,27 @@ function collect_drawables(model,m,pos,out)
       -- at least one point within viewport?
       if(a[3]>znear) viz=true
      end
- 		  add(vertices,a)
-		  end
-			if(viz) add(out,{key=-#f.vi/z,v=vertices,c=f.c,kind=3})
-		end
-	end
-
+ 		  vertices[#vertices+1]=a
+    end
+    if viz then
+     vertices=plane_poly_clip({0,0,-1,-0.25},vertices)
+     if(#vertices>2) add(out,{key=-64*#f.vi/z,v=vertices,c=f.c,kind=3})
+    end
+   else
+    groups[f.gid]+=1
+   end
+	 end
+ 
+  -- collision check
+ 	for k,v in pairs(model.groups) do
+			if v==groups[k] then
+    make_msg("crash: collision with building")
+    sim.crashed=true
+    sfx(3)
+   	break
+   end
+ 	end
+ 	
  -- edges
  for i=1,#model.e do
 		local e=model.e[i]
@@ -1029,12 +1063,12 @@ function collect_drawables(model,m,pos,out)
     local a,b=p[ak],p[bk]
     -- not in cache?
     if not a then
-      local v=cam:modelview(m,model.v[ak])
-      a,p[ak]=v,v
+     local v=cam:modelview(m,model.v[ak])
+     a,p[ak]=v,v
     end
     if not b then
-      local v=cam:modelview(m,model.v[bk])
-      b,p[bk]=v,v
+     local v=cam:modelview(m,model.v[bk])
+     b,p[bk]=v,v
     end
 
     if e.kind==1 then -- papi light?
@@ -1052,47 +1086,69 @@ function collect_drawables(model,m,pos,out)
       add(out,{r=r/2,key=-w0,x=x0,y=y0,c=c})
      end
     elseif e.kind==0 then -- lightline?
-      -- line clipping aginst near cam plane
+    
+ 			a[4],b[4]=0,e.n
+     local v={a,b,a}
+		  for i=1,#clipplanes2 do
+			  if(#v<2) break
+			  v=plane_poly_clip(clipplanes2[i],v)
+    end
+    a,b=v[1],v[2]
+    
+    
+      --[[ line clipping aginst near cam plane
       -- swap end points
       -- simplified sutherland-atherton
       -- inlined for speed
-      local az,bz=a[3],b[3]
-      if(az<bz) a,b,az,bz=b,a,bz,az
-      local den,t,viz=az-bz,1
-      if az>znear and bz<znear then
-       t=(az-znear)/den
-       if t>=0 and t<=1 then
-         -- intersect pos
-         local s=make_v(a,b)
-         v_scale(s,t)
-         v_add(s,a)
-         -- in-place out
-         b=s
+   			local t,viz=1,true
+   			local planes={{-1,-600,1},{1,600,1},{-1,0.25,3}}
+      for k=1,#planes do
+       local dir,zdist,id=planes[k][1],planes[k][2],planes[k][3]
+       if(viz==false) break
+       local az,bz=a[id],b[id]
+       if(dir*az>dir*bz) a,b,az,bz=b,a,bz,az
+    			-- znear=max(0.25,cam_pos[2])
+       if dir*az<dir*zdist then
+        -- crossing plane?
+        if dir*bz>dir*zdist then
+         --assert(az-bz>=0,az.."/"..bz)
+	        t=(az-zdist)/(az-bz)
+ 	       -- intersect pos
+  	      local s=make_v(a,b)
+   	     v_scale(s,t)
+    	    v_add(s,a)
+     	   b=s 
+      	  c=8  
+       	else
+         c=11
+        end   
+       else
+        viz=false
        end
-       viz=true
-      elseif bz>znear then
-       viz=true
       end
-
-      -- hide light glare at low angle
-      -- dot(cam up, up) --> 0,180 degrees
-      -- *20 --> 0,9 degrees
-      -- todo: explicit 'bloom' figure
-      if viz then
-       local p0,p1=cam:project2d(a),cam:project2d(b)
-       local bloom=lerp(24,12,mid(-20*cam.m[7],0,1))
-       lightline(p0[1],p0[2],p1[1],p1[2],c,0,p0[3],t*e.n,p1[3],bloom,e.scale,out)
-      end
+      ]]
+      
+     -- hide light glare at low angle
+     -- dot(cam up, up) --> 0,180 degrees
+     -- *20 --> 0,9 degrees
+     -- todo: explicit 'bloom' figure
+     if #v>2 then
+      local p0,p1=cam:project2d(a),cam:project2d(b)
+      local bloom=lerp(24,12,mid(-20*cam.m[7],0,1))
+      lightline(p0[1],p0[2],p1[1],p1[2],c,p0[4],p0[3],p1[4],p1[3],bloom,e.scale,out)
+     end
     end
 	end
 end
 
 -- sutherland-hodgman clipping
-function plane_poly_clip(n,p,v)
+-- n.p is pre-multiplied in n[4]
+function plane_poly_clip(n,v)
 	local dist,allin={},0
-	for i=1,#v do
-		dist[i]=v_dot(make_v(v[i],p),n)
-		if(dist[i]>0) allin+=1
+	for i,a in pairs(v) do
+		local d=n[4]-(a[1]*n[1]+a[2]*n[2]+a[3]*n[3])
+		if(d>0) allin+=1
+	 dist[i]=d
 	end
  -- early exit
 	if(allin==#v) return v
@@ -1102,17 +1158,18 @@ function plane_poly_clip(n,p,v)
 	local v0,d0,v1,d1,t,r=v[#v],dist[#v]
  -- use local closure
  local clip_line=function()
-  local r,t=make_v(v0,v1),d0/(d0-d1)
-  v_scale(r,t)
-  v_add(r,v0)
-  if(v0[4]) r[4],r[5]=lerp(v0[4],v1[4],t),lerp(v0[5],v1[5],t)
-  add(res,r)
+ 	local r,t=make_v(v0,v1),d0/(d0-d1)
+ 	v_scale(r,t)
+ 	v_add(r,v0)
+ 	if(v0[4]) r[4]=lerp(v0[4],v1[4],t)
+ 	if(v0[5]) r[5]=lerp(v0[5],v1[5],t)
+ 	res[#res+1]=r
  end
 	for i=1,#v do
 		v1,d1=v[i],dist[i]
 		if d1>0 then
 			if(d0<=0) clip_line()
-			add(res,v1)
+			res[#res+1]=v1
 		elseif d0>0 then
    clip_line()
 		end
@@ -1120,7 +1177,6 @@ function plane_poly_clip(n,p,v)
 	end
 	return res
 end
-
 function make_actor(model,p,angle)
   angle=angle and angle/360 or 0
 	-- instance
@@ -1171,7 +1227,7 @@ function make_cam(x0,y0,focal)
 	return c
 end
 
-local clipplanes=json_parse'[[0,0,1],[0,0,8],[0.707,0,-0.707],[0.25,0,0],[-0.707,0,-0.707],[-0.25,0,0],[0,0.707,-0.707],[0,0.25,0],[0,-0.707,-0.707],[0,-0.25,0],[0,0,-1],[0,0,0.25]]'
+local clipplanes=json_parse'[[0,0,1,8],[0.707,0,-0.707,0.1767],[-0.707,0,-0.707,0.1767],[0,0.707,-0.707,0.1767],[0,-0.707,-0.707,0.1767],[0,0,-1,-0.25]]'
 
 function draw_clouds(ceiling)
  local weather=wx[wnd]
@@ -1186,13 +1242,13 @@ function draw_clouds(ceiling)
    m_x_v(cam.m,v)
   end
  -- update far clip plane=horizon limit
- clipplanes[2][3]=weather.horiz
-	for i=1,#clipplanes,2 do
-	 cloudplane=plane_poly_clip(clipplanes[i],clipplanes[i+1],cloudplane)
+ clipplanes[1][4]=weather.horiz
+	for i=1,#clipplanes do
+	 cloudplane=plane_poly_clip(clipplanes[i],cloudplane)
 	end
-  tex_src=weather.tex
+ tex_src=weather.tex
 	color(cloudy<0 and 5 or 13)
-  project_texpoly(cloudplane)
+ project_texpoly(cloudplane)
 end
 
 function draw_ground(ceiling)
@@ -1215,7 +1271,7 @@ function draw_ground(ceiling)
 	local x0,z0=cam.pos[1],cam.pos[3]
 	local dx,dy=x0%scale,z0%scale
 
-  color(1)
+ color(1)
 	for i=-4,4 do
 		local ii=scale*i-dx+x0
 		for j=-4,4 do
@@ -1227,7 +1283,7 @@ function draw_ground(ceiling)
 			if v[3]>0 then
 				pset(v[1],v[2])
 			end
-    end
+  end
 	end
 
  -- start alt.,color,pattern
@@ -1238,7 +1294,8 @@ function draw_ground(ceiling)
 		local p={0,-sky_gradient[i]/120,0}
 		if(horiz) p[2]+=cy
 		m_x_v(cam.m,p)
-		farplane=plane_poly_clip(n,p,farplane)
+		n[4]=v_dot(p,n)
+		farplane=plane_poly_clip(n,farplane)
 		fillp(sky_gradient[i+2])
   -- display
 		project_poly(farplane,sky_gradient[i+1])
@@ -1293,11 +1350,13 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,scale,out)
  local light=function(x,y,u)
   if prevu and prevu!=u then
 			local col=sget(ramp+3*mid(scale*w0-u%2,0,1),c)
-   if(col!=0) pset(x,y,col)
-   -- avoid too many lights!
-   if bloom and w0>bloom then
-    add(out,{key=-w0,x=x,y=y,c=c})
-   end
+   if col!=0 then
+    pset(x,y,col)
+   	-- avoid too many lights!
+   	if bloom and w0>bloom then
+		 		circfillt(x,y,min(3,24/w0),light_shades[c])
+   	end
+  	end
   end
   u0+=du
   w0+=dw
@@ -1308,14 +1367,14 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,scale,out)
   -- order points on y
   if(y0>y1) x0,y0,x1,y1,u0,u1,w0,w1=x1,y1,x0,y0,u1,u0,w1,w0
   w,h=x1-x0,y1-y0
-	 du,dw=(u1*w1-u0*w0)/h,(w1-w0)/h
+	 du,dw=(u1-u0)/h,(w1-w0)/h
 
   -- y-major
-  u0*=w0
+  -- u0*=w0
 	 if y0<0 then
 		 local t=-y0/h
 		 -- todo: unroll lerp
-	  x0,y0,u0,w0=x0+w*t,0,lerp(u0,u1*w1,t),lerp(w0,w1,t)
+	  x0,y0,u0,w0=x0+w*t,0,lerp(u0,u1,t),lerp(w0,w1,t)
 	  prevu=nil
   end
 
@@ -1327,14 +1386,14 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,scale,out)
    -- x-major
 	  if(x0>x1) x0,y0,x1,y1,u0,u1,w0,w1=x1,y1,x0,y0,u1,u0,w1,w0
 	  w,h=x1-x0,y1-y0
-	  du,dw=(u1*w1-u0*w0)/w,(w1-w0)/w
+	  du,dw=(u1-u0)/w,(w1-w0)/w
 
-	  u0*=w0
+	  --u0*=w0
 	  if x0<0 then
 	    local t=-x0/w
 	    -- u is not linear
 	    -- u*w is
-	    x0,y0,u0,w0=0,y0+h*t,lerp(u0,u1*w1,t),lerp(w0,w1,t)
+	    x0,y0,u0,w0=0,y0+h*t,lerp(u0,u1,t),lerp(w0,w1,t)
 	    prevu=nil
 	  end
 
@@ -1454,6 +1513,14 @@ end
 -->8
 -- unpack data & models
 local mem=0x1000
+
+-- unpack a list into an argument list
+-- trick from: https://gist.github.com/josefnpat/bfe4aaa5bbb44f572cd0
+function munpack(t, from, to)
+ local from,to=from or 1,to or #t
+ if(from<=to) return t[from], munpack(t, from+1, to)
+end
+
 -- w: number of bytes (1 or 2)
 function unpack_int(w)
   w=w or 1
@@ -1495,7 +1562,7 @@ function unpack_models()
 
 		-- level of details
 		unpack_array(function()
-   local lod={v={},f={},n={},cp={},e={}}
+   local lod={v={},f={},n={},cp={},e={},groups={}}
    -- vertices
    unpack_array(function()
     add(lod.v,{unpack_double(scale),unpack_double(scale),unpack_double(scale)})
@@ -1503,25 +1570,28 @@ function unpack_models()
 
    -- faces
    unpack_array(function(i)
-    local f={ni=i,vi={},c=unpack_int()}
+    local f={ni=i,vi={},c=unpack_int(),gid=unpack_int()}
     -- vertex indices
     unpack_array(function()
      add(f.vi,unpack_int())
     end)
     add(lod.f,f)
+    -- collision group
+    if(f.gid>0) lod.groups[f.gid]=1+(lod.groups[f.gid] or 0)
    end)
 
    -- normals
    unpack_array(function()
-    add(lod.n,{unpack_float(),unpack_float(),unpack_float()})
-   end)
+    add(lod.n,{unpack_float(),unpack_float(),unpack_float()})			
+   end)  
 
-   -- n.p cache
+   -- n.p cache	
    for i=1,#lod.f do
     local f=lod.f[i]
-    add(lod.cp,v_dot(lod.n[i],lod.v[f.vi[1]]))
-   end
-
+    local cp=v_dot(lod.n[i],lod.v[f.vi[1]])
+    add(lod.cp,cp)
+   end	
+   
    -- edges
    unpack_array(function()
     local e={
@@ -1698,9 +1768,9 @@ ba73000000000000000037cffc830005ff0000575000ffff0000000000000000ff830369baa977bd
 4100000037bfc8404897100000014676666660ff666660ffd56660ffffffffffffc6369bfffffea6dfffffffdabfffff000666666666ffffff066666f000000f
 10000000236bb9646642000000001333666660ff666660ffd56660ffffffffffffe637bfffffffcbffffffffc89bafff000666666666ffffff066666f000000f
 01333112010255321000000000000000666660ff6666d0ffd56660fffffffffffff967adcdcdeb98ab9adffd87676adf000666666666ffffff066666ffffffff
-03a648965859890719a629286648497608f987e94877595937f70ad76788362899d6187816b8c9470648f7080a08399886d7e9c8d7e947363837f8692927d9d7
-180ad7187979c70af719b9a7e6a9f797e9779859a68998d657e948a938e657e9c797f9d7c66947d7f97808f977080a08e6a92828c8e98618b6f91877b6494767
-68260a28b7c8e9f707c9d7b91829c8b9b82030c0b1f10320f6f38a04000407f38c04000407f38a04002405f38c04002405f38d04000407f38f04000407f38d04
+03278909f7d9e8a8e928e678a9764839a8e9e7a91997b619f6e97898e859c677e9b7b8e918b6891886f817685979661988678939a8e9e7b9e86729186628f968
+f709c9097856c679982668a8a8e93808f977a8c957480ae707b968e928a809c876f70af7d85949d6286676982937f876c8b856289816c74976280a08a8a90999
+09d8f65866c9f80827c9b707b9482949e63030c0b1f10320f6f38a04000407f38c04000407f38a04002405f38c04002405f38d04000407f38f04000407f38d04
 002405f38f04002405048004000407048204000407048004002405048204002405048304000407048504000407048304002405048504002405f3010400040004
 0f04000400f3010400d90c040f0400d90cf38404000407f38604000407f38404002405f38604002405f38704000407f38904000407f38704002405f389040024
 05048604000407048804000407048604002405048904000407048b04000407048904002405048b04002405f38104000407f38304000407f38104002405f38304
@@ -1710,30 +1780,33 @@ ba73000000000000000037cffc830005ff0000575000ffff0000000000000000ff830369baa977bd
 00730464490400730e64490400461e04870400f58a548e040056d004870400d551841e0400b50ea4120400a50a841e0400a50a841e2408a50aa4122408a50a84
 1e2408b50ea4122408b50e841b2408a507a4152408a507841b2408c501a4152408c50184183402a507a4153402a50784183402c501a4153402c5010488040024
 05a4120400b50e2507040095e074dc040095e07403040095ea64dc040066e27403040056cc74030400730674dc0400d49b74dc04008567143e040063a2143e04
-008343a3060400f40aa3063400f44bb30a0400f40ab30a24fff41cc30e0400f40ac30e24fff4fce3020400f40ae30224eff4cd41704010204030704050608070
-704090a0c0b07040d0e001f0704051618171704091a1c1b170400212322270404252726270408292b2a2004025d4f405004035d5d42590407565a5b500406575
-554500408595b5a590404555958500405575b5959040654585a57040d1e1c5f1004005f4e415004015e4d53541080a08080a08080a08080a08080a08080a0808
-0a08080a08080a0806080808080a08080a080608080a080808060a0808167708080a080808060a0808123111007023a91441007002a9c2d20060050ae2f20080
-620a13230070200a33430070200a112100b0e10a31410080e10a73830070e10a36c300c01138e3b300c03238241400c0603804e300c06038d33400c09038c4a4
-00b08038544400b06038647400b01138948400b00938a4b400b0913893a300c040382114007021a9260600c0a038e5f500c0903863f300c0403834e500c0a038
-162400c02038f33600c02038465600a09338667600a0b03886961080a6b61080c6d61080e6f6108061f30104000400040f04000400f3010400d90c040f0400d9
-0c04000400040004000400b80004000400d90c04000400b80004000400320ef30a0400d20404060400d204f3070400320e04090400320ef3010400630a040f04
-00630a04000400630a04000400320e040f0400730e040f0400e58e040f040016e204000400732e04000400930c0000b03010007023a94140007002a950600060
-050a70800080620aa0b00070200ac0d00070200a102000b0e10a30400080e10a01110070e10a615100b060382041007021a930e0f1420320a370820400872fdf
-090400f631cea1040036179dd60400044edd8304008128af550400e05251800400604692c80400f0f0741f04001119e50004005127e6cd0400b1bcf643040013
-70672a0400b401a6db040006ec952a0400c7b593090400183accce04007efc0c890400b7a8d2b90400eafe8aa80400caf03b6c0400f099d2de04009b10936704
-77b3779367c47fb37793670477147b9367c47f147bf36b0477b377f36bc47fb377f36b0477147bf36bc47f147bd2bb0477244bd2bbc47f244b33570477043333
-57c47f0433b2a30477c3afb2a3c47fc3af034f0477a397034fc47fa39723a60477050e23a6c47f050ee2b104775576e2b1c47f5576631f04775503631fc47f55
-03232a0477957b232ac47f957b6fe204003617978404001370acba0400b7a8dbad0400f099c42904330124e3130433084523d30433da0a23e804337b2b00b404
-00e052f5890400c7b52d1e04007efceaf70400caf0f000407181a191004091a1e1d10040d1e1c1b10040b1c181710040e1a181c10040f1022212004012226252
-0040526242320040324202f100406222024200407282a292004092a2e2d20040d2e2c2b20040b2c282720040e2a282c2f006080808080a0a0808080806080a08
-d808d9d908373708363608d8080a089608a6a60879790869690896080a082220100090700a30200090b00a40300090510a50400090610a60500090010a706000
-90f00a80700090c00a90800090010aa0900090c00ab0a00090a00ac0b00090b00ad0c00090e00ae0d00090d00af0e00090110a01f00090110a10010090b10a60
-f00090e40a30c00090b40a90010090c30a60110090020a30210090b10a01310090910af0410090130ac0510090920a90610090130af2030090b40af2130090b1
-0a03230090920a33430090c30a43530090910a33630090130a73830090e40a73930090020a83a30090130a0170820400872fcea1040036179dd60400044edd83
-0400812851800400604692c80400f0f0e6cd0400b1bc672a0400b401952a0400c7b593090400183accce04007efc0c890400b7a8d2b90400eafe8aa80400caf0
-3b6c0400f099d2de04009b1000000110200090210a30200090510a40300090610a60500090c00a80900090f10aa0900090110a10a00090b10a40500090f10a20
-f00090370aa0010090b60a90b00090d60a20c00090b10aa0d00090910a90e00090130a70800090a10a60700090620a0000000000000000000000000000000000
+008343a3060400f40aa3063400f44bb30a0400f40ab30a24fff41cc30e0400f40ac30e24fff4fce3020400f40ae30224eff4cd51700040102040307000405060
+807070004090a0c0b0700040d0e001f07000405161817170004091a1c1b170004002123222700040425272627000408292b2a200104025d4f40500104035d5d4
+259020407565a5b5002040657555450020408595b5a5902040455595850020405575b595902040654585a5700040d1e1c5f100104005f4e41500104015e4d535
+0010402505153551080a08080a08080a08080a08080a08080a08080a08080a08080a0806080808080a08080a080608080a080808060a0808167708080a080808
+060a0808080a08123111007023a91441007002a9c2d20060050ae2f20080620a13230070200a33430070200a112100b0e10a31410080e10a73830070e10a36c3
+00c01138e3b300c03238241400c0603804e300c06038d33400c09038c4a400b08038544400b06038647400b01138948400b00938a4b400b0913893a300c04038
+2114007021a9260600c0a038e5f500c0903863f300c0403834e500c0a038162400c02038f33600c02038465600a09338667600a0b03886961080a6b61080c6d6
+1080e6f6108061f30104000400040f04000400f3010400d90c040f0400d90c04000400040004000400b80004000400d90c04000400b80004000400320ef30a04
+00d20404060400d204f3070400320e04090400320ef3010400630a040f0400630a04000400630a04000400320e040f0400730e040f0400e58e040f040016e204
+000400732e04000400930c0000b03010007023a94140007002a950600060050a70800080620aa0b00070200ac0d00070200a102000b0e10a30400080e10a0111
+0070e10a615100b060382041007021a930e0f1420320a370820400872fdf090400f631cea1040036179dd60400044edd8304008128af550400e0525180040060
+4692c80400f0f0741f04001119e50004005127e6cd0400b1bcf64304001370672a0400b401a6db040006ec952a0400c7b593090400183accce04007efc0c8904
+00b7a8d2b90400eafe8aa80400caf03b6c0400f099d2de04009b1093670477b3779367c47fb37793670477147b9367c47f147bf36b0477b377f36bc47fb377f3
+6b0477147bf36bc47f147bd2bb0477244bd2bbc47f244b3357047704333357c47f0433b2a30477c3afb2a3c47fc3af034f0477a397034fc47fa39723a6047705
+0e23a6c47f050ee2b104775576e2b1c47f5576631f04775503631fc47f5503232a0477957b232ac47f957b6fe204003617978404001370acba0400b7a8dbad04
+00f099c42904330124e3130433084523d30433da0a23e804337b2b00b40400e052f5890400c7b52d1e04007efceaf70400caf0f00010407181a19100104091a1
+e1d1001040d1e1c1b1001040b1c18171001040e1a181c1002040f10222120020401222625200204052624232002040324202f1002040622202420030407282a2
+9200304092a2e2d2003040d2e2c2b2003040b2c28272003040e2a282c2f006080808080a0a0808080806080a08d808d9d908373708363608d8080a089608a6a6
+0879790869690896080a082220100090700a30200090b00a40300090510a50400090610a60500090010a70600090f00a80700090c00a90800090010aa0900090
+c00ab0a00090a00ac0b00090b00ad0c00090e00ae0d00090d00af0e00090110a01f00090110a10010090b10a60f00090e40a30c00090b40a90010090c30a6011
+0090020a30210090b10a01310090910af0410090130ac0510090920a90610090130af2030090b40af2130090b10a03230090920a33430090c30a43530090910a
+33630090130a73830090e40a73930090020a83a30090130a0170820400872fcea1040036179dd60400044edd830400812851800400604692c80400f0f0e6cd04
+00b1bc672a0400b401952a0400c7b593090400183accce04007efc0c890400b7a8d2b90400eafe8aa80400caf03b6c0400f099d2de04009b1000000110200090
+210a30200090510a40300090610a60500090c00a80900090f10aa0900090110a10a00090b10a40500090f10a20f00090370aa0010090b60a90b00090d60a20c0
+0090b10aa0d00090910a90e00090130a70800090a10a60700090620a4021d191f0101080560804005608560804000400040004000400040004005608b5f70400
+d50cb5f70400a50075fb0400a50075fb0400d50c00008010200090410a10400090410a20300090410a30400090410a50600090200a50800090200a6070009020
+0a70800090200a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __label__
 11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
 11111111111111111111111111111111111111116111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
@@ -1864,6 +1937,9 @@ d656d565444444444444444444444444444444444444444444444444444444444444444444444444
 000244444444444444444444444444444400044444444444444444444444444444444444444444457d545100000006605001067d70144444444f776ccccccccc
 00024444444000444444444444444444440610004444444444444444444444444444444444444445d544566d10000751776100567044444444444e7776ccccc0
 
+__gff__
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __map__
 0b0c0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d6c6d3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a2f2f2f00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 1b4445461d1d54551d4756571d67661d1d1d54551d1d1d071d1d1d05061d1d1d7c7d3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a2f2f2f00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -1898,11 +1974,13 @@ __map__
 000000000000000000000000000000000000000000000000000000000000000000003a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a2f2f2f2f2f2f2f2f00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 000000000000000000000000000000000000000000000000000000000000000000003a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a2f2f2f2f2f2f2f2f00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __sfx__
-000b00021d23023230150500000010050100501005010050100501375013750137502120021200037000370004700047000570005700057000570005700057000570004700047000370002700027000270001700
+000b00021023010230100501005010050100501005010050100501075013750137501805018050130501005010050100501005013050130500570005700057000570004700047000370002700027000270001700
 00060000223301c3300a2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 000100040a1400c140226101d61020600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 000600002f6503367031670256701c67019660156600a650046400162003610016000361002600026000360001600016000160001600016000260002600026000360003600036000000000000000000000000000
 000400001d5501d5501d5501c5501a550185501555013550105500955005550015500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00020000090500a7500a050097500504002740010300372001010067000870006000077000670007700087000800006700077000670007000097000670005700070000770019000180001800019000097001a000
-000200200475001040040400573007750047400375005040047600574004030047400305003050030500306003740037500305003750037400305003750017400375006040057400574003740057500505003760
+000205201506018760180601776013060045400375003550055500575004550055400554005540055400374005530065400554005540055400455005540067400455005550057500455004550045500575004540
 000300200161002610026100261001610016100161002610026100261003610036100361003610036100361004610046100461003610036100361003610036100361003610036100361003610026100261002610
+000300002b460146602b470156702a4701467026470126702247012660174500c64011430094200461003610016100261001650127001270010700057000e7000c700097000870006700067001a0000000000000
+000b00002d550255502d550255401e53018540135500d540095200652003530015500155014400103000f30015400123001430017300163000f30010300133001330010300103001030011300123001230012300
