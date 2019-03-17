@@ -82,7 +82,8 @@ lines_db = {
     # -- 
     # regular lines
     # line type -> line color
-    "SHORES": { "color": 1 , "kind":2}
+    "SHORES": { "color": 1 , "kind":2},
+    "SOLID_LIGHT": { "color": 8 , "kind":4}
 }
 
 def export_layer(l):

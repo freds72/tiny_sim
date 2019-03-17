@@ -475,17 +475,17 @@ function make_sim(s)
         polyliner(cdii,hsic,crs,11)
         spr(33,62,110) --heading plane symbol
         --dto bearing
-        print(flr(brg[dto]+heading)%360,117,37,14)
+        ?flr(brg[dto]+heading)%360,117,37,14
 
         -- disprpm()
         local drpm=ceil(rpm/10)*10
         color(drpm<=2000 and 7 or 11)
         if drpm>=1000 then
-          print(sub(drpm,1,2),1,116)
-          print(sub(drpm,3,4),1,122)
+          ?sub(drpm,1,2),1,116
+          ?sub(drpm,3,4),1,122
         else
-          print(sub(drpm,1,1),5,116)
-          print(sub(drpm,2,3),1,122)
+          ?sub(drpm,1,1),5,116
+          ?sub(drpm,2,3),1,122
         end
         spr(4,1,108-throttle/5)
 
@@ -494,7 +494,7 @@ function make_sim(s)
         local dy,n=ias*3,ias>20 and flr(ias/10) or 2
         for i=n,n+2 do
           local x=i*10>99 and 22 or 26
-          print(i*10,x,70-(i*30)+dy,6)
+          ?i*10,x,70-(i*30)+dy,6
           line(31,72-(i*30)-15+dy,33,72-(i*30)-15+dy)
         end
         clip()
@@ -505,16 +505,16 @@ function make_sim(s)
         local y2,y3=ceil(y),(y*7)%7
         if ias>=20 then
           clip(30,65,3,13)
-          print(y2%10,30,66+y3,7)
-          print((y2-1)%10,30,72+y3)
-          print((y2+1)%10,30,60+y3)
+          ?y2%10,30,66+y3,7
+          ?(y2-1)%10,30,72+y3
+          ?(y2+1)%10,30,60+y3
           clip()
           local z=ias>=99.5 and 22 or 26
           -- ensure smooth transition to next ias
-          print(flr((ias+0.5)/10),z,69)
+          ?flr((ias+0.5)/10),z,69
         else
           -- warn: minify bug
-          print('---',22,69,7)
+          ?'---',22,69,7
         end
 
         clip(34,50,8,41)
@@ -528,7 +528,7 @@ function make_sim(s)
         local dy,n=alt/5,alt>199 and flr(alt/100) or 2
         for i=n-2,n+2 do
             local x=i<100 and 96 or 92
-            print(i*100,x,70-(i*20)+dy,6)
+            ?i*100,x,70-(i*20)+dy,6
             line(95,62-(i*20)+dy,97,62-(i*20)+dy,6)
         end
         clip()
@@ -537,9 +537,9 @@ function make_sim(s)
         local y=alt/10-flr(alt/100)*10
         local y2,y3=ceil(y),(y*7)%7
         clip(104,65,7,13)
-        print((y2%10)..0,104,66+y3,7)
-        print(((y2-1)%10)..0,104,72+y3)
-        print(((y2+1)%10)..0,104,60+y3)
+        ?(y2%10)..0,104,66+y3,7
+        ?((y2-1)%10)..0,104,72+y3
+        ?((y2+1)%10)..0,104,60+y3
         clip()
         local z=96
         if alt>=9995 then
@@ -548,14 +548,18 @@ function make_sim(s)
         elseif alt<995 then
           z=100
         end
-        if(alt>=100) print(flr((alt/10+0.5)/10),z,69,7)
+        if alt>=100 then
+         ?flr((alt/10+0.5)/10),z,69,7
+        end
 
         -- dispvs()
         local vsoffset=ceil(vs/100)
         vsoffset=mid(vsoffset,-19,21)
         rectfill(115,68-vsoffset,126,74-vsoffset,0)
         spr(23,112,68-vsoffset)
-        if(vsoffset!=0) print(ceil(vs/100),115,69-vsoffset,7)
+        if vsoffset!=0 then
+         ?ceil(vs/100),115,69-vsoffset,7
+        end
 
         -- dispheading()
         rectfill(57,88,71,94,0)
@@ -563,17 +567,19 @@ function make_sim(s)
         local hdg=ceil(heading)%360
         if hdg<10 then print("00"..hdg,58,89,7)
         elseif hdg<100 then print("0"..hdg,58,89,7)
-        else print(hdg,58,89,7) end
+        else 
+          ?hdg,58,89,7 
+        end
 
         -- old: disptime()
         disptime(timer,108,122)
 
 								-- dispnav
-        print(db[nav1].name,29,37,11)
+        ?db[nav1].name,29,37,11
         dispdist(dist[dto],89,116,7)
         dispdist(dist[dto],88,37,14)
-        print(db[dto].name,57,37,14)
-        print(db[dto].name,89,122,12)
+        ?db[dto].name,57,37,14
+        ?db[dto].name,89,122,12
 
         -- dispmap()
         --based on 5nm/187.5 per 22px
@@ -619,10 +625,10 @@ function make_sim(s)
 
        -- clip included in rcockpit
        drawstatic(world.rcockpit)
-       print(db[dto].name,17,37,14)
+       ?db[dto].name,17,37,14
        color(14)
        disptime(flr(dist[dto]/groundspeed*3600),94,37)
-       print(groundspeed,54,37)
+       ?groundspeed,54,37
 
       end
     end
@@ -657,9 +663,9 @@ end
 
 function dispdist(d,x,y,c)
   if d<10 then
-    print(flr(d*10)/10,x,y,c)
+    ?flr(d*10)/10,x,y,c
   else
-    print(flr(d),x,y,c)
+    ?flr(d),x,y,c
   end
 end
 
@@ -668,7 +674,7 @@ function disptime(t,x,y)
  local seconds=flr(t-minutes*60)
  if(minutes<10) minutes="0"..minutes
  if(seconds<10) seconds="0"..seconds
- print(minutes..":"..seconds,x,y)
+ ?minutes..":"..seconds,x,y
 end
 
 local message,message_t
@@ -685,7 +691,7 @@ function dispmessage()
     local c = message_t%16<8 and 7 or 9
   rectfill(0,9,127,15,5)
   if(#message>20) rectfill(0,15,127,21,5)
-		print(message,10,10,c)
+		?message,10,10,c
 	end
 end
 
@@ -694,10 +700,10 @@ function drawmenu()
 
   drawstatic(world.intro)
 
-  print("flight:",8,37,item==0 and c or 7)
-  print(scenarios[scen].name,44,37,7)
- 	print("weather:",8,47,item==1 and c or 7)
-  print(wx[wnd].name,44,47,7)
+  ?"flight:",8,37,item==0 and c or 7
+  ?scenarios[scen].name,44,37,7
+ 	?"weather:",8,47,item==1 and c or 7
+  ?wx[wnd].name,44,47,7
 
 end
 
@@ -716,11 +722,11 @@ function drawmap(lat,lon,hdg)
   local draw_ils=function(a,txt)
    local _x,_y=sin(a),cos(a)
    line(x+3,y+3,50*_x+x+3,50*_y+y+3,11)
-   print(txt,62*_x+x+2,62*_y+y+3,7)
+   ?txt,62*_x+x+2,62*_y+y+3,7
   end
   if l.type=="vor" then
    spr(39,x,y)
-   print(name,x+9,y+1,7)
+   ?name,x+9,y+1,7
   elseif l.type=="ils" then
    draw_ils((angle-3)/360,"")
    draw_ils((angle+3)/360,name)
@@ -730,14 +736,14 @@ function drawmap(lat,lon,hdg)
    elseif angle>67 and angle<103 then spr(54,x,y)
    elseif angle>102 and angle<148 then spr(55,x-1,y,1,1,true)
    else spr(22,x,y) end
-   print(name,x+9,y+1,7)
+   ?name,x+9,y+1,7
   else
    -- city
    spr(17,x,y)
-   print(name,x-40,y+1,5)
+   ?name,x-40,y+1,5
   end
  end
- print("tiny\nbay",265,-1,1)
+ ?"tiny\nbay",265,-1,1
  camera()
 
  -- rotated plane
@@ -752,8 +758,8 @@ end
 
 function drawbriefing()
   cls()
-  print("flight briefing:",8,10,6)
-  print(scenarios[scen].name,8,17,7)
+  ?"flight briefing:",8,10,6
+  ?scenarios[scen].name,8,17,7
 
   --
   drawstatic(scenarios[scen].briefing)
@@ -850,8 +856,8 @@ function _draw()
    -- perf monitor!
    --[[
    local cpu=(flr(1000*stat(1))/10).."%"
-   print(cpu,2,3,2)
-   print(cpu,2,2,7)
+   ?cpu,2,3,2
+   ?cpu,2,2,7
    ]]
 
   end
@@ -1014,6 +1020,24 @@ function collect_drawables(model,m,pos,out)
   groups[f.gid]=0
  end
 
+ -- model to 
+ local function v_cache(k)
+  local a=p[k]
+  if not a then
+    a=v_clone(model.v[k])
+    -- relative to world
+    m_x_v(m,a)
+    -- world to cam
+    v_add(a,cam.pos,-1)
+  		m_x_v(cam.m,a)
+  
+    -- pilot height (cam space)
+  		v_add(a,pilot_pos,-1)
+	   p[k]=a      
+  end
+  return a
+ end
+ 
   -- faces
 	for i=1,#model.f do
 	  local f,n=model.f[i],model.n[i]
@@ -1023,23 +1047,18 @@ function collect_drawables(model,m,pos,out)
     local z,vertices,viz=0,{}
     -- project vertices
     for k=1,#f.vi do
- 		  local ak=f.vi[k]
- 			 local a=p[ak]
-     if not a then
-      a=cam:modelview(m,model.v[ak])
-      p[ak]=a      
-     end
+ 			 local a=v_cache(f.vi[k])
      z+=a[3]
      -- at least one point within viewport?     
      if(a[3]>znear) viz=true
- 		 vertices[#vertices+1]=a
+ 		  vertices[#vertices+1]=a
     end
     if viz then
     	for k=1,#clipplanes2 do
 			  if(#vertices<2) viz=nil break
-			  vertices=plane_poly_clip(clipplanes2[k],vertices)
-      end
-      if (viz) add(out,{key=-64*#f.vi/z,v=vertices,c=f.c,kind=3})
+			   vertices=plane_poly_clip(clipplanes2[k],vertices)
+     end
+     if (viz) add(out,{key=-64*#f.vi/z,v=vertices,c=f.c,kind=3})
     end
    else
     groups[f.gid]+=1
@@ -1060,28 +1079,21 @@ function collect_drawables(model,m,pos,out)
  for i=1,#model.e do
 		local e=model.e[i]
     -- edges indices
-    local ak,bk,c=e[1],e[2],e.c or model.c
+    local c=e.c or model.c
     -- edge positions
-    local a,b=p[ak],p[bk]
-    -- not in cache?
-    if not a then
-     local v=cam:modelview(m,model.v[ak])
-     a,p[ak]=v,v
-    end
-    if not b then
-     local v=cam:modelview(m,model.v[bk])
-     b,p[bk]=v,v
-    end
+    local a,b=v_cache(e[1]),v_cache(e[2])
 
-    if e.kind==1 then -- papi light?
-     local p0=cam:project2d(a)
-     local x0,y0,w0=p0[1],p0[2],p0[3]
+    if e.kind==1 or e.kind==4 then -- papi light?
+     local x0,y0,w0=cam:project2d(a)
      -- viz distance
      local wfar=wx[wnd].horiz
      wfar=wfar and 120/wfar or 0
      if w0>wfar then
-      local n=v_dot(a,a)-v_dot(a,b)
-      c=n>0 and 7 or c
+      -- papi light
+      if e.kind==1 then
+	      local n=v_dot(a,a)-v_dot(a,b)
+ 	     c=n>0 and 7 or c
+ 	    end
       local r=mid(w0/4,0,3)
       add(out,{r=r,key=-w0,x=x0,y=y0,c=c})
       -- hightlight
@@ -1135,13 +1147,14 @@ function collect_drawables(model,m,pos,out)
      -- *20 --> 0,9 degrees
      -- todo: explicit 'bloom' figure
      if a and b then
-      local p0,p1=cam:project2d(a),cam:project2d(b)
+      local x0,y0,w0,u0=cam:project2d(a)
+      local x1,y1,w1,u1=cam:project2d(b)
       if e.kind==0 then
 	      local bloom=lerp(24,12,mid(-20*cam.m[7],0,1))
- 	     lightline(p0[1],p0[2],p1[1],p1[2],c,p0[4],p0[3],p1[4],p1[3],bloom,e.scale,out)
+ 	     lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,e.scale,out)
  	    else
- 	     line(p0[1],p0[2],p1[1],p1[2],c)
-  	   end
+ 	     line(x0,y0,x1,y1,c)						
+			end
      end
    end
 	end
@@ -1208,23 +1221,15 @@ function make_cam(x0,y0,focal)
     self.m=m
     m_inv(self.m)
 	 end,
-  -- to camera space
-  modelview=function(self,m,v)
-    v=v_clone(v)
-    -- relative to world
-    m_x_v(m,v)
-    -- world to cam
-    v_add(v,self.pos,-1)
-
-		m_x_v(self.m,v)
-
-    -- pilot height (cam space)
-		v_add(v,pilot_pos,-1)
-
-    return v
-  end,
 		-- project cam-space points into 2d
     project2d=function(self,v)
+  	  -- view to screen
+  	  local w=focal/v[3]
+  	  return x0+v[1]*w,y0-v[2]*w,w,v[4] and v[4]*w,v[5] and v[5]*w
+		end,
+		-- project cam-space points into 2d
+    -- array version
+    project2da=function(self,v)
   	  -- view to screen
   	  local w=focal/v[3]
   	  return {x0+v[1]*w,y0-v[2]*w,w,v[4] and v[4]*w,v[5] and v[5]*w}
@@ -1285,9 +1290,9 @@ function draw_ground(ceiling)
 			v_add(v,cam.pos,-1)
       m_x_v(cam.m,v)
       v_add(v,pilot_pos,-1)
-      v=cam:project2d(v)
-			if v[3]>0 then
-				pset(v[1],v[2])
+      local x,y,w=cam:project2d(v)
+			if w>0 then
+				pset(x,y)
 			end
   end
 	end
@@ -1314,28 +1319,29 @@ function draw_ground(ceiling)
   for _,v in pairs(stars) do
     v=v_clone(v)
     m_x_v(cam.m,v)
-    v=cam:project2d(v)
-    if(v[3]>0) pset(v[1],v[2],6)
+    local x,y,w=cam:project2d(v)
+    if(w>0) pset(x,y,6)
   end
  end
 end
 
 function project_poly(p,c)
 	if #p>2 then
-		local p0,p1=cam:project2d(p[1]),cam:project2d(p[2])
+		local x0,y0=cam:project2d(p[1])
+    local x1,y1=cam:project2d(p[2])
 		for i=3,#p do
-			local p2=cam:project2d(p[i])
-			trifill(p0[1],p0[2],p1[1],p1[2],p2[1],p2[2],c)
-			p1=p2
+			local x2,y2=cam:project2d(p[i])
+			trifill(x0,y0,x1,y1,x2,y2,c)
+		  x1,y1=x2,y2
 		end
 	end
 end
 
 function project_texpoly(p)
 	if #p>2 then
-		local p0,p1=cam:project2d(p[1]),cam:project2d(p[2])
+		local p0,p1=cam:project2da(p[1]),cam:project2da(p[2])
 		for i=3,#p do
-			local p2=cam:project2d(p[i])
+			local p2=cam:project2da(p[i])
 			tritex(p0,p1,p2)
 			p1=p2
 		end
@@ -1774,45 +1780,46 @@ ba73000000000000000037cffc830005ff0000575000ffff0000000000000000ff830369baa977bd
 4100000037bfc8404897100000014676666660ff666660ffd56660ffffffffffffc6369bfffffea6dfffffffdabfffff000666666666ffffff066666f000000f
 10000000236bb9646642000000001333666660ff666660ffd56660ffffffffffffe637bfffffffcbffffffffc89bafff000666666666ffffff066666f000000f
 01333112010255321000000000000000666660ff6666d0ffd56660fffffffffffff967adcdcdeb98ab9adffd87676adf000666666666ffffff066666ffffffff
-03280af7266898d70ad75608e6b779b6c9e878e679477678e67769b616188897f958a6985937d9d72879a60a18e73698a8992977a8b9e8e70a086789e688f908
-69589688f938f679e897d9c8a7c836b9a817080a0868f958f7c907e70ae7480ad7e7b919598948b7481698e9a7a8d997198937a958e6f679f869e839080ae776
-19a8e8495989b8e66759a678c917d7d9c84030c0b1f10320f6f38a04000407f38c04000407f38a04002405f38c04002405f38d04000407f38f04000407f38d04
+031668c7374959c699f7c8182636a8889618a6080a38180a18382806a9f85759d84988e9682769e6180af747b9b8560948080a083938a928280af788f91688b7
+f70a0839887687a9f6080a08080a1827b9674999b7c8b9c808b9290878f9b91908b7f94868f91897f9d72658982618a8e8a947080a0828d92766b82736a89708
+89b647d948d81989e9486776e8e80768564030c0b1f10320f6f38a04000407f38c04000407f38a04002405f38c04002405f38d04000407f38f04000407f38d04
 002405f38f04002405048004000407048204000407048004002405048204002405048304000407048504000407048304002405048504002405f3010400040004
 0f04000400f3010400d90c040f0400d90cf38404000407f38604000407f38404002405f38604002405f38704000407f38904000407f38704002405f389040024
 05048604000407048804000407048604002405048904000407048b04000407048904002405048b04002405f38104000407f38304000407f38104002405f38304
 002405048c04000407048e04000407048c04002405048e0400240504000400040004000400b80004000400d90c04000400b80004000400320ef30a0400d20404
 060400d204f3070400320e04090400320ef3010400630a040f0400630a04000400630a04000400320e040f0400730e54450400730e540f040083e774030400c4
 1874dc0400d402540f0400361e64070400630a040f0400e58e040f040016e2540f040066e225070400d40204000400732e04000400930c04c904007304548f04
-00730464490400730e64490400461e04870400f58a548e040056d004870400d55135180400850c451c04007508351804007508351824087508451c2408750835
-182408850c451c2408850c351524087505451f2408750535152408850f451f2408850f351234027505451f3402750535123402850f451f3402850f0488040024
-05451c0400850c2507040095e074dc040095e07403040095ea64dc040066e27403040056cc74030400730674dc0400d49b74dc04008567143e040063a2143e04
-008343a3060400f40aa3063400f44bb30a0400f40ab30a24fff41cc30e0400f40ac30e24fff4fce3020400f40ae30224eff4cd51700040102040307000405060
-807070004090a0c0b0700040d0e001f07000405161817170004091a1c1b170004002123222700040425272627000408292b2a200104025d4f40500104035d5d4
-25d020407565a5b5002040657555450020408595b5a5d02040455595850020405575b595d02040654585a5700040d1e1c5f100104005f4e41500104015e4d535
-0010402505153551080a08080a08080a08080a08080a08080a08080a08080a08080a0806080808080a08080a080608080a080808060a0808167708080a080808
-060a0808080a08023111007023a91441007002a9c2d20060050ae2f20080620a13230070200a33430070200a112100b0e10a31410080e10a73830070e10a36c3
-00c01138e3b300c03238241400c0603804e300c06038d33400c09038c4a400b08038544400b06038647400b01138948400b00938a4b400b0913893a300c04038
-2114007021a9260600c0a038e5f500c0903863f300c0403834e500c0a038162400c02038465600a09338667600a0b03886961080a6b61080c6d61080e6f61080
-70f30104000400040f04000400f3010400d90c040f0400d90c04000400320e04000400630a04000400320e0000503010007023a9102000b0e10a30400080e10a
-60700070e10a2040007023a930e0f1420320a370820400872fdf090400f631cea1040036179dd60400044edd8304008128af550400e05251800400604692c804
-00f0f0741f04001119e50004005127e6cd0400b1bcf64304001370672a0400b401a6db040006ec952a0400c7b593090400183accce04007efc0c890400b7a8d2
-b90400eafe8aa80400caf03b6c0400f099d2de04009b1093670477b3779367c47fb37793670477147b9367c47f147bf36b0477b377f36bc47fb377f36b047714
-7bf36bc47f147bd2bb0477244bd2bbc47f244b3357047704333357c47f0433b2a30477c3afb2a3c47fc3af034f0477a397034fc47fa39723a60477050e23a6c4
-7f050ee2b104775576e2b1c47f5576631f04775503631fc47f5503232a0477957b232ac47f957b6fe204003617978404001370acba0400b7a8dbad0400f099c4
-2904330124e3130433084523d30433da0a23e804337b2b00b40400e052f5890400c7b52d1e04007efceaf70400caf0f00010407181a19100104091a1e1d10010
-40d1e1c1b1001040b1c18171001040e1a181c1002040f10222120020401222625200204052624232002040324202f1002040622202420030407282a292003040
-92a2e2d2003040d2e2c2b2003040b2c28272003040e2a282c2f006080808080a0a0808080806080a08d808d9d908373708363608d8080a089608a6a608797908
-69690896080a082220100090700a30200090b00a40300090510a50400090610a60500090010a70600090f00a80700090c00a90800090010aa0900090c00ab0a0
-0090a00ac0b00090b00ad0c00090e00ae0d00090d00af0e00090110a01f00090110a10010090b10a60f00090e40a30c00090b40a90010090c30a60110090020a
-30210090b10a01310090910af0410090130ac0510090920a90610090130af2030090b40af2130090b10a03230090920a33430090c30a43530090910a33630090
-130a73830090e40a73930090020a83a30090130a0170820400872fcea1040036179dd60400044edd830400812851800400604692c80400f0f0e6cd0400b1bc67
-2a0400b401952a0400c7b593090400183accce04007efc0c890400b7a8d2b90400eafe8aa80400caf03b6c0400f099d2de04009b1000000110200090400a3020
-0090400a40300090400a60500090200a80900090600aa0900090300a10a00090500a40500090600a20f00090710aa0010090510a90b00090610a20c00090500a
-a0d00090500a90e00090a00a70800090500a60700090800a4021d191f01010f056080400a52815410400040035f10400d4d5f418040064f8757d0400d49826c4
-0400547a466404004471e5bf0400545226c104003421f5dd0400344005360400e4efc4bf0400c4c3a461040084d394a5040044aaf5d40400252c0000d0503020
-104030201020402010f05020107060201080a0201060802010a090201090702010c0b00090200ad0c00090300ae0d00090200a10f02010708191f110d0412110
-106034da0400f32a044744eb0471148b0400c306a3a70400d34dd30b040034bb2405040024d65000103010203000103030204000103040205000103050206000
-103060201050791927b73966b659b88809b99909c800000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00730464490400730e64490400461e04870400f58a548e040056d004870400d55135180400850c451c040075083518040075083518140f7508451c140f750835
+18140f850c451c140f850c048804002405451c0400850c2507040095e074dc040095e07403040095ea64dc040066e27403040056cc74030400730674dc0400d4
+9b74dc04008567143e040063a2143e0400834335182403850c451c2403850c451c2403750835182403750835182404850c451c24047508451c2404850c351824
+047508a3060400f40aa3063400f44bb30a0400f40ab30a24fff41cc30e0400f40ac30e24fff4fce3020400f40ae30224eff4cd21700040102040307000405060
+807070004090a0c0b0700040d0e001f07000405161817170004091a1c1b170004002123222700040425272627000408292b2a200104025d4f4050010403555d4
+25d010403525061600004016063626d0104005152636700040d1e145f100104005f4e415001040551626e4d010402505360621080a08080a08080a08080a0808
+0a08080a08080a08080a08080a0806080808080a08080a080a08080806080a080808060a0808060808423111007023a91441007002a9c2d20060050ae2f20080
+620a13230070200a33430070200a112100b0e10a31410080e10a73830070e10ab5c300c01138e3b300c03238241400c0603804e300c06038d33400c09038c4a4
+00b08038544400b06038647400b01138948400b00938a4b400b0913893a300c040382114007021a9a58500c0a038657500c0903863f300c04038346500c0a038
+952400c02038c5d500a09338e5f500a0b0380646408016664080367640802656408086961080a6b61080c6d61080e6f6108070f30104000400040f04000400f3
+010400d90c040f0400d90c04000400320e04000400630a04000400320e0000503010007023a9102000b0e10a30400080e10a60700070e10a2040007023a930e0
+f14203206470820400872fdf090400f631cea1040036179dd60400044edd8304008128af550400e05251800400604692c80400f0f0741f04001119e500040051
+27e6cd0400b1bcf64304001370672a0400b401a6db040006ec952a0400c7b593090400183accce04007efc0c890400b7a8d2b90400eafe8aa80400caf03b6c04
+00f099d2de04009b1093670400b377a3c5152fc3d593670400147ba3c5152f041df36b0400b377e3fc152fc3d5f36b0400147be3fc152f041dd2bb0400244bd2
+bbc47f244b3357040004333357c47f0433b2a30400c3afb2a3c47fc3af034f0400a397034fc47fa39723a60400050e23a694e6050ee2b104005576e2b194e655
+76631f04005503631f94e65503232a0400957b232a94e6957b6fe204003617978404001370acba0400b7a8dbad0400f099c42904000124e3130400084523d304
+00da0a23e804007b2b00b40400e052f5890400c7b52d1e04007efceaf70400caf0a3c525c4c3d5a3c525c4041de3fc25c4c3d5e3fc25c4041dd2bbd415244b33
+57d4150433b2a3d415c3af034fd415a39723a6948c050ee2b1948c5576631f948c5503232a948c957bf00010407181a19100104091a1e1d1001040d1e1c1b100
+1040b1c18171002040f10222120020401222625200204052624232002040324202f10030407282a29200304092a2e2d2003040d2e2c2b2003040b2c282720000
+4082c2e2a20000400242622200004081c1e1a1f006280808280a0a2808082806d808d9d908373708363608d89608a6a60879790869690896080a08080a08080a
+08e220100090700a30200090b00a40300090510a50400090610a60500090010a70600090f00a80700090c00a90800090010aa0900090c00ab0a00090a00ac0b0
+0090b00ad0c00090e00ae0d00090d00af0e00090110a01f00090110a10010090b10a60f00090e40a30c00090b40a90010090c30a60110090020a30210090b10a
+01310090910af0410090130ac0510090920a90610090130af2030090b40af2130090b10a03230090920a33430090c30a43530090910a33630090130a73830090
+e40a73930090020a83a30090130ae1e34080d3c14080e264408054c24080a1c34080a244408081b340808234408042144080f302408062244080220440800170
+820400872fcea1040036179dd60400044edd830400812851800400604692c80400f0f0e6cd0400b1bc672a0400b401952a0400c7b593090400183accce04007e
+fc0c890400b7a8d2b90400eafe8aa80400caf03b6c0400f099d2de04009b1000000110200090400a30200090400a40300090400a60500090200a80900090600a
+a0900090300a10a00090500a40500090600a20f00090710aa0010090510a90b00090610a20c00090500aa0d00090500a90e00090a00a70800090500a60700090
+800a4021d191f01010f056080400a52815410400040035f10400d4d5f418040064f8757d0400d49826c40400547a466404004471e5bf0400545226c104003421
+f5dd0400344005360400e4efc4bf0400c4c3a461040084d394a5040044aaf5d40400252c0000d0503020104030201020402010f05020107060201080a0201060
+802010a090201090702010c0b00090200ad0c00090300ae0d00090200a10f02010708191f110d0412110106034da0400f32a044744eb0471148b0400c306a3a7
+0400d34dd30b040034bb2405040024d65000103010203000103030204000103040205000103050206000103060201050791927b73966b659b88809b99909c800
 __label__
 11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
 11111111111111111111111111111111111111116111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
