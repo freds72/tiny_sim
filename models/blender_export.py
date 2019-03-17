@@ -66,7 +66,7 @@ solid_db = {
 lines_db = {
     # ---
     # airport lights references
-    # light type -> color + number of lights per meter
+    # light type -> color + distance between lights (meters)
     "ALS": { "color": 7, "n": 10, "intensity":1, "kind":0},
     "RWYEnd": { "color": 8, "n": 1, "intensity":1, "kind":0},
     "RWYStart": { "color": 11, "n": 1, "intensity":1, "kind":0},
@@ -78,6 +78,7 @@ lines_db = {
     "TAXI-CLL": { "color": 11, "n": 5, "intensity":0.1, "kind":0},
     "RWY-Guard": { "color": 10, "n": 3, "intensity":0.1, "kind":0},
     "CITY": { "color": 9, "n": 30, "intensity":1, "kind":0},
+    "CITY_FAR": { "color": 9, "n": 150, "intensity":1, "kind":0},
     # -- 
     # regular lines
     # line type -> line color
