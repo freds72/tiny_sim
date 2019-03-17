@@ -62,20 +62,26 @@ solid_db = {
  "SOLID_8": 8
 }
 
-# airport lights references
-# light type -> color + number of lights per meter
-lights_db = {
-    "ALS": { "color": 7, "n": 10, "intensity":1},
-    "RWYEnd": { "color": 8, "n": 1, "intensity":1},
-    "RWYStart": { "color": 11, "n": 1, "intensity":1},
-    "RWL-Left": { "color": 7, "n": 30, "intensity":0.8},
-    "RWL-Right": { "color": 7, "n": 30, "intensity":0.8},
-    "RWY-CLL": { "color": 6, "n": 15, "intensity":1},
-    "RWY-CLL-End": { "color": 8, "n": 8, "intensity":1},
-    "TAXI": { "color": 12, "n": 20, "intensity":0.1},
-    "TAXI-CLL": { "color": 11, "n": 5, "intensity":0.1},
-    "RWY-Guard": { "color": 10, "n": 3, "intensity":0.1},
-    "CITY": { "color": 9, "n": 30, "intensity":1} 
+# lines DB
+lines_db = {
+    # ---
+    # airport lights references
+    # light type -> color + number of lights per meter
+    "ALS": { "color": 7, "n": 10, "intensity":1, "kind":0},
+    "RWYEnd": { "color": 8, "n": 1, "intensity":1, "kind":0},
+    "RWYStart": { "color": 11, "n": 1, "intensity":1, "kind":0},
+    "RWL-Left": { "color": 7, "n": 30, "intensity":0.8, "kind":0},
+    "RWL-Right": { "color": 7, "n": 30, "intensity":0.8, "kind":0},
+    "RWY-CLL": { "color": 6, "n": 15, "intensity":1, "kind":0},
+    "RWY-CLL-End": { "color": 8, "n": 8, "intensity":1, "kind":0},
+    "TAXI": { "color": 12, "n": 20, "intensity":0.1, "kind":0},
+    "TAXI-CLL": { "color": 11, "n": 5, "intensity":0.1, "kind":0},
+    "RWY-Guard": { "color": 10, "n": 3, "intensity":0.1, "kind":0},
+    "CITY": { "color": 9, "n": 30, "intensity":1, "kind":0},
+    # -- 
+    # regular lines
+    # line type -> line color
+    "SHORES": { "color": 1 , "kind":2}
 }
 
 def export_layer(l):
@@ -169,18 +175,21 @@ def export_layer(l):
                 if len(cg)==1:
                     # get light specifications
                     light_group_name=cg.pop()
-                    light=lights_db[light_group_name]            
+                    light=lines_db[light_group_name]
                     light_color_index=light['color']
-                    light_scale=light['intensity']
+                    light_kind=light['kind']
                     # light color + light type
-                    es = es + "{:02x}{:02x}{:02x}{:02x}".format(v0+1, v1+1, 0, light_color_index)
-                    # number of lights
-                    # find out number of lights according to segment length
-                    num_lights=int(round(max(e.calc_length()/light['n'],2)))
-                    if num_lights>255:
-                        raise Exception('Too many lights ({}) for edge: ({},{}) category: {}'.format(num_lights,obdata.vertices[v0].co,obdata.vertices[v1].co,light_group_name))
-                    es = es + "{:02x}{}".format(num_lights,pack_float(light_scale))
+                    es = es + "{:02x}{:02x}{:02x}{:02x}".format(v0+1, v1+1, light_kind, light_color_index)
                     es_count = es_count + 1
+                    # additional properties
+                    if light_kind==0:
+                        # number of lights
+                        # find out number of lights according to segment length
+                        num_lights=int(round(max(e.calc_length()/light['n'],2)))
+                        if num_lights>255:
+                            raise Exception('Too many lights ({}) for edge: ({},{}) category: {}'.format(num_lights,obdata.vertices[v0].co,obdata.vertices[v1].co,light_group_name))
+                        light_scale=light['intensity']
+                        es = es + "{:02x}{}".format(num_lights,pack_float(light_scale))
 
         # PAPI lights
         lightindex = len(obdata.vertices)

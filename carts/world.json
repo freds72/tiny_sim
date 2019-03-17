@@ -162,11 +162,23 @@
             "type": "vor"
         },
         {
-            "lat": 60,
-            "lon": 1200,
+            "lat": -70.17,
+            "lon": 531.28,
             "name": "pti",
             "type": "apt",
             "angle": 170
+        },
+        {
+            "lat": 0,
+            "lon": 0,
+            "name": "",
+            "type": "grnd"
+        },
+        {
+            "lat": -169.64,
+            "lon": 100.27,
+            "name": "mnt. big",
+            "type": "mnt_big"
         }
     ],
     "vspeeds":[
