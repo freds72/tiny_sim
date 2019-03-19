@@ -86,7 +86,7 @@ lines_db = {
     "SOLID_LIGHT": { "color": 8 , "kind":4}
 }
 
-def export_layer(l):
+def export_layer(scale,l):
     # data
     s = ""
     layer = [ob for ob in scene.objects if ob.layers[l]]
@@ -187,7 +187,8 @@ def export_layer(l):
                     if light_kind==0:
                         # number of lights
                         # find out number of lights according to segment length
-                        num_lights=int(round(max(e.calc_length()/light['n'],2)))
+                        # convert model scale to meters (1 game unit = 48 meters)
+                        num_lights=int(round(max(48*e.calc_length()/light['n']/scale,2)))
                         if num_lights>255:
                             raise Exception('Too many lights ({}) for edge: ({},{}) category: {}'.format(num_lights,obdata.vertices[v0].co,obdata.vertices[v1].co,light_group_name))
                         light_scale=light['intensity']
@@ -216,13 +217,14 @@ for c in name:
     s = s + "{:02x}".format(charset.index(c)+1)
 
 # scale (custom model property)
-s = s + "{:02x}".format(obcontext.get("scale", 1))
+model_scale = obcontext.get("scale", 1)
+s = s + "{:02x}".format(model_scale)
 
 # layers = lod
 ln = 0
 ls = ""
 for i in range(2):
-    layer_data = export_layer(i)
+    layer_data = export_layer(model_scale,i)
     if len(layer_data)>0:
         ln += 1
         ls = ls + layer_data
