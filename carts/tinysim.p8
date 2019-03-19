@@ -381,14 +381,12 @@ function make_sim(s)
       local mx,my=flr(16*lon/600)+46,flr(16*(600+lat)/600)+8
       local tile=fget(mget(mx,my))
 
-      if ias>180 and not self.crashed then
-        make_msg("crash: exceeded maximum speed\nz: exit to menu",300)
-        self.crashed=true
-        sfx(4)
-      elseif alt<=0 and not onground then
+      if(ias>180) make_msg("exceeded maximum speed\nreduce power & pull up!!!")
+      --sfx(4)
+      if alt<=0 and not onground then
         onground=true
         if tile==2 then -- water!
-          make_msg("splash: landed on water\nz: exit to menu",300)
+          make_msg("crashed into the ocean\nz: exit to menu",300)
           self.crashed=true
           -- todo: better splash sound?
           sfx(8)
@@ -1070,6 +1068,7 @@ function collect_drawables(model,m,pos,out)
 			if v==groups[k] then
     make_msg("crash: collision with obstacle\nz: exit to menu", 300)
     sim.crashed=true
+    --fix sound
     sfx(3)
    	break
    end
