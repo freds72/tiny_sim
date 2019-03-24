@@ -249,9 +249,9 @@ function make_sim(s)
       if(abs(bank)>20) pitch-=0.3*abs(sin(bank/360))
       if(abs(bank)>160) pitch-=0.15
 
-      if(bank>180) bank-=360
+						if(bank>180) bank-=360
       if(bank<-180) bank+=360
-
+						
       -- flaps()
       if btnp(5,1) then --q
         flps=1-flps --toggle
@@ -628,7 +628,7 @@ function make_sim(s)
        disptime(flr(dist[dto]/groundspeed*3600),94,37)
        ?groundspeed,54,37
 
-      end
+      end     
     end
   }
 end
@@ -965,15 +965,14 @@ function make_m_from_euler(x,y,z)
 		local a,b = cos(x),-sin(x)
 		local c,d = cos(y),-sin(y)
 		local e,f = cos(z),-sin(z)
-    local ac,ad,bc,bd = a * c, a * d, b * c, b * d
-
-    -- yzx order
-    return {
-      c * e, f, -d * e,0,
-      bd - ac * f, a * e, ad * f + bc,0,
-      bc * f + ad, -b * e, ac - bd * f,0,
-      0,0,0,1
-    }
+  
+    -- yxz order
+  local ce,cf,de,df=c*e,c*f,d*e,d*f
+	 return {
+	  ce+df*b,a*f,cf*b-de,0,
+	  de*b-cf,a*e,df+ce*b,0,
+	  a*d,-b,a*c,0,
+	  0,0,0,1}
 end
 
 -- only invert 3x3 part
@@ -1067,7 +1066,7 @@ function collect_drawables(model,m,pos,zfar,out)
     if f.c!=15 then -- collision hull?
 	    vertices=plane_clip(zfar,clips,vertices)
  	  	if(#vertices>2) add(out,{key=-64*#f.vi/z,v=vertices,c=f.c,kind=3})
-  		end
+  	end
    else
     groups[f.gid]+=1
    end
