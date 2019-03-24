@@ -83,7 +83,10 @@ lines_db = {
     # regular lines
     # line type -> line color
     "SHORES": { "color": 1 , "kind":2},
-    "SOLID_LIGHT": { "color": 8 , "kind":4}
+    "SOLID_LIGHT": { "color": 8 , "kind":4},
+    "RED_LIGHT": { "color": 8 , "kind":4},
+    "GREEN_LIGHT": { "color": 11 , "kind":4},
+    "WHITE_LIGHT": { "color": 7 , "kind":4}
 }
 
 def export_layer(scale,l):
@@ -136,7 +139,7 @@ def export_layer(scale,l):
             # is face part of a solid?
             face_verts = {loop_vert[li]:li for li in f.loop_indices}
             solid_group = {vgroups[k][0]:v for k,v in face_verts.items() if len(vgroups[k])==1}
-            solid_group = set([solid_db[k] for k,v in solid_group.items()])
+            solid_group = set([solid_db[k] for k,v in solid_group.items() if k in solid_db])
             if len(solid_group)>1:
                 raise Exception('Multiple vertex groups for the same face') 
             if len(solid_group)==1:

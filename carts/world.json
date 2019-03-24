@@ -184,6 +184,13 @@
             "lon": 100.27,
             "name": "mt. big",
             "type": "mnt_big"
+        },
+        {
+            "lat": -157.76,
+            "lon": 402.52,
+            "name": "",
+            "type": "ship",
+            "angle": 56
         }
     ],
     "vspeeds":[
