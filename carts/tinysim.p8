@@ -857,8 +857,7 @@ function _draw()
    ?cpu,2,3,2
    ?cpu,2,2,7
    ]]
-
-  end
+   end
   dispmessage()
 end
 
@@ -895,12 +894,15 @@ function unpack_ramp(x)
 end
 
 for c=0,15 do
- -- set base color
- sset(74,0,sget(72,c))
+ -- set base color for black + dark blue
+ local hc=sget(72,c)
+ sset(74,0,hc)
+ sset(74,1,hc)
 	light_shades[c]=unpack_ramp(74)
 end
 
 local znear,clipplanes=0.25,json_parse'[[0,0,1,8],[0.707,0,-0.707,0.1767],[-0.707,0,-0.707,0.1767],[0,0.707,-0.707,0.1767],[0,-0.707,-0.707,0.1767],[0,0,-1,-0.25]]'
+local clipplanes_simple=json_parse'[[0,0,1,8],[0,0,-1,-0.25]]'
 
 -- zbuffer (kind of)
 function zbuf_draw(zfar)
@@ -919,9 +921,9 @@ function zbuf_draw(zfar)
 		local d=objs[i]
   if d.kind==3 then
 			project_poly(d.v,d.c)
-		else
-  	circfillt(d.x,d.y,d.r,light_shades[d.c])
- 	end
+	 elseif d.y<40 then -- no need to draw outside of screen
+   circfillt(d.x,d.y,d.r,light_shades[d.c])
+  end
  end
 end
 
@@ -1036,28 +1038,36 @@ function collect_drawables(model,m,pos,zfar,out)
   return a
  end
 
+	local clips
+	local function set_clips(a)		
+		local az=abs(a[3])
+		if abs(a[1])>az or abs(a[2])>az then
+			-- full clipping
+			clips=clipplanes
+	 end
+	end
+
   -- faces
 	for i=1,#model.f do
 	  local f,n=model.f[i],model.n[i]
    -- front facing?
    if v_dot(n,cam_pos)>model.cp[i] then
+	   -- reset clip planes
+		  clips=clipplanes_simple
     -- face vertices (for clipping)
-    local z,vertices,viz=0,{}
+    local z,vertices=0,{}
     -- project vertices
     for k=1,#f.vi do
  			 local a=v_cache(f.vi[k])
      z+=a[3]
-     -- at least one point within viewport?
-     if(a[3]>znear) viz=true
+     -- select clip planes
+     set_clips(a)
  		  vertices[#vertices+1]=a
     end
-    if viz then
-    	for k=zfar and 1 or 2,#clipplanes do
-			  if(#vertices<2) viz=nil break
-			   vertices=plane_poly_clip(clipplanes[k],vertices)
-     end
-     if (viz) add(out,{key=-64*#f.vi/z,v=vertices,c=f.c,kind=3})
-    end
+    if f.c!=15 then -- collision hull?
+	    vertices=plane_clip(zfar,clips,vertices)
+ 	  	if(#vertices>2) add(out,{key=-64*#f.vi/z,v=vertices,c=f.c,kind=3})
+  		end
    else
     groups[f.gid]+=1
    end
@@ -1075,92 +1085,67 @@ function collect_drawables(model,m,pos,zfar,out)
  	end
 
  -- edges
- for i=1,#model.e do
-		local e=model.e[i]
-    -- edges indices
-    local c=e.c or model.c
-    -- edge positions
-    local a,b=v_cache(e[1]),v_cache(e[2])
+ -- viz distance
+ local wfar=zfar and 120/zfar or 0
+ for j=1,#model.e do
+		local e=model.e[j]
+  -- edges indices
+  local c=e.c or model.c
+  -- edge positions
+  local a,b=v_cache(e[1]),v_cache(e[2])
 
-    if e.kind==1 or e.kind==4 then -- papi light?
-     local x0,y0,w0=cam:project2d(a)
-     -- viz distance
-     local wfar=wx[wnd].horiz
-     wfar=wfar and 120/wfar or 0
-     if w0>wfar then
-      -- papi light
-      if e.kind==1 then
-	      local n=v_dot(a,a)-v_dot(a,b)
- 	     c=n>0 and 7 or c
- 	    end
-      local r=mid(w0/4,0,3)
-      add(out,{r=r,key=-w0,x=x0,y=y0,c=c})
-      -- hightlight
-      add(out,{r=r/2,key=-w0,x=x0,y=y0,c=c})
-     end
-    else
+  -- reset clip planes
+  clips=clipplanes_simple
 
- 			 a[4],b[4]=0,e.n or 0
-     local v={a,b,a}
-		  for i=zfar and 1 or 2,#clipplanes do
-			  if(#v<2) break
-			  v=plane_poly_clip(clipplanes[i],v)
+  if e.kind==1 or e.kind==4 then -- papi light?
+   local x0,y0,w0=cam:project2d(a)
+   if w0>wfar then
+    -- papi light
+    if e.kind==1 then
+     local n=v_dot(a,a)-v_dot(a,b)
+     c=n>0 and 7 or c
     end
-    a,b=v[1],v[2]
-
-
-      --[[ line clipping aginst near cam plane
-      -- swap end points
-      -- simplified sutherland-atherton
-      -- inlined for speed
-   			local t,viz=1,true
-   			local planes={{-1,-600,1},{1,600,1},{-1,0.25,3}}
-      for k=1,#planes do
-       local dir,zdist,id=planes[k][1],planes[k][2],planes[k][3]
-       if(viz==false) break
-       local az,bz=a[id],b[id]
-       if(dir*az>dir*bz) a,b,az,bz=b,a,bz,az
-    			-- znear=max(0.25,cam_pos[2])
-       if dir*az<dir*zdist then
-        -- crossing plane?
-        if dir*bz>dir*zdist then
-         --assert(az-bz>=0,az.."/"..bz)
-	        t=(az-zdist)/(az-bz)
- 	       -- intersect pos
-  	      local s=make_v(a,b)
-   	     v_scale(s,t)
-    	    v_add(s,a)
-     	   b=s
-      	  c=8
-       	else
-         c=11
-        end
-       else
-        viz=false
-       end
-      end
-      ]]
-
-     -- hide light glare at low angle
-     -- dot(cam up, up) --> 0,180 degrees
-     -- *20 --> 0,9 degrees
-     -- todo: explicit 'bloom' figure
-     if a and b then
-      local x0,y0,w0,u0=cam:project2d(a)
-      local x1,y1,w1,u1=cam:project2d(b)
-      if e.kind==0 then
-	      local bloom=lerp(24,12,mid(-20*cam.m[7],0,1))
- 	     lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,e.scale,out)
- 	    else
- 	     line(x0,y0,x1,y1,c)
-			end
-     end
+    local r=mid(w0/4,0,3)
+    add(out,{r=r,key=-w0,x=x0,y=y0,c=c})
+    -- hightlight
+    add(out,{r=r/2,key=-w0,x=x0,y=y0,c=c})
    end
+  else
+
+   -- select clip planes
+   set_clips(a)
+   set_clips(b)
+			  
+		 a[4],b[4]=0,e.n or 0
+   local v=plane_clip(zfar,clips,{a,b,a})
+   a,b=v[1],v[2]    
+   -- hide light glare at low angle
+   -- dot(cam up, up) --> 0,180 degrees
+   -- *20 --> 0,9 degrees
+   -- todo: explicit 'bloom' figure
+   if a and b then
+    local x0,y0,w0,u0=cam:project2d(a)
+    local x1,y1,w1,u1=cam:project2d(b)
+    if e.kind==0 then
+     local bloom=lerp(24,12,mid(-20*cam.m[7],0,1))
+     lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,e.scale,out)
+    else
+     line(x0,y0,x1,y1,c)
+				end
+  	end
+ 	end
 	end
 end
 
 -- sutherland-hodgman clipping
 -- n.p is pre-multiplied in n[4]
+function plane_clip(zfar,clips,v)
+	for i=zfar and 1 or 2,#clips do
+  if(#v<2) break
+  v=plane_poly_clip(clips[i],v)
+ end
+	return v
+end
 function plane_poly_clip(n,v)
 	local dist,allin={},0
 	for i,a in pairs(v) do
@@ -1568,7 +1553,7 @@ function unpack_models()
 	-- for all models
 	unpack_array(function()
   local model,name,scale={lods={}},unpack_string(),1/unpack_int()
-
+  
 		-- level of details
 		unpack_array(function()
    local lod={v={},f={},n={},cp={},e={},groups={}}
@@ -1714,7 +1699,7 @@ end
 
 __gfx__
 00000000fff7777f49777777777777e25fffffff666666666666666666666666000000000000000000000000ffffffffffffffff666666667777777770ffffff
-00000000ff7fffffffffffffffffffff55ffffff6666666666666666666666660011000101c0001d00000000fffffffffff66666777777771c66666660ffffff
+00000000ff7fffffffffffffffffffff55ffffff666666666666666666666666001100010100001d00000000fffffffffff66666777777771c66666660ffffff
 00000000f7ffffffff3b77777777d5ff555fffff000000000000000000000000000000002280002e00000000ffffffff6667777755555555cc66666660ffffff
 000000007fffffffffffffffffffffff55ffffff0000077707770777007700770000000053b0003b00000000ffffff667775555511111111c777777760ffffff
 00000000ffffffffffff1c7777c1ffff5fffffff000007000070070007000700000000002490004500000000ffff667755511111000000001777777760ffffff
@@ -1777,9 +1762,9 @@ ba73000000000000000037cffc830005ff0000575000ffff0000000000000000ff830369baa977bd
 4100000037bfc8404897100000014676666660ff666660ffd56660ffffffffffffc6369bfffffea6dfffffffdabfffff000666666666ffffff066666f000000f
 10000000236bb9646642000000001333666660ff666660ffd56660ffffffffffffe637bfffffffcbffffffffc89bafff000666666666ffffff066666f000000f
 01333112010255321000000000000000666660ff6666d0ffd56660fffffffffffff967adcdcdeb98ab9adffd87676adf000666666666ffffff066666ffffffff
-0358f9d7c639f697e9a747d96897e987495937776959265888e70ae767f8569828169809a959290757b8c907a957178917080af7a609f6a879c6f60969a6d8d6
-3999b76868f917c948d6d86959798889e8f8180ad7f7a93938f988d799c6e7d937e70af7b9c8b8f88856f70a08e93857e8c9772828060608b7f70a38c9f8b766
-29c7b8382627891728c909e869d6a7e9884030c0b1f10320f6f38a04000407f38c04000407f38a04002405f38c04002405f38d04000407f38f04000407f38d04
+03180a1856a8174769c6d8d9c736c8e727c9b7d70ae7e8c9c709c928e8b97737d918a91978b769a6e82836d7f9c7e7580666182907893729194939a8861799c8
+c6992867a909b9c847f70a081988a946a847e8b977b7f9d7b798e9598958c9f8b7c649e8f70af7b93807f7a939d988a8c8c9a8e6787696d8d688d9b8b9e8b897
+f9d77769a60a18c7f70af72939d6a6e8394030c0b1f10320f6f38a04000407f38c04000407f38a04002405f38c04002405f38d04000407f38f04000407f38d04
 002405f38f04002405048004000407048204000407048004002405048204002405048304000407048504000407048304002405048504002405f3010400040004
 0f04000400f3010400d90c040f0400d90cf38404000407f38604000407f38404002405f38604002405f38704000407f38904000407f38704002405f389040024
 05048604000407048804000407048604002405048904000407048b04000407048904002405048b04002405f38104000407f38304000407f38104002405f38304
@@ -1815,8 +1800,14 @@ dd04000450d31f0400f3d2f3b10400e3dcf3880400e3bf04af0400f3f31432040004b30439040014
 10a00090600a40500090600a20f00090710aa0010090c00a90b00090610a20c00090400aa0d00090500a90e00090900a70800090500a60700090800a01110090
 a00a4021d191f01010f056080400a52815410400040035f10400d4d5f418040064f8757d0400d49826c40400547a466404004471e5bf0400545226c104003421
 f5dd0400344005360400e4efc4bf0400c4c3a461040084d394a5040044aaf5d40400252c0000d0503020104030201020402010f05020107060201080a0201060
-802010a090201090702010c0b00090070ad0c00090e70ae0d00090d50a10f02010708191f110d0412110106034da0400f32a044744eb0471148b0400c306a3a7
-0400d34dd30b040034bb2405040024d65000103010203000103030204000103040205000103050206000103060201050791927b73966b659b88809b99909c800
+802010a090201090702010c0b00090070ad0c00090e70ae0d00090d50a10f02010708191f110d0412110204134da0400f32a148b0400c306a3a70400d34dd30b
+040034bb2405040024d6f32f340e042c043e343a043a146434a8f3aff30834cff3bb04db34caf314f3ab34f714c0044d3475e3ef1440340504bc148734f3f32f
+d3b924c7f330f3de241d0498044924ec0437048d24dc0420f3d9242df37d04a724ecf3581100104010e0c02000104020c0f03000104030f0b04000104040b0d0
+5000104050d0e01020104070600111601040e0d07080601040f0c0a090601040b0f09060601040d0b06070601040c0e080a0800050211101314120104090a041
+31201040a080214120104060903101201040807011210010506090a0807011791927b73966b659b88809b99909c8d778169909c8b73966b659b88809b9791927
+180a08c858d996d829d9283776d80788f90800a034da0400f32a148b0400c306a3a70400d34dd30b040034bb2405040024d6f32f340e042c043e343a043a1464
+34a8f3aff30834cff3bb04db34caf314600010401080a02000104020a090300010403090604000104040607050001040507080106010506090a0807060791927
+b73966b659b88809b99909c888f90800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __label__
 11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
 11111111111111111111111111111111111111116111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
