@@ -138,8 +138,9 @@ function _init()
  menu,item=1,0
  scen,wnd=1,1
 
- --3d
- cam=make_cam(64,12,64)
+ -- 3d
+ -- viewport: 0,30,127,30
+ cam=make_cam(64,15,64)
 
  -- reset actors & engine
  actors,sim={}
@@ -857,6 +858,7 @@ function _draw()
    ?cpu,2,3,2
    ?cpu,2,2,7
    ]]
+   
    end
   dispmessage()
 end
@@ -901,7 +903,7 @@ for c=0,15 do
 	light_shades[c]=unpack_ramp(74)
 end
 
-local znear,clipplanes=0.25,json_parse'[[0,0,1,8],[0.707,0,-0.707,0.1767],[-0.707,0,-0.707,0.1767],[0,0.707,-0.707,0.1767],[0,-0.707,-0.707,0.1767],[0,0,-1,-0.25]]'
+local clipplanes=json_parse'[[0,0,1,8],[0.707,0,-0.707,0.1767],[-0.707,0,-0.707,0.1767],[0,0.973,-0.228,0.243],[0,-0.973,-0.228,0.243],[0,0,-1,-0.25]]'
 local clipplanes_simple=json_parse'[[0,0,1,8],[0,0,-1,-0.25]]'
 
 -- zbuffer (kind of)
@@ -921,7 +923,7 @@ function zbuf_draw(zfar)
 		local d=objs[i]
   if d.kind==3 then
 			project_poly(d.v,d.c)
-	 elseif d.y<40 then -- no need to draw outside of screen
+	 else
    circfillt(d.x,d.y,d.r,light_shades[d.c])
   end
  end
@@ -1040,7 +1042,8 @@ function collect_drawables(model,m,pos,zfar,out)
 	local clips
 	local function set_clips(a)		
 		local az=abs(a[3])
-		if abs(a[1])>az or abs(a[2])>az then
+		-- 5.33 to cover for aspect ratio on y-axis
+		if abs(a[1])>az or abs(5.33*a[2])>az then
 			-- full clipping
 			clips=clipplanes
 	 end
