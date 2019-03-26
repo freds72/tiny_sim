@@ -219,9 +219,15 @@ s = s + "{:02x}".format(len(name))
 for c in name:
     s = s + "{:02x}".format(charset.index(c)+1)
 
-# scale (custom model property)
-model_scale = obcontext.get("scale", 1)
+# scale (custom scene property)
+model_scale = scene.get("scale", 1)
 s = s + "{:02x}".format(model_scale)
+
+# model lod selection
+lod_dist = scene.get("lod_dist", [1024])
+s = s + "{:02x}".format(len(lod_dist))
+for i in lod_dist:
+    s = s + "{}".format(pack_double(i))
 
 # layers = lod
 ln = 0
