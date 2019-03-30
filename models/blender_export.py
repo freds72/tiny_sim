@@ -126,16 +126,19 @@ def export_layer(scale,l):
             s = s + "{}{}{}".format(pack_double(tmp.x), pack_double(tmp.z), pack_double(tmp.y))
 
         # faces
-        s = s + "{:02x}".format(len(obdata.polygons))
+        faces = []
         for i in range(len(obdata.polygons)):
             f=obdata.polygons[i]
+            fs = ""
             # color
+            is_dual_sided = False          
             if len(obcontext.material_slots)>0:
                 slot = obcontext.material_slots[f.material_index]
                 mat = slot.material
-                s = s + "{:02x}".format(diffuse_to_p8color(mat.diffuse_color))
+                is_dual_sided = mat.game_settings.use_backface_culling==False
+                fs = fs + "{:02x}".format(diffuse_to_p8color(mat.diffuse_color))
             else:
-                s = s + "{:02x}".format(1) # default color
+                fs = fs + "{:02x}".format(1) # default color
             # is face part of a solid?
             face_verts = {loop_vert[li]:li for li in f.loop_indices}
             solid_group = {vgroups[k][0]:v for k,v in face_verts.items() if len(vgroups[k])==1}
@@ -145,20 +148,30 @@ def export_layer(scale,l):
             if len(solid_group)==1:
                 # get group ID
                 solid_group=solid_group.pop()
-                s = s + "{:02x}".format(solid_group)
+                fs = fs + "{:02x}".format(solid_group)
             else:
-                s = s + "{:02x}".format(0)
+                fs = fs + "{:02x}".format(0)
 
-            # + vertex count
-            s = s + "{:02x}".format(len(f.loop_indices))
+            # + face count
+            fs = fs + "{:02x}".format(len(f.loop_indices))
             # + vertex id (= edge loop)
             for li in f.loop_indices:
-                s = s + "{:02x}".format(loop_vert[li]+1)
-    
+                fs = fs + "{:02x}".format(loop_vert[li]+1)
+            faces.append({'face': f, 'flip': False, 'data': fs})
+            if is_dual_sided:
+                faces.append({'face': f, 'flip': True, 'data': fs})
+
+        # push face data to buffer (inc. dual sided faces)
+        s = s + "{:02x}".format(len(faces))
+        for f in faces:
+            s += f['data']
+                    
         # normals
-        s = s + "{:02x}".format(len(obdata.polygons))
-        for f in obdata.polygons:
-            s = s + "{}{}{}".format(pack_float(f.normal.x), pack_float(f.normal.z), pack_float(f.normal.y))
+        s = s + "{:02x}".format(len(faces))
+        for f in faces:
+            flip = -1 if f['flip'] else 1
+            f = f['face']
+            s = s + "{}{}{}".format(pack_float(flip * f.normal.x), pack_float(flip * f.normal.z), pack_float(flip * f.normal.y))
 
         # all edges (except pure edge face)
         es = ""
