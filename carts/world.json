@@ -11,7 +11,7 @@
                         "remain on runway axis. extend the\nflaps and keep speed at 65-70\nknots by using pitch and\nthrottle. at 50 feet, smoothly\nclose throttle and raise the\nnose to gently touch down\nbelow 65 knots.\ntoo easy? add some wind!",
                         8,
                         30,
-                        6
+                        5
                     ]
                 }
             ]
@@ -27,7 +27,7 @@
                         "fly heading of approx. 085\nkeep localizer (  ) centered\n(the wind might push you away)\nmaintain 1000 ft\nintercept glide slope ( )\nreduce power and extend flaps\nstart 500 ft/min descent\nkeep localizer centered\nkeep glideslope centered\nat 200 ft reduce power & land",
                         8,
                         30,
-                        6
+                        5
                     ]
                 },
                 {
@@ -58,7 +58,7 @@
                     "args": ["cross pco (  ) on heading 313\nintercept localizer (  )\nturn left heading 265\ndescend to 2000 ft\nturn right heading 310\nfly 1 minute\nturn left heading 130\nintercept localizer\nturn left heading 085\nfly final approach and land",
                         8,
                         30,
-                        6
+                        5
                     ]
                 },
                 {"fn": "spr", "args":[35,51,29] },
@@ -76,7 +76,7 @@
                         "you have just taken off\nfrom tinyville for a trip\nto the beach, when the\nengine suddenly quits at\nonly 500 feet! make a steep\nturn back to airport while\nmaintaining best glide\nspeed (65 knots). can you\nmake it back? good luck!",
                         8,
                         30,
-                        6
+                        5
                     ]
                 }
             ]
@@ -92,7 +92,7 @@
                         "while checking the map you did\nnot pay attention to your\nattitude. when you look up,\nthe airplane is out of control\nat low altitude. oops!\ncan you recover?\nhint: bank first, then pull up",
                         8,
                         30,
-                        6
+                        5
                     ]
                 }
             ]
@@ -106,7 +106,7 @@
                     "args": ["you are cleared for take-off\non runway 08 at tinyville.\napply full power and raise\nthe nose at 50-55 knots.\nhave fun!",
                         8,
                         30,
-                        6
+                        5
                     ]
                 }
             ]
@@ -389,24 +389,25 @@
         {"fn":"line","args":[4,36,4,42,0]}
     ],
     "briefing":[
+        {"fn":"map","args":[82,1,0,17,16,10]},
         {"fn":"print","args":["press ❎ to   fly",8,112,7]},
         {"fn":"spr","args":[2,54,112]},
         {"fn":"spr","args":[3,77,112]},
         {"fn":"print","args":["🅾️: back to menu",8,119,6]}
     ],
     "intro":[
-        {"fn":"cls","args":[]},
         {"fn":"spr","args":[2,34,10]},
         {"fn":"spr","args":[3,78,10]},
+        {"fn":"rectfill","args":[5,77,116,107,8]},
+        {"fn":"rect","args":[5,77,116,107,2]},
+        {"fn":"map","args":[82,0,5,70,15,1]},
         {"fn":"print","args":["tiny sim",44,10,7]},
         {"fn":"print","args":["the world's smallest flight sim",2,20,6]},
         {"fn":"print","args":["press ❎ for briefing",8,57,7]},
         {"fn":"print","args":["❎/🅾️:  throttle",8,80,6]},
         {"fn":"print","args":["❎(p2): toggle flaps",8,87]},
         {"fn":"print","args":["🅾️(p2): instruments / map",8,94]},
-        {"fn":"print","args":["⬅️(p2): cycle gps waypoint",8,101]},
-        {"fn":"rect","args":[5,77,125,108,6]},
-        {"fn":"print","args":["@yellowbaron | 3d by @freds72",7,123,6]}
+        {"fn":"print","args":["⬅️(p2): cycle gps waypoint",8,101]}
     ],
     "gs":[
         {"fn":"pset","args":[92,61,7]},
