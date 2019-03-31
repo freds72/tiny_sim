@@ -192,6 +192,48 @@
             "lon": 402.52,
             "model": "ship",
             "angle": 56
+        },
+        {
+            "lat": -342.95,
+            "lon": 575.45,
+            "model": "ship",
+            "angle": 156
+        },
+        {
+            "lon": 544.49,
+            "lat": -107.86,
+            "model": "windt",
+            "angle": 21
+        },
+        {
+            "lon": 550.84,
+            "lat": -105.59,
+            "model": "windt",
+            "angle": 21
+        },
+        {
+            "lon": 556.43,
+            "lat": -103.61,
+            "model": "windt",
+            "angle": 21
+        },
+        {
+            "lon": 116.03,
+            "lat": -409.66,
+            "model": "windt",
+            "angle": 90
+        },
+        {
+            "lon": 114.03,
+            "lat": -408.52,
+            "model": "windt",
+            "angle": 90
+        },
+        {
+            "lon": 116.03,
+            "lat": -406.93,
+            "model": "windt",
+            "angle": 90
         }
     ],
     "vspeeds":[
