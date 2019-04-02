@@ -83,7 +83,10 @@ lines_db = {
     # regular lines
     # line type -> line color
     "SHORES": { "color": 1 , "kind":2},
-    "SOLID_LIGHT": { "color": 8 , "kind":4}
+    "SOLID_LIGHT": { "color": 8 , "kind":4},
+    "RED_LIGHT": { "color": 8 , "kind":4},
+    "GREEN_LIGHT": { "color": 11 , "kind":4},
+    "WHITE_LIGHT": { "color": 7 , "kind":4}
 }
 
 def export_layer(scale,l):
@@ -123,39 +126,52 @@ def export_layer(scale,l):
             s = s + "{}{}{}".format(pack_double(tmp.x), pack_double(tmp.z), pack_double(tmp.y))
 
         # faces
-        s = s + "{:02x}".format(len(obdata.polygons))
+        faces = []
         for i in range(len(obdata.polygons)):
             f=obdata.polygons[i]
+            fs = ""
             # color
+            is_dual_sided = False          
             if len(obcontext.material_slots)>0:
                 slot = obcontext.material_slots[f.material_index]
                 mat = slot.material
-                s = s + "{:02x}".format(diffuse_to_p8color(mat.diffuse_color))
+                is_dual_sided = mat.game_settings.use_backface_culling==False
+                fs = fs + "{:02x}".format(diffuse_to_p8color(mat.diffuse_color))
             else:
-                s = s + "{:02x}".format(1) # default color
+                fs = fs + "{:02x}".format(1) # default color
             # is face part of a solid?
             face_verts = {loop_vert[li]:li for li in f.loop_indices}
             solid_group = {vgroups[k][0]:v for k,v in face_verts.items() if len(vgroups[k])==1}
-            solid_group = set([solid_db[k] for k,v in solid_group.items()])
+            solid_group = set([solid_db[k] for k,v in solid_group.items() if k in solid_db])
             if len(solid_group)>1:
                 raise Exception('Multiple vertex groups for the same face') 
             if len(solid_group)==1:
                 # get group ID
                 solid_group=solid_group.pop()
-                s = s + "{:02x}".format(solid_group)
+                fs = fs + "{:02x}".format(solid_group)
             else:
-                s = s + "{:02x}".format(0)
+                fs = fs + "{:02x}".format(0)
 
-            # + vertex count
-            s = s + "{:02x}".format(len(f.loop_indices))
+            # + face count
+            fs = fs + "{:02x}".format(len(f.loop_indices))
             # + vertex id (= edge loop)
             for li in f.loop_indices:
-                s = s + "{:02x}".format(loop_vert[li]+1)
-    
+                fs = fs + "{:02x}".format(loop_vert[li]+1)
+            faces.append({'face': f, 'flip': False, 'data': fs})
+            if is_dual_sided:
+                faces.append({'face': f, 'flip': True, 'data': fs})
+
+        # push face data to buffer (inc. dual sided faces)
+        s = s + "{:02x}".format(len(faces))
+        for f in faces:
+            s += f['data']
+                    
         # normals
-        s = s + "{:02x}".format(len(obdata.polygons))
-        for f in obdata.polygons:
-            s = s + "{}{}{}".format(pack_float(f.normal.x), pack_float(f.normal.z), pack_float(f.normal.y))
+        s = s + "{:02x}".format(len(faces))
+        for f in faces:
+            flip = -1 if f['flip'] else 1
+            f = f['face']
+            s = s + "{}{}{}".format(pack_float(flip * f.normal.x), pack_float(flip * f.normal.z), pack_float(flip * f.normal.y))
 
         # all edges (except pure edge face)
         es = ""
@@ -216,9 +232,15 @@ s = s + "{:02x}".format(len(name))
 for c in name:
     s = s + "{:02x}".format(charset.index(c)+1)
 
-# scale (custom model property)
-model_scale = obcontext.get("scale", 1)
+# scale (custom scene property)
+model_scale = scene.get("scale", 1)
 s = s + "{:02x}".format(model_scale)
+
+# model lod selection
+lod_dist = scene.get("lod_dist", [1024])
+s = s + "{:02x}".format(len(lod_dist))
+for i in lod_dist:
+    s = s + "{}".format(pack_double(i))
 
 # layers = lod
 ln = 0
