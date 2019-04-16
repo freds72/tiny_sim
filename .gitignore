@@ -6,3 +6,5 @@ config.txt
 /cdata
 *.blend1
 sdl_controllers.txt
+*.bin
+
