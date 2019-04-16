@@ -730,13 +730,6 @@ function drawmap(lat,lon,hdg)
  camera(-58+dx,-87+dy)
  map(34,0,-33,-128,47,31)
 
- for i=0,600,37.5 do
-  for j=0,600,37.5 do
-			local x,y=scalemap(i,-j)
-			pset(x,y,5)
-		end
-	end
-		
  for _,l in pairs(db) do
   local name,angle,x,y=l.name,l.angle,scalemap(l.lon,l.lat)
   x-=3 --correct for sprite size
@@ -754,15 +747,12 @@ function drawmap(lat,lon,hdg)
    draw_ils((angle-3)/360,"")
    draw_ils((angle+3)/360,name)
   elseif l.type=="apt" then
-   pset(x+3,y+3,7)
-   --[[
    if angle>=0 and angle<23 then spr(22,x,y)
    elseif angle>22 and angle<68 then spr(55,x,y)
    elseif angle>67 and angle<103 then spr(54,x,y)
    elseif angle>102 and angle<148 then spr(55,x-1,y,1,1,true)
    else spr(22,x,y) end
    ?name,x+9,y+1,7
-   ]]
   elseif name then
    -- any db item with a name
    spr(17,x,y)
