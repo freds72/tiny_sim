@@ -446,10 +446,10 @@
         {"fn":"print","args":["tiny sim",44,10,7]},
         {"fn":"print","args":["the world's smallest flight sim",2,20,6]},
         {"fn":"print","args":["press ❎ for briefing",8,57,7]},
-        {"fn":"print","args":["❎/🅾️:  throttle",8,80,6]},
-        {"fn":"print","args":["❎(p2): toggle flaps",8,87]},
-        {"fn":"print","args":["🅾️(p2): instruments / map",8,94]},
-        {"fn":"print","args":["⬅️(p2): cycle gps waypoint",8,101]}
+        {"fn":"print","args":["❎/🅾️ : throttle",8,80,6]},
+        {"fn":"print","args":["❎[p2]: toggle flaps",8,87]},
+        {"fn":"print","args":["🅾️[p2]: instruments / map",8,94]},
+        {"fn":"print","args":["⬆️[p2]: cycle gps waypoint",8,101]}
     ],
     "gs":[
         {"fn":"pset","args":[92,61,7]},
