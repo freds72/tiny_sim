@@ -4,1732 +4,1273 @@ __lua__
 -- tiny sim
 -- @yellowbaron, 3d engine @freds72
 -- 3d math portions from threejs
-
--- json globals
--- ❎ = x   = 4
--- 🅾️ = z/c = 5
--- ⬆️
 local _tok={
-  ['true']=true,
-  ['false']=false}
+['true']=true,
+['false']=false}
 function nop() return true end
 local _g={
-  cls=cls,
-  clip=clip,
-  map=map,
-  print=print,
-  line=line,
-  spr=spr,
-  sspr=sspr,
-  pset=pset,
-  rect=rect,
-  rectfill=rectfill,
-  sfx=sfx}
-
--- json parser
--- from: https://gist.github.com/tylerneylon/59f4bcf316be525b30ab
+cls=cls,
+clip=clip,
+map=map,
+print=print,
+line=line,
+spr=spr,
+sspr=sspr,
+pset=pset,
+rect=rect,
+rectfill=rectfill,
+sfx=sfx}
 local table_delims={['{']="}",['[']="]"}
 local function match(s,tokens)
-  for i=1,#tokens do
-    if(s==sub(tokens,i,i)) return true
-  end
-  return false
+for i=1,#tokens do
+if(s==sub(tokens,i,i)) return true
+end
+return false
 end
 local function skip_delim(str, pos, delim, err_if_missing)
 if sub(str,pos,pos)!=delim then
-  --if(err_if_missing) assert'delimiter missing'
-  return pos,false
+return pos,false
 end
 return pos+1,true
 end
-
 local function parse_str_val(str, pos, val)
-  val=val or ''
-  --[[
-  if pos>#str then
-    assert'end of input found while parsing string.'
-  end
-  ]]
-  local c=sub(str,pos,pos)
-  -- lookup global refs
+val=val or ''
+local c=sub(str,pos,pos)
 if(c=='"') return _g[val] or val,pos+1
-  return parse_str_val(str,pos+1,val..c)
+return parse_str_val(str,pos+1,val..c)
 end
 local function parse_num_val(str,pos,val)
-  val=val or ''
-  --[[
-  if pos>#str then
-    assert'end of input found while parsing string.'
-  end
-  ]]
-  local c=sub(str,pos,pos)
-  -- support base 10, 16 and 2 numbers
-  if(not match(c,"-xb0123456789abcdef.")) return tonum(val),pos
-  return parse_num_val(str,pos+1,val..c)
+val=val or ''
+local c=sub(str,pos,pos)
+if(not match(c,"-xb0123456789abcdef.")) return tonum(val),pos
+return parse_num_val(str,pos+1,val..c)
 end
--- public values and functions.
-
 function json_parse(str, pos, end_delim)
-  pos=pos or 1
-  -- if(pos>#str) assert'reached unexpected end of input.'
-  local first=sub(str,pos,pos)
-  if match(first,"{[") then
-    local obj,key,delim_found={},true,true
-    pos+=1
-    while true do
-      key,pos=json_parse(str, pos, table_delims[first])
-      if(key==nil) return obj,pos
-      -- if not delim_found then assert'comma missing between table items.' end
-      if first=="{" then
-        pos=skip_delim(str,pos,':',true)  -- true -> error if missing.
-        obj[key],pos=json_parse(str,pos)
-      else
-        add(obj,key)
-      end
-      pos,delim_found=skip_delim(str, pos, ',')
-  end
-  elseif first=='"' then
-    -- parse a string (or a reference to a global object)
-    return parse_str_val(str,pos+1)
-  elseif match(first,"-0123456789") then
-    -- parse a number.
-    return parse_num_val(str, pos)
-  elseif first==end_delim then  -- end of an object or array.
-    return nil,pos+1
-  else  -- parse true, false
-    for lit_str,lit_val in pairs(_tok) do
-      local lit_end=pos+#lit_str-1
-      if sub(str,pos,lit_end)==lit_str then return lit_val,lit_end+1 end
-    end
-    -- assert'invalid json token'
-  end
+pos=pos or 1
+local first=sub(str,pos,pos)
+if match(first,"{[") then
+local obj,key,delim_found={},true,true
+pos+=1
+while true do
+key,pos=json_parse(str, pos, table_delims[first])
+if(key==nil) return obj,pos
+if first=="{" then
+pos=skip_delim(str,pos,':',true)
+obj[key],pos=json_parse(str,pos)
+else
+add(obj,key)
 end
-
+pos,delim_found=skip_delim(str, pos, ',')
+end
+elseif first=='"' then
+return parse_str_val(str,pos+1)
+elseif match(first,"-0123456789") then
+return parse_num_val(str, pos)
+elseif first==end_delim then
+return nil,pos+1
+else
+for lit_str,lit_val in pairs(_tok) do
+local lit_end=pos+#lit_str-1
+if sub(str,pos,lit_end)==lit_str then return lit_val,lit_end+1 end
+end
+end
+end
 local world=json_parse'{"scenarios":[{"name":"visual approach","args":[-417,326.3,85,600,-1,0,25,112,3,2],"weather":1,"briefing":[{"fn":"print","args":["remain on runway axis. extend the\nflaps and keep speed at 65-70\nknots by using pitch and\nthrottle. at 50 feet, smoothly\nclose throttle and raise the\nnose to gently touch down\nbelow 65 knots.\ntoo easy? add some wind!",8,30,5]}]},{"name":"final approach","args":[-408.89,230.77,85,1000,1,0,75,112,3,2],"weather":2,"briefing":[{"fn":"print","args":["fly heading of approx. 085\nkeep localizer (  ) centered\n(the wind might push you away)\nmaintain 1000 ft\nintercept glide slope ( )\nreduce power and extend flaps\nstart 500 ft/min descent\nkeep localizer centered\nkeep glideslope centered\nat 200 ft reduce power & land",8,30,5]},{"fn":"spr","args":[20,71,36]},{"fn":"spr","args":[38,100,55]}]},{"name":"full approach","args":[-222.22,461.54,313,3000,0,0,91,112,1,2],"weather":3,"briefing":[{"fn":"print","args":["cross pco (  ) on heading 313\nintercept localizer (  )\nturn left heading 265\ndescend to 2000 ft\nturn right heading 310\nfly 1 minute\nturn left heading 130\nintercept localizer\nturn left heading 085\nfly final approach and land",8,30,5]},{"fn":"spr","args":[35,51,29]},{"fn":"spr","args":[20,91,36]}]},{"name":"engine failure!","args":[-422.2,408,85,500,10,0,0,65,3,2],"weather":1,"briefing":[{"fn":"print","args":["you have just taken off\nfrom tinyville for a trip\nto the beach, when the\nengine suddenly quits at\nonly 500 feet! make a steep\nturn back to airport while\nmaintaining best glide\nspeed (65 knots). can you\nmake it back? good luck!",8,30,5]}]},{"name":"unusual attitude","args":[-222.22,461.54,330,450,99,99,100,112,3,2],"weather":1,"briefing":[{"fn":"print","args":["while checking the map you did\nnot pay attention to your\nattitude. when you look up,\nthe airplane is out of control\nat low altitude. oops!\ncan you recover?\nhint: bank first, then pull up",8,30,5]}]},{"name":"free flight","args":[-422.2,384.6,85,0,0,0,0,0,5,2,true],"weather":1,"briefing":[{"fn":"print","args":["you are cleared for take-off\non runway 08 at tinyville.\napply full power and raise\nthe nose at 50-55 knots.\nhave fun!",8,30,5]}]}],"wx":[{"name":"clear, calm","dir":[0,0],"sky_gradient":[0,14,0,360,2,0,1440,1,0]},{"name":"clouds, breezy","dir":[60,10],"ceiling":500,"horiz":56,"sky_gradient":[0,213,-23131,500,5,0],"tex":{"x":0,"y":32},"light_ramp":68,"light_scale":0.125},{"name":"low clouds, stormy","dir":[10,20],"ceiling":200,"horiz":28,"sky_gradient":[0,5,0],"tex":{"x":64,"y":32},"light_ramp":68,"light_scale":0.08}],"db":[{"lat":-251.11,"lon":430.77,"name":"pco","type":"vor","nav":true},{"lat":-422.46,"lon":387.59,"name":"itn","type":"ils","angle":85},{"lat":-422.2,"lon":384.6,"name":"tny","type":"apt","model":"apt","angle":85,"nav":true},{"lat":-244,"lon":268.5,"name":"smallville","model":"cty"},{"lat":-66.67,"lon":153.85,"name":"smv","type":"apt","model":"apt","angle":40,"nav":true},{"lat":-177.78,"lon":246.15,"name":"wee","type":"vor","nav":true},{"lat":-70.17,"lon":531.28,"name":"pti","type":"apt","model":"apt2","angle":170,"nav":true},{"lat":0,"lon":0,"model":"grnd"},{"lat":-169.64,"lon":100.27,"name":"mt. big","model":"mnt_big"},{"lat":-157.76,"lon":402.52,"model":"ship","angle":56},{"lat":-342.95,"lon":575.45,"model":"ship","angle":156},{"lon":544.49,"lat":-107.86,"model":"windt","angle":21},{"lon":550.84,"lat":-105.59,"model":"windt","angle":21},{"lon":556.43,"lat":-103.61,"model":"windt","angle":21},{"lon":116.03,"lat":-409.66,"model":"windt","angle":90},{"lon":114.03,"lat":-408.52,"model":"windt","angle":90},{"lon":116.03,"lat":-406.93,"model":"windt","angle":90}],"vspeeds":[{"ias":55,"s":40},{"ias":60,"s":56},{"ias":65,"s":41},{"ias":79,"s":57}],"hsic":[64,111],"bp":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124]],"e":[[1,2],[1,3],[1,4],[5,6]]},"nesw":[[64,99,52],[52,111,53],[64,123,36],[76,111,37]],"cdii":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124],[64,104],[64,118]],"e":[[1,2],[1,3],[1,4],[5,6],[7,8]]},"apsymbol":{"v":[[55,87],[61,87],[58,86],[58,91],[57,91],[59,91]],"e":[[1,2],[3,4],[5,6]]},"lcockpit":[{"fn":"map","args":[0,0,-4,26,17,3]},{"fn":"map","args":[0,3,-4,48,2,11]},{"fn":"spr","args":[18,71,120]},{"fn":"spr","args":[34,79,115]},{"fn":"rectfill","args":[107,121,127,127,0]},{"fn":"rectfill","args":[87,115,100,127,0]},{"fn":"spr","args":[35,79,122]}],"rcockpit":[{"fn":"clip","args":[]},{"fn":"map","args":[17,0,-4,26,27,3]},{"fn":"map","args":[32,3,116,50,2,10]},{"fn":"spr","args":[21,107,120]},{"fn":"spr","args":[42,115,120]},{"fn":"line","args":[4,36,4,42,0]}],"briefing":[{"fn":"map","args":[82,1,0,17,16,10]},{"fn":"print","args":["press ❎ to   fly",8,112,7]},{"fn":"spr","args":[2,54,112]},{"fn":"spr","args":[3,77,112]},{"fn":"print","args":["🅾️: back to menu",8,119,6]}],"intro":[{"fn":"spr","args":[2,34,10]},{"fn":"spr","args":[3,78,10]},{"fn":"rectfill","args":[5,77,116,107,8]},{"fn":"rect","args":[5,77,116,107,2]},{"fn":"map","args":[82,0,5,70,15,1]},{"fn":"print","args":["tiny sim",44,10,7]},{"fn":"print","args":["the world\'s smallest flight sim",2,20,6]},{"fn":"print","args":["press ❎ for briefing",8,57,7]},{"fn":"print","args":["❎/🅾️ : throttle",8,80,6]},{"fn":"print","args":["❎[p2]: toggle flaps",8,87]},{"fn":"print","args":["🅾️[p2]: instruments / map",8,94]},{"fn":"print","args":["⬆️[p2]: cycle gps waypoint",8,101]}],"gs":[{"fn":"pset","args":[92,61,7]},{"fn":"pset","args":[92,66,7]},{"fn":"pset","args":[92,71,7]},{"fn":"pset","args":[92,76,7]},{"fn":"pset","args":[92,81,7]},{"fn":"line","args":[91,71,93,71,7]}],"stopsfx":[{"fn":"sfx","args":[38,-2]},{"fn":"sfx","args":[42,-2]},{"fn":"sfx","args":[43,-2]},{"fn":"sfx","args":[45,-2]}]}'
--- dither pattern 4x4 kernel
 local dither_pat=json_parse'[0xffff.8,0x7fff.8,0x7fdf.8,0x5fdf.8,0x5f5f.8,0x5b5f.8,0x5b5e.8,0x5a5e.8,0x5a5a.8,0x1a5a.8,0x1a4a.8,0x0a4a.8,0x0a0a.8,0x020a.8,0x0208.8,0x0000.8]'
-
---scenarios (name,lat,lon,hdg,alt,pitch,bank,throttle,tas,dto,nav1,onground)
-
---weather (name,wind,ceiling,bg color,sky gradient,light_ramp x offset, inverse light distance)
-
---airport and navaid database (rwy hdg < 180)
-
--- shortcuts
 local scenarios,wx,db,hsic,bp,cdii,nesw,vspeeds,apsymbol=world.scenarios,world.wx,world.db,world.hsic,world.bp,world.cdii,world.nesw,world.vspeeds,world.apsymbol
-
---general settings and vars
 palt(15,true)
 palt(0,false)
 local frame=0
-
--- scenario + weather selection
 local scen,wnd=1,1
-
---3d
--- world axis
 local v_fwd,v_right,v_up={0,0,1},{1,0,0},{0,1,0}
-
--- models & actors
 local all_models,actors,stars,cam={},{},{}
--- sim + pilot pos (in camera space)
 local pilot_pos,sim={0,0.037,0}
-
--- current texture location (32x32)
 local tex_src
-
--- intro music
 music(0)
-
 function _init()
- menu,item=1,0
- scen,wnd=1,1
-
- -- 3d
- -- viewport: 0,30,127,30
- cam=make_cam(63.5,14.5,63.5)
-
- -- reset actors & engine
- actors,sim={}
- for _,l in pairs(db) do
-  -- registered model?
-  if l.model then
-			add(actors,make_actor(l.model,{l.lat,0,l.lon},l.angle))
-		end
-	end
+menu,item=1,0
+scen,wnd=1,1
+cam=make_cam(63.5,14.5,63.5)
+actors,sim={}
+for _,l in pairs(db) do
+if l.model then
+add(actors,make_actor(l.model,{l.lat,0,l.lon},l.angle))
 end
-
--- create a simulator entity from the given scenario
+end
+end
 function make_sim(s)
-  local brg,dist,crs,cdi={},{},0,0
-  local rpm,vs,aoa,timer,flps,blag,plag,slag,relwind=2200,0,0,0,0,0,0,0
-
-  -- plane pos/orientation
-  local lat,lon,heading,alt,pitch,bank,throttle,tas,dto,nav1,onground=munpack(scenarios[s].args)
-  -- safeguard
-  -- assert(nav1,"missing scenario arg")
-
-  if(pitch==99) bank,pitch=unusual()
-
-  --instruments
-  --ai
-  local aic,aipitch,aistep,aiwidth,ai={64,71},{60,141},10,8,json_parse'[[-87,72],[215,72],[64,-79],[64,223]]'
-
-  --inset map
-  local mapc,mapclr={22,111},{apt=14,vor=12,ils=0,cty=5}
-		
-		-- previous tile
-		local prev_tile=-1
-		
-  function warn(y)
-    local j=y>64 and -1 or 1
-    for i=0,3 do
-      local _y=y+i*aistep+pitch
-      local x1,y1=rotatepoint({aipitch[1],_y},aic,-bank)
-      local x2,y2=rotatepoint({aipitch[1]+aiwidth/2,_y+(aistep-2)*j},aic,-bank)
-      local x3,y3=rotatepoint({aipitch[1]+aiwidth,_y},aic,-bank)
-      line(x1,y1,x2,y2,8)
-      line(x3,y3,x2,y2)
-    end
-  end
-
-		function next_dto()
-   dto+=1
-   if(dto==#db+1) dto=1
-		end
-		
-    -- sfx starts at 36
-		-- engine sound
-		sfx(38)
-    -- wind
-		sfx(43)
-
-  return {
-    -- pos and orientation
-    get_pos=function()
-      return {lat,alt/120,lon},make_m_from_euler(-pitch/360,heading/360-0.25,-bank/360)
-    end,
-    crashed=false,
-    input=function()
-      -- rpm
-      --set throttle
-      if btn(5) then --x
-        throttle+=1.5
-        blag=-3
-      elseif btn(4) then --y
-        throttle-=1.5
-        blag=3
-      end
-      throttle=mid(throttle,0,100)
-      --calculate rpm
-      local maxrpm=2400
-      if(alt>=2000) maxrpm=2456-0.028*alt
-      targetrpm=throttle/100*(maxrpm-700)+700
-      rpm+=(targetrpm-rpm)/20
-      if(abs(targetrpm-rpm)>=30) plag=(targetrpm-rpm)/20
-      rpm=max(rpm,700)
-
-      -- pitch
-      if btn(2) then -- dn
-        plag=max(plag-2,-60)
-        pitch-=0.25*cos(bank/360)
-      elseif btn(3) and aoa<18 then -- up
-        plag=min(plag+2,60)
-        pitch+=0.35*cos(bank/360)
-      elseif plag!=0 then
-        pitch+=0.004*plag*cos(bank/360)
-        plag-=plag/abs(plag)
-      end
-      pitch=mid(pitch,-45,45)
-
-      if btn(0) then
-        if onground and tas<30 then --nosewheel steering
-          heading-=0.6
-        else
-          blag=max(blag-1,-50)
-          bank-=1.8-tas/250
-        end
-      elseif btn(1) then
-        if onground and tas<30 then
-               heading+=0.6
-            else
-              blag=min(blag+1,50)
-          bank+=1.8-tas/250
-            end
-      elseif blag!=0 then
-        bank+=0.03*blag
-        blag-=blag/abs(blag)
-      end
-      if (abs(bank)<4 and blag==0) bank/=1.1 --bank stability
-      if(abs(bank)>20) pitch-=0.3*abs(sin(bank/360))
-      if(abs(bank)>160) pitch-=0.15
-
-						if(bank>180) bank-=360
-      if(bank<-180) bank+=360
-						
-      -- flaps()
-      if btnp(5,1) then --x (p2)
-        flps=1-flps --toggle
-        plag=flps==1 and 70 or -70
-      end
-
-      -- cycle gps navigation waypoint
-      if btnp(2,1) then -- up (p2)
-     		next_dto()
-       -- skip non navigable entries
-       while not db[dto].nav do
-								next_dto()
-       end
-      end
-
-      -- on ground check
-      if onground then
-        bank/=1.3 --level off on ground
-        pitch=max(pitch)
-      end
-    end,
-    update=function(self)
-      -- calcalt
-      local coeff=vs<0 and 74 or 88
-      vs=tas*-sin((pitch-aoa)/360)*coeff
-      if(alt==0) vs=max(vs)
-      alt=max(alt+vs/1800)
-
-      -- calcheading()
-      if abs(bank)<=90 then heading+=bank*0.007
-      else heading+=(180-abs(bank))*bank/abs(bank)*0.007 end
-      heading=(heading+360)%360
-
-      -- calcspeed()
-      local targetspeed=38.67+rpm/30-3.8*pitch
-      targetspeed=mid(targetspeed,-30,200)
-      if(flps==1) targetspeed-=10
-      if(onground) targetspeed-=40
-      tas+=(targetspeed-tas)/250
-      ias=tas/(1+alt/1000*0.02) --2% per 1000 ft
-
-      -- calcaoa()
-      if ias>=71.1 then
-        aoa=13.2-0.12*ias
-      elseif ias>=46.7 then
-        aoa=26-0.3*ias
-      else
-        aoa=54-0.9*ias
-      end
-      aoa=max(aoa)
-      -- calcwind()
-      local wind=wx[wnd].dir
-      relwind=heading-wind[1]
-      relwind=(relwind+180)%360-180
-      local relh,relc=-wind[2]*cos(relwind/360),wind[2]*sin(relwind/360)
-      groundspeed=sqrt((tas/10+relh/10)^2+(relc/10)^2) --avoid tas^2 overflow
-      groundspeed=ceil(10*groundspeed)
-      local wca=onground and 0 or (atan2(tas+relh,relc)*360+180)%360-180
-      -- actual 2d velocity direction
-      track=heading+wca
-
-      -- calcposition()
-      local dx,dy=-groundspeed*sin(track/360)/2880,groundspeed*cos(track/360)/2880
-      lon+=dx
-      lat-=dy
-
-      -- calcdistbrg()
-      local j=1
-      for _,l in pairs(db) do
-        local dy,dx=-(l.lat-lat)*0.01,(l.lon-lon)*0.01 --avoid overflow
-        brg[j]=90+(atan2(dx,dy)*360)-heading
-        brg[j]-=flr(brg[j]/360)*360
-        dist[j]=max(sqrt(dx*dx+dy*dy))*2.6667 --*100*16/600
-        j+=1
-      end
-
-      -- stall()
-      local critical=18+4*flps
-      if aoa>=critical then
-        slag,plag=45,0
-        if(not onground) blag=-10
-      end
-      pitch-=slag*(onground and 0.003 or 0.008)
-      if (slag>=1) slag-=1
-
-      -- calcgs()
-      local alpha=atan2(alt/6072,dist[nav1])*360-270
-      gsy=mid(63+10/0.7*(alpha-3),50,74)
-
-      -- calccdi()
-      local cdangle=brg[nav1]-crs
-      cdangle=(cdangle+360)%360
-      if(cdangle>180) cdangle-=360
-      if cdangle>90 then cdangle=180-cdangle --backcourse
-      elseif cdangle<-90 then cdangle=-180-cdangle end
-      cdi=mid(18/10*cdangle,-9,9) --5 deg full deflection
-
-			   -- sfx mgt
-      -- see: https://www.lexaloffle.com/bbs/?tid=2341
-      -- pitch+shl(instr,6)+shl(vol,9)
-      local p=(rpm-700)/1000 --original was 1400, renamed to p to avoid issue with airplane pitch
-      local rpmvol=shl(band(0x7,2+2*p),9)
-      -- sfx 38
-      poke4(0x3c18,bor(band(0x3f,7*p)+0x040+rpmvol,shr(band(0x3f,6*p)+0x040+rpmvol,16)))
-      -- wind noise (> 120 knots relative speed) + conver to sfx volume
-      -- sfx 43
-      local src,wndvol=0x3d6c,shl(band(0x7,7*min(max(ias-120)/60,1)),9) -- 180-120
-      -- use it for 2 notes
-      wndvol=bor(wndvol,shr(wndvol,16))
-      -- 2 notes/loop (eg 4 bytes)
-      -- 32 notes total
-      for k=1,16 do
-       -- copy sound + adjust volume
-       poke4(src,bor(band(peek4(src),0xf1ff.f1ff),wndvol))
-       src+=4
-      end
-
-      -- checklanded()
-      -- map tile
-      -- todo: boundary checks
-      -- alternative: make the map boundaries a no fly zone!
-      local mx,my=flr(16*lon/600)+46,flr(16*(600+lat)/600)+8
-      local tile=fget(mget(mx,my))
-
-      if(ias>180) make_msg("exceeded maximum speed\nreduce power & pull up!!!")
-      if alt<=0 and not onground then
-       onground=true
-       if tile==2 then -- water!
-         make_msg("crashed into the ocean\n❎: exit to menu",300)
-         self.crashed=true
-         -- todo: better splash sound?
-         sfx(44)
-       elseif vs>-300 and pitch>-0.5 and abs(bank)<5 then
-         make_msg("good landing!")
-         sfx(42) --rolling sound
-       elseif vs>-1000 and pitch>-0.5 and abs(bank)<30 then
-         make_msg("oops... hard landing")
-         sfx(42) --rolling sound
-       else
-         make_msg("crash: collision with ground\n❎: exit to menu",300)
-         self.crashed=true
-         sfx(39)
-       end
-      end
-      if alt>0 and onground then
-        onground=nil
-        -- stop rolling sound
-        sfx(42,-2)
-      end
-      -- no fly zone
-      if tile==1 then
-       if prev_tile!=1 then
-	       make_msg("immediately leave this zone!\nyour license will be revoked")
- 	      sfx(45)
- 	     end
-      elseif prev_tile==1 then
-       -- leaving zone
-       sfx(45,-2)
-      end
-						prev_tile=tile
-						
-      timer+=1/30
-      -- flaps(): moved to input
-      -- blackbox(): removed
-    end,
-    draw=function()
-      if menu==0 then
-        -- dispai()
-        ai[1][2]=72+pitch
-        ai[2][2]=72+pitch
-        ai[3][2]=-80+pitch
-        ai[4][2]=222+pitch
-        local ax,ay=rotatepoint(ai[1],aic,-bank)
-        local bx,by=rotatepoint(ai[2],aic,-bank)
-        local cx,cy=rotatepoint(ai[3],aic,-bank)
-        local dx,dy=rotatepoint(ai[4],aic,-bank)
-        clip(10,36,118,96)
-        trifill(ax,ay,bx,by,cx,cy,12)
-        trifill(ax,ay,bx,by,dx,dy,4)
-        line(ax,ay,bx,by,7) --horizon
-        clip(35,44,55,43)
-        for j=0,15 do
-          local tmp=aipitch[2]-j*aistep+pitch
-          local x1,y1=rotatepoint({aipitch[1],tmp},aic,-bank)
-          local x2,y2=rotatepoint({aipitch[1]+aiwidth,tmp},aic,-bank)
-          if(j!=7) line(x1,y1,x2,y2,7)
-        end
-        warn(-8)
-        warn(110)
-        clip()
-        --transparency
-        rectfillt(21,50,33,90)
-        rectfillt(95,50,111,90)
-
-        line(48,75,aic[1],aic[2],10) --aircraft
-        line(80,75,aic[1],aic[2])
-        line(40,71,45,71) --small horizon lines
-        line(83,71,88,71)
-
-        exec(world.lcockpit)
-
-        -- disphsi()
-        --transparency
-        circfillt(64,111,15.5)
-        circ(64,111,8,7)
-        spr(19,62,95) --tick mark
-        --cardinal directions
-        for _,l in pairs(nesw) do
-          local x,y=rotatepoint(l,hsic,-heading)
-          spr(l[3],x-1,y-1)
-        end
-        --bearing pointer
-        polyliner(bp,hsic,brg[dto],12)
-        --cdi
-        crs=db[nav1].angle-heading
-        cdii.v[7][1]=cdi+64
-        cdii.v[8][1]=cdi+64
-        polyliner(cdii,hsic,crs,11)
-        spr(33,62,110) --heading plane symbol
-        --dto bearing
-        ?flr(brg[dto]+heading)%360,117,37,14
-
-        -- disprpm()
-        local drpm=ceil(rpm/10)*10
-        color(drpm<=2000 and 7 or 11)
-        if drpm>=1000 then
-          ?sub(drpm,1,2),1,116
-          ?sub(drpm,3,4),1,122
-        else
-          ?sub(drpm,1,1),5,116
-          ?sub(drpm,2,3),1,122
-        end
-        spr(4,1,109-throttle/4.4)
-
-        -- dispspeed()
-        clip(22,50,32,41)
-        local dy,n=ias*3,ias>20 and flr(ias/10) or 2
-        for i=n,n+2 do
-          local x=i*10>99 and 22 or 26
-          ?i*10,x,70-(i*30)+dy,6
-          line(31,72-(i*30)-15+dy,33,72-(i*30)-15+dy)
-        end
-        clip()
-        -- red or black
-        rectfill(21,68,33,74,ias>=163 and 8 or 0)
-        rectfill(29,65,33,77)
-        local y=ias-flr(ias/10)*10
-        local y2,y3=ceil(y),(y*7)%7
-        if ias>=20 then
-          clip(30,65,3,13)
-          ?y2%10,30,66+y3,7
-          ?(y2-1)%10,30,72+y3
-          ?(y2+1)%10,30,60+y3
-          clip()
-          local z=ias>=99.5 and 22 or 26
-          -- ensure smooth transition to next ias
-          ?flr((ias+0.5)/10),z,69
-        else
-          -- warn: minify bug
-          ?'===',22,69,7
-        end
-
-        clip(34,50,8,41)
-        for _,v in pairs(vspeeds) do
-          spr(v.s,34,(ias-v.ias)*3+69)
-        end
-        clip()
-
-        -- dispalt()
-        clip(95,50,16,41)
-        local dy,n=alt/5,alt>199 and flr(alt/100) or 2
-        for i=n-2,n+2 do
-            local x=i<100 and 96 or 92
-            ?i*100,x,70-(i*20)+dy,6
-            line(95,62-(i*20)+dy,97,62-(i*20)+dy,6)
-        end
-        clip()
-        rectfill(95,68,111,74,0)
-        rectfill(103,65,111,77)
-        local y=alt/10-flr(alt/100)*10
-        local y2,y3=ceil(y),(y*7)%7
-        clip(104,65,7,13)
-        ?(y2%10)..0,104,66+y3,7
-        ?((y2-1)%10)..0,104,72+y3
-        ?((y2+1)%10)..0,104,60+y3
-        clip()
-        local z=96
-        if alt>=9995 then
-          rectfill(91,68,94,74,0)
-          z=92
-        elseif alt<995 then
-          z=100
-        end
-        if alt>=100 then
-         ?flr((alt/10+0.5)/10),z,69,7
-        end
-
-        -- dispvs()
-        local vsoffset=ceil(vs/100)
-        vsoffset=mid(vsoffset,-19,21)
-        rectfill(115,68-vsoffset,126,74-vsoffset,0)
-        spr(23,112,68-vsoffset)
-        if vsoffset!=0 then
-         ?ceil(vs/100),115,69-vsoffset,7
-        end
-
-        -- dispheading()
-        rectfill(57,88,71,94,0)
-        pset(70,89,7)
-        local hdg=ceil(heading)%360
-        if hdg<10 then print("00"..hdg,58,89,7)
-        elseif hdg<100 then print("0"..hdg,58,89,7)
-        else
-          ?hdg,58,89,7
-        end
-
-        -- old: disptime()
-        disptime(timer,108,122)
-
-								-- dispnav
-        ?db[nav1].name,29,37,11
-        dispdist(dist[dto],89,116,7)
-        dispdist(dist[dto],88,37,14)
-        ?db[dto].name,57,37,14
-        ?db[dto].name,89,122,12
-
-        -- dispmap()
-        --based on 5nm/187.5 per 22px
-        rectfill(11,97,33,119,0)
-        local latmin,lonmin=lat+67.77, lon-93.75
-        function disppoint(p)
-          --scale to map
-          local mapx,mapy=11+22/187.5*(p.lon-lonmin),119-22/187.5*(-p.lat+latmin)
-          local rotx,roty=rotatepoint({mapx,mapy},mapc,360-heading)
-          return {rotx,roty}
-        end
-        for l in all(db) do
-          local p=disppoint(l)
-          if(checkonmap(p)) pset(p[1]+0.5,p[2],mapclr[l.type])
-        end
-        spr(33,20,110) --map plane symbol
-
-        -- dispgs()
-        if dist[nav1]<15 and alt<9995 then
-        	rectfillt(91,58,93,84)
-        	exec(world.gs)
-        	spr(38,91,gsy+8)
-        end
-        -- dispflaps()
-        spr(flps==1 and 46 or 14,0,64,1,2)
-
-        -- dispwind()
-								local s
-        if onground then
-          s=127
-        elseif relwind>=0 and relwind<90 then
-          s=78
-        elseif relwind<=0 and relwind>-90 then
-          s=79
-        elseif relwind>=90 and relwind<180 then
-          s=94
-        elseif relwind<=-90 and relwind>-180 then
-          s=95
-        end
-							 spr(s,40,95)
-      elseif menu==2 then
-       drawmap(lat,lon,heading)
-
-       -- clip included in rcockpit
-       exec(world.rcockpit)
-       ?db[dto].name,17,37,14
-       color(14)
-       disptime(flr(dist[dto]/groundspeed*3600),94,37)
-       ?groundspeed,54,37
-
-      end     
-    end
-  }
+local brg,dist,crs,cdi={},{},0,0
+local rpm,vs,aoa,timer,flps,blag,plag,slag,relwind=2200,0,0,0,0,0,0,0
+local lat,lon,heading,alt,pitch,bank,throttle,tas,dto,nav1,onground=munpack(scenarios[s].args)
+if(pitch==99) bank,pitch=unusual()
+local aic,aipitch,aistep,aiwidth,ai={64,71},{60,141},10,8,json_parse'[[-87,72],[215,72],[64,-79],[64,223]]'
+local mapc,mapclr={22,111},{apt=14,vor=12,ils=0,cty=5}
+local prev_tile=-1
+function warn(y)
+local j=y>64 and -1 or 1
+for i=0,3 do
+local _y=y+i*aistep+pitch
+local x1,y1=rotatepoint({aipitch[1],_y},aic,-bank)
+local x2,y2=rotatepoint({aipitch[1]+aiwidth/2,_y+(aistep-2)*j},aic,-bank)
+local x3,y3=rotatepoint({aipitch[1]+aiwidth,_y},aic,-bank)
+line(x1,y1,x2,y2,8)
+line(x3,y3,x2,y2)
 end
-
+end
+function next_dto()
+dto+=1
+if(dto==#db+1) dto=1
+end
+sfx(38)
+sfx(43)
+return {
+get_pos=function()
+return {lat,alt/120,lon},make_m_from_euler(-pitch/360,heading/360-0.25,-bank/360)
+end,
+crashed=false,
+input=function()
+if btn(5) then
+throttle+=1.5
+blag=-3
+elseif btn(4) then
+throttle-=1.5
+blag=3
+end
+throttle=mid(throttle,0,100)
+local maxrpm=2400
+if(alt>=2000) maxrpm=2456-0.028*alt
+targetrpm=throttle/100*(maxrpm-700)+700
+rpm+=(targetrpm-rpm)/20
+if(abs(targetrpm-rpm)>=30) plag=(targetrpm-rpm)/20
+rpm=max(rpm,700)
+if btn(2) then
+plag=max(plag-2,-60)
+pitch-=0.25*cos(bank/360)
+elseif btn(3) and aoa<18 then
+plag=min(plag+2,60)
+pitch+=0.35*cos(bank/360)
+elseif plag!=0 then
+pitch+=0.004*plag*cos(bank/360)
+plag-=plag/abs(plag)
+end
+pitch=mid(pitch,-45,45)
+if btn(0) then
+if onground and tas<30 then
+heading-=0.6
+else
+blag=max(blag-1,-50)
+bank-=1.8-tas/250
+end
+elseif btn(1) then
+if onground and tas<30 then
+heading+=0.6
+else
+blag=min(blag+1,50)
+bank+=1.8-tas/250
+end
+elseif blag!=0 then
+bank+=0.03*blag
+blag-=blag/abs(blag)
+end
+if (abs(bank)<4 and blag==0) bank/=1.1
+if(abs(bank)>20) pitch-=0.3*abs(sin(bank/360))
+if(abs(bank)>160) pitch-=0.15
+if(bank>180) bank-=360
+if(bank<-180) bank+=360
+if btnp(5,1) then
+flps=1-flps
+plag=flps==1 and 70 or -70
+end
+if btnp(2,1) then
+next_dto()
+while not db[dto].nav do
+next_dto()
+end
+end
+if onground then
+bank/=1.3
+pitch=max(pitch)
+end
+end,
+update=function(self)
+local coeff=vs<0 and 74 or 88
+vs=tas*-sin((pitch-aoa)/360)*coeff
+if(alt==0) vs=max(vs)
+alt=max(alt+vs/1800)
+if abs(bank)<=90 then heading+=bank*0.007
+else heading+=(180-abs(bank))*bank/abs(bank)*0.007 end
+heading=(heading+360)%360
+local targetspeed=38.67+rpm/30-3.8*pitch
+targetspeed=mid(targetspeed,-30,200)
+if(flps==1) targetspeed-=10
+if(onground) targetspeed-=40
+tas+=(targetspeed-tas)/250
+ias=tas/(1+alt/1000*0.02)
+if ias>=71.1 then
+aoa=13.2-0.12*ias
+elseif ias>=46.7 then
+aoa=26-0.3*ias
+else
+aoa=54-0.9*ias
+end
+aoa=max(aoa)
+local wind=wx[wnd].dir
+relwind=heading-wind[1]
+relwind=(relwind+180)%360-180
+local relh,relc=-wind[2]*cos(relwind/360),wind[2]*sin(relwind/360)
+groundspeed=sqrt((tas/10+relh/10)^2+(relc/10)^2)
+groundspeed=ceil(10*groundspeed)
+local wca=onground and 0 or (atan2(tas+relh,relc)*360+180)%360-180
+track=heading+wca
+local dx,dy=-groundspeed*sin(track/360)/2880,groundspeed*cos(track/360)/2880
+lon+=dx
+lat-=dy
+local j=1
+for _,l in pairs(db) do
+local dy,dx=-(l.lat-lat)*0.01,(l.lon-lon)*0.01
+brg[j]=90+(atan2(dx,dy)*360)-heading
+brg[j]-=flr(brg[j]/360)*360
+dist[j]=max(sqrt(dx*dx+dy*dy))*2.6667
+j+=1
+end
+local critical=18+4*flps
+if aoa>=critical then
+slag,plag=45,0
+if(not onground) blag=-10
+end
+pitch-=slag*(onground and 0.003 or 0.008)
+if (slag>=1) slag-=1
+local alpha=atan2(alt/6072,dist[nav1])*360-270
+gsy=mid(63+10/0.7*(alpha-3),50,74)
+local cdangle=brg[nav1]-crs
+cdangle=(cdangle+360)%360
+if(cdangle>180) cdangle-=360
+if cdangle>90 then cdangle=180-cdangle
+elseif cdangle<-90 then cdangle=-180-cdangle end
+cdi=mid(18/10*cdangle,-9,9)
+local p=(rpm-700)/1000
+local rpmvol=shl(band(0x7,2+2*p),9)
+poke4(0x3c18,bor(band(0x3f,7*p)+0x040+rpmvol,shr(band(0x3f,6*p)+0x040+rpmvol,16)))
+local src,wndvol=0x3d6c,shl(band(0x7,7*min(max(ias-120)/60,1)),9)
+wndvol=bor(wndvol,shr(wndvol,16))
+for k=1,16 do
+poke4(src,bor(band(peek4(src),0xf1ff.f1ff),wndvol))
+src+=4
+end
+local mx,my=flr(16*lon/600)+46,flr(16*(600+lat)/600)+8
+local tile=fget(mget(mx,my))
+if(ias>180) make_msg("exceeded maximum speed\nreduce power & pull up!!!")
+if alt<=0 and not onground then
+onground=true
+if tile==2 then
+make_msg("crashed into the ocean\n❎: exit to menu",300)
+self.crashed=true
+sfx(44)
+elseif vs>-300 and pitch>-0.5 and abs(bank)<5 then
+make_msg("good landing!")
+sfx(42)
+elseif vs>-1000 and pitch>-0.5 and abs(bank)<30 then
+make_msg("oops... hard landing")
+sfx(42)
+else
+make_msg("crash: collision with ground\n❎: exit to menu",300)
+self.crashed=true
+sfx(39)
+end
+end
+if alt>0 and onground then
+onground=nil
+sfx(42,-2)
+end
+if tile==1 then
+if prev_tile!=1 then
+make_msg("immediately leave this zone!\nyour license will be revoked")
+sfx(45)
+end
+elseif prev_tile==1 then
+sfx(45,-2)
+end
+prev_tile=tile
+timer+=1/30
+end,
+draw=function()
+if menu==0 then
+ai[1][2]=72+pitch
+ai[2][2]=72+pitch
+ai[3][2]=-80+pitch
+ai[4][2]=222+pitch
+local ax,ay=rotatepoint(ai[1],aic,-bank)
+local bx,by=rotatepoint(ai[2],aic,-bank)
+local cx,cy=rotatepoint(ai[3],aic,-bank)
+local dx,dy=rotatepoint(ai[4],aic,-bank)
+clip(10,36,118,96)
+trifill(ax,ay,bx,by,cx,cy,12)
+trifill(ax,ay,bx,by,dx,dy,4)
+line(ax,ay,bx,by,7)
+clip(35,44,55,43)
+for j=0,15 do
+local tmp=aipitch[2]-j*aistep+pitch
+local x1,y1=rotatepoint({aipitch[1],tmp},aic,-bank)
+local x2,y2=rotatepoint({aipitch[1]+aiwidth,tmp},aic,-bank)
+if(j!=7) line(x1,y1,x2,y2,7)
+end
+warn(-8)
+warn(110)
+clip()
+rectfillt(21,50,33,90)
+rectfillt(95,50,111,90)
+line(48,75,aic[1],aic[2],10)
+line(80,75,aic[1],aic[2])
+line(40,71,45,71)
+line(83,71,88,71)
+exec(world.lcockpit)
+circfillt(64,111,15.5)
+circ(64,111,8,7)
+spr(19,62,95)
+for _,l in pairs(nesw) do
+local x,y=rotatepoint(l,hsic,-heading)
+spr(l[3],x-1,y-1)
+end
+polyliner(bp,hsic,brg[dto],12)
+crs=db[nav1].angle-heading
+cdii.v[7][1]=cdi+64
+cdii.v[8][1]=cdi+64
+polyliner(cdii,hsic,crs,11)
+spr(33,62,110)
+?flr(brg[dto]+heading)%360,117,37,14
+local drpm=ceil(rpm/10)*10
+color(drpm<=2000 and 7 or 11)
+if drpm>=1000 then
+?sub(drpm,1,2),1,116
+?sub(drpm,3,4),1,122
+else
+?sub(drpm,1,1),5,116
+?sub(drpm,2,3),1,122
+end
+spr(4,1,109-throttle/4.4)
+clip(22,50,32,41)
+local dy,n=ias*3,ias>20 and flr(ias/10) or 2
+for i=n,n+2 do
+local x=i*10>99 and 22 or 26
+?i*10,x,70-(i*30)+dy,6
+line(31,72-(i*30)-15+dy,33,72-(i*30)-15+dy)
+end
+clip()
+rectfill(21,68,33,74,ias>=163 and 8 or 0)
+rectfill(29,65,33,77)
+local y=ias-flr(ias/10)*10
+local y2,y3=ceil(y),(y*7)%7
+if ias>=20 then
+clip(30,65,3,13)
+?y2%10,30,66+y3,7
+?(y2-1)%10,30,72+y3
+?(y2+1)%10,30,60+y3
+clip()
+local z=ias>=99.5 and 22 or 26
+?flr((ias+0.5)/10),z,69
+else
+?'---',22,69,7
+end
+clip(34,50,8,41)
+for _,v in pairs(vspeeds) do
+spr(v.s,34,(ias-v.ias)*3+69)
+end
+clip()
+clip(95,50,16,41)
+local dy,n=alt/5,alt>199 and flr(alt/100) or 2
+for i=n-2,n+2 do
+local x=i<100 and 96 or 92
+?i*100,x,70-(i*20)+dy,6
+line(95,62-(i*20)+dy,97,62-(i*20)+dy,6)
+end
+clip()
+rectfill(95,68,111,74,0)
+rectfill(103,65,111,77)
+local y=alt/10-flr(alt/100)*10
+local y2,y3=ceil(y),(y*7)%7
+clip(104,65,7,13)
+?(y2%10)..0,104,66+y3,7
+?((y2-1)%10)..0,104,72+y3
+?((y2+1)%10)..0,104,60+y3
+clip()
+local z=96
+if alt>=9995 then
+rectfill(91,68,94,74,0)
+z=92
+elseif alt<995 then
+z=100
+end
+if alt>=100 then
+?flr((alt/10+0.5)/10),z,69,7
+end
+local vsoffset=ceil(vs/100)
+vsoffset=mid(vsoffset,-19,21)
+rectfill(115,68-vsoffset,126,74-vsoffset,0)
+spr(23,112,68-vsoffset)
+if vsoffset!=0 then
+?ceil(vs/100),115,69-vsoffset,7
+end
+rectfill(57,88,71,94,0)
+pset(70,89,7)
+local hdg=ceil(heading)%360
+if hdg<10 then print("00"..hdg,58,89,7)
+elseif hdg<100 then print("0"..hdg,58,89,7)
+else
+?hdg,58,89,7
+end
+disptime(timer,108,122)
+?db[nav1].name,29,37,11
+dispdist(dist[dto],89,116,7)
+dispdist(dist[dto],88,37,14)
+?db[dto].name,57,37,14
+?db[dto].name,89,122,12
+rectfill(11,97,33,119,0)
+local latmin,lonmin=lat+67.77, lon-93.75
+function disppoint(p)
+local mapx,mapy=11+22/187.5*(p.lon-lonmin),119-22/187.5*(-p.lat+latmin)
+local rotx,roty=rotatepoint({mapx,mapy},mapc,360-heading)
+return {rotx,roty}
+end
+for l in all(db) do
+local p=disppoint(l)
+if(checkonmap(p)) pset(p[1]+0.5,p[2],mapclr[l.type])
+end
+spr(33,20,110)
+if dist[nav1]<15 and alt<9995 then
+rectfillt(91,58,93,84)
+exec(world.gs)
+spr(38,91,gsy+8)
+end
+spr(flps==1 and 46 or 14,0,64,1,2)
+local s
+if onground then
+s=127
+elseif relwind>=0 and relwind<90 then
+s=78
+elseif relwind<=0 and relwind>-90 then
+s=79
+elseif relwind>=90 and relwind<180 then
+s=94
+elseif relwind<=-90 and relwind>-180 then
+s=95
+end
+spr(s,40,95)
+elseif menu==2 then
+drawmap(lat,lon,heading)
+exec(world.rcockpit)
+?db[dto].name,17,37,14
+color(14)
+disptime(flr(dist[dto]/groundspeed*3600),94,37)
+?groundspeed,54,37
+end
+end
+}
+end
 function unusual()
-  local sign=rnd()<0.5 and 1 or -1
-  return (80-rnd(15))*sign,-45
+local sign=rnd()<0.5 and 1 or -1
+return (80-rnd(15))*sign,-45
 end
-
 function checkonmap(p)
-  return p[1]>11 and p[1]<33 and p[2]>97 and p[2]<120
+return p[1]>11 and p[1]<33 and p[2]>97 and p[2]<120
 end
-
--- draw a rotated poly line
 function polyliner(m,c,angle,col)
-  color(col)
-  -- edge pairs
-  for _,l in pairs(m.e) do
-    local x1,y1=rotatepoint(m.v[l[1]],c,angle)
-    local x2,y2=rotatepoint(m.v[l[2]],c,angle)
-    line(x1,y1,x2,y2)
-  end
+color(col)
+for _,l in pairs(m.e) do
+local x1,y1=rotatepoint(m.v[l[1]],c,angle)
+local x2,y2=rotatepoint(m.v[l[2]],c,angle)
+line(x1,y1,x2,y2)
 end
-
+end
 function rotatepoint(p,c,angle)
-  local x,y=p[1]-c[1],p[2]-c[2]
-  local cs,ss=cos(angle/360),sin(angle/360)
-  return x*cs+y*ss+c[1],-x*ss+y*cs+c[2]
+local x,y=p[1]-c[1],p[2]-c[2]
+local cs,ss=cos(angle/360),sin(angle/360)
+return x*cs+y*ss+c[1],-x*ss+y*cs+c[2]
 end
-
 function dispdist(d,x,y,c)
-  if d<10 then
-    ?flr(d*10)/10,x,y,c
-  else
-    ?flr(d),x,y,c
-  end
+if d<10 then
+?flr(d*10)/10,x,y,c
+else
+?flr(d),x,y,c
 end
-
+end
 function disptime(t,x,y)
- local minutes=flr(t/60)
- local seconds=flr(t-minutes*60)
- if(minutes<10) minutes="0"..minutes
- if(seconds<10) seconds="0"..seconds
- ?minutes..":"..seconds,x,y
+local minutes=flr(t/60)
+local seconds=flr(t-minutes*60)
+if(minutes<10) minutes="0"..minutes
+if(seconds<10) seconds="0"..seconds
+?minutes..":"..seconds,x,y
 end
-
 local message,message_t
 function make_msg(msg,t)
-  if(t==nil) t=60
-  message,message_t=msg,t
+if(t==nil) t=60
+message,message_t=msg,t
 end
 function dispmessage()
-  -- update & draw
-  if message then
-    message_t-=1
-    if(message_t<0) message=nil sim.crashed=nil return
-
-    local c = message_t%16<8 and 7 or 9
-    rectfill(0,9,127,15,5)
-    if(#message>20) rectfill(0,15,127,21,5)
-		  ?message,10,10,c
-	 end
+if message then
+message_t-=1
+if(message_t<0) message=nil sim.crashed=nil return
+local c = message_t%16<8 and 7 or 9
+rectfill(0,9,127,15,5)
+if(#message>20) rectfill(0,15,127,21,5)
+?message,10,10,c
 end
-
+end
 function drawmenu()
-  local c = frame%16<8 and 7 or 9
-
-  exec(world.intro)
-  -- cannot be put in json :[
-		?"\82\69\65\68 \66\69\70\79\82\69 \70\76\73\71\72\84",25,71,7
-			
-  ?"flight:",8,37,item==0 and c or 7
- 	?"weather:",8,47,item==1 and c or 7
-  ?scenarios[scen].name,44,37,7
-  ?wx[wnd].name,44,47
-
-		local t=4*t()%80
-  ?sub("   ★credits★    engine: @yellowbaron - 3d: @freds72 - ♪: steve miller band               ",t,t+12),64-32,120,9
+local c = frame%16<8 and 7 or 9
+exec(world.intro)
+?"\82\69\65\68 \66\69\70\79\82\69 \70\76\73\71\72\84",25,71,7
+?"flight:",8,37,item==0 and c or 7
+?"weather:",8,47,item==1 and c or 7
+?scenarios[scen].name,44,37,7
+?wx[wnd].name,44,47
+local t=4*t()%80
+?sub("   ★credits★    engine: @yellowbaron - 3d: @freds72 - ♪: steve miller band               ",t,t+12),64-32,120,9
 end
-
 function drawmap(lat,lon,hdg)
- local dx,dy=scalemap(lon,lat)
- -- 58/87 are screen center coords for moving map
- clip(0,43,118,85)
- camera(-58+dx,-87+dy)
- map(34,0,-33,-128,47,31)
-
- for _,l in pairs(db) do
-  local name,angle,x,y=l.name,l.angle,scalemap(l.lon,l.lat)
-  x-=3 --correct for sprite size
-  y-=3
-  -- helper function (save tokens)
-  function draw_ils(a,txt)
-   local _x,_y=sin(a),cos(a)
-   line(x+3,y+3,50*_x+x+3,50*_y+y+3,11)
-   ?txt,62*_x+x+2,62*_y+y+3,7
-  end
-  if l.type=="vor" then
-   spr(39,x,y)
-   ?name,x+9,y+1,7
-  elseif l.type=="ils" then
-   draw_ils((angle-3)/360,"")
-   draw_ils((angle+3)/360,name)
-  elseif l.type=="apt" then
-   if angle>=0 and angle<23 then spr(22,x,y)
-   elseif angle>22 and angle<68 then spr(55,x,y)
-   elseif angle>67 and angle<103 then spr(54,x,y)
-   elseif angle>102 and angle<148 then spr(55,x-1,y,1,1,true)
-   else spr(22,x,y) end
-   ?name,x+9,y+1,7
-  elseif name then
-   -- any db item with a name
-   spr(17,x,y)
-   ?name,x-4*#name,y+1,5
-  end
- end
- ?"tiny\nbay",265,-1,1
- camera()
-
- -- rotated plane
- polyliner(apsymbol,{58,87},hdg,7)
+local dx,dy=scalemap(lon,lat)
+clip(0,43,118,85)
+camera(-58+dx,-87+dy)
+map(34,0,-33,-128,47,31)
+for _,l in pairs(db) do
+local name,angle,x,y=l.name,l.angle,scalemap(l.lon,l.lat)
+x-=3
+y-=3
+function draw_ils(a,txt)
+local _x,_y=sin(a),cos(a)
+line(x+3,y+3,50*_x+x+3,50*_y+y+3,11)
+?txt,62*_x+x+2,62*_y+y+3,7
 end
-
+if l.type=="vor" then
+spr(39,x,y)
+?name,x+9,y+1,7
+elseif l.type=="ils" then
+draw_ils((angle-3)/360,"")
+draw_ils((angle+3)/360,name)
+elseif l.type=="apt" then
+if angle>=0 and angle<23 then spr(22,x,y)
+elseif angle>22 and angle<68 then spr(55,x,y)
+elseif angle>67 and angle<103 then spr(54,x,y)
+elseif angle>102 and angle<148 then spr(55,x-1,y,1,1,true)
+else spr(22,x,y) end
+?name,x+9,y+1,7
+elseif name then
+spr(17,x,y)
+?name,x-4*#name,y+1,5
+end
+end
+?"tiny\nbay",265,-1,1
+camera()
+polyliner(apsymbol,{58,87},hdg,7)
+end
 function scalemap(_x,_y)
-  -- based on 16nm per 128px
-  -- todo: remove 64/64 centering
-  return 64+_x*0.2133,64+_y*0.2133
+return 64+_x*0.2133,64+_y*0.2133
 end
-
 function drawbriefing()
- 	exec(world.briefing)
-  exec(scenarios[scen].briefing)
- 	?scenarios[scen].name,9,18,1
+exec(world.briefing)
+exec(scenarios[scen].briefing)
+?scenarios[scen].name,9,18,1
 end
-
--- execute the given draw commands from a table
 function exec(cmds)
-  -- call native pico function from list of instructions
-  for i=1,#cmds do
-    local drawcmd=cmds[i]
-    drawcmd.fn(munpack(drawcmd.args))
-  end
+for i=1,#cmds do
+local drawcmd=cmds[i]
+drawcmd.fn(munpack(drawcmd.args))
 end
-
+end
 function _update()
-  frame+=1
-  if menu==1 then --menu
-    if btnp(5) then --x
-      menu=3
-    elseif btnp(3) then --down
-      item+=1
-      item%=2
-      sfx(37)
-    elseif btnp(2) then --up
-      item-=1
-      item%=2
-      sfx(37)
-    elseif btnp(1) then --right
-      if item==0 then
-        scen+=1
-        if(scen==#scenarios+1) scen=1
-        wnd=scenarios[scen].weather
-      elseif item==1 then
-        wnd+=1
-        if(wnd==#wx+1) wnd=1
-      end
-      sfx(37)
-    elseif btnp(0) then --left
-      if item==0 then
-        scen-=1
-        if(scen==0) scen=#scenarios
-        wnd=scenarios[scen].weather
-      elseif item==1 then
-        wnd-=1
-        if(wnd==0) wnd=#wx
-      end
-      sfx(37)
-    end
-  elseif menu==3 then --briefing
-    if btnp(5) then --x
-      menu=0
-      -- stop music when playing
-      music(-1,250)
-
-      -- start game
-      sim=make_sim(scen)
-      -- ugly hack to get everything setup before _draw
-      _update()
-    elseif btnp(4) then -- z
-      _init()
-    end
-  else
-   if sim.crashed then
-    --stop sounds
-    exec(world.stopsfx)
-    -- wait input
-    if(btnp(4)) make_msg() menu=1 music(0)
-   else
-    sim:input() 
-    sim:update()
-   end
-
-	  -- update cam
-	  cam:track(sim:get_pos())
-
-			-- switch l/r cockpit
-   if btnp(4,1) then -- c (p2)
-    menu=menu==0 and 2 or 0
-   	-- offset pilot pos when looking right
-   	pilot_pos[1]=menu==0 and 0 or 0.03
-   end
-  end
- -- pause menu
- menuitem(1, "back to sim menu", function() menu=1 sfx(-1) music(0) end)
+frame+=1
+if menu==1 then
+if btnp(5) then
+menu=3
+elseif btnp(3) then
+item+=1
+item%=2
+sfx(37)
+elseif btnp(2) then
+item-=1
+item%=2
+sfx(37)
+elseif btnp(1) then
+if item==0 then
+scen+=1
+if(scen==#scenarios+1) scen=1
+wnd=scenarios[scen].weather
+elseif item==1 then
+wnd+=1
+if(wnd==#wx+1) wnd=1
 end
-
+sfx(37)
+elseif btnp(0) then
+if item==0 then
+scen-=1
+if(scen==0) scen=#scenarios
+wnd=scenarios[scen].weather
+elseif item==1 then
+wnd-=1
+if(wnd==0) wnd=#wx
+end
+sfx(37)
+end
+elseif menu==3 then
+if btnp(5) then
+menu=0
+music(-1,250)
+sim=make_sim(scen)
+_update()
+elseif btnp(4) then
+_init()
+end
+else
+if sim.crashed then
+exec(world.stopsfx)
+if(btnp(4)) make_msg() menu=1 music(0)
+else
+sim:input()
+sim:update()
+end
+cam:track(sim:get_pos())
+if btnp(4,1) then
+menu=menu==0 and 2 or 0
+pilot_pos[1]=menu==0 and 0 or 0.03
+end
+end
+menuitem(1, "back to sim menu", function() menu=1 sfx(-1) music(0) end)
+end
 function _draw()
-  cls()
-  if menu==1 or menu==3 then
-    cam:track({0,600,1024*t()},make_m_from_euler(0,0,sin(t()/30)/10))
-  	draw_ground(wx[1])
-    if menu==1 then
-       drawmenu()			
-	  else
-	    drawbriefing()
-    end
-	else
- 		-- 3d
- 		local weather=wx[wnd]
-	  draw_ground(weather)
-	  zbuf_draw(weather.horiz)
-  	draw_clouds(weather)
-
-   sim:draw()
-
-   -- perf monitor!
-   --[[
-   local cpu=(flr(1000*stat(1))/10).."%"
-   ?cpu,2,3,2
-   ?cpu,2,2,7
-   ]]
-   
-   end
-  dispmessage()
+cls()
+if menu==1 or menu==3 then
+cam:track({0,600,1024*t()},make_m_from_euler(0,0,sin(t()/30)/10))
+draw_ground(wx[1])
+if menu==1 then
+drawmenu()
+else
+drawbriefing()
 end
-
--->8
--- 3d engine @freds72
-
--- https://github.com/morgan3d/misc/tree/master/p8sort
+else
+local weather=wx[wnd]
+draw_ground(weather)
+zbuf_draw(weather.horiz)
+draw_clouds(weather)
+sim:draw()
+end
+dispmessage()
+end
 function sort(data)
- for num_sorted=1,#data-1 do
-  local new_val=data[num_sorted+1]
-  local new_val_key,i=new_val.key,num_sorted+1
-
-  while i>1 and new_val_key>data[i-1].key do
-   data[i]=data[i-1]
-   i-=1
-  end
-  data[i]=new_val
- end
+for num_sorted=1,#data-1 do
+local new_val=data[num_sorted+1]
+local new_val_key,i=new_val.key,num_sorted+1
+while i>1 and new_val_key>data[i-1].key do
+data[i]=data[i-1]
+i-=1
 end
-
--- light blooms
--- note: cannot be packed into gfx, takes too much space
--- y=0
+data[i]=new_val
+end
+end
 local light_shades={}
 function unpack_ramp(x)
- local shades={}
-  -- brightness pairs
-	for i=0,15 do
-		for j=0,15 do
-			shades[i+16*j]=sget(x,i)+16*sget(x,j)
-	 end
-	end
-	return shades
+local shades={}
+for i=0,15 do
+for j=0,15 do
+shades[i+16*j]=sget(x,i)+16*sget(x,j)
 end
-
+end
+return shades
+end
 for c=0,15 do
- -- set base color for black + dark blue
- local hc=sget(72,c)
- sset(74,0,hc)
- sset(74,1,hc)
-	light_shades[c]=unpack_ramp(74)
+local hc=sget(72,c)
+sset(74,0,hc)
+sset(74,1,hc)
+light_shades[c]=unpack_ramp(74)
 end
-
 local clipplanes=json_parse'[[0,0,1,8],[0.707,0,-0.707,0.1767],[-0.707,0,-0.707,0.1767],[0,0.973,-0.228,0.243],[0,-0.973,-0.228,0.243],[0,0,-1,-0.25]]'
 local clipplanes_simple=json_parse'[[0,0,1,8],[0,0,-1,-0.25]]'
-
--- zbuffer (kind of)
 function zbuf_draw(zfar)
-	local objs={}
-
-	for _,d in pairs(actors) do
-		collect_drawables(d.model,d.m,d.pos,zfar,objs)
-	end
-
-	-- z-sorting
-	sort(objs)
-
- -- actual draw
-	for i=1,#objs do
-		local d=objs[i]
-  if d.kind==3 then
-			project_poly(d.v,d.c)
-	 else
-   circfillt(d.x,d.y,d.r,light_shades[d.c])
-  end
- end
+local objs={}
+for _,d in pairs(actors) do
+collect_drawables(d.model,d.m,d.pos,zfar,objs)
 end
-
+sort(objs)
+for i=1,#objs do
+local d=objs[i]
+if d.kind==3 then
+project_poly(d.v,d.c)
+else
+circfillt(d.x,d.y,d.r,light_shades[d.c])
+end
+end
+end
 function lerp(a,b,t)
-	return a*(1-t)+b*t
+return a*(1-t)+b*t
 end
-
 function make_v(a,b)
-	return {
-		b[1]-a[1],
-		b[2]-a[2],
-		b[3]-a[3]}
+return {
+b[1]-a[1],
+b[2]-a[2],
+b[3]-a[3]}
 end
 function v_clone(v)
-	return {v[1],v[2],v[3]}
+return {v[1],v[2],v[3]}
 end
 function v_dot(a,b)
-	return a[1]*b[1]+a[2]*b[2]+a[3]*b[3]
+return a[1]*b[1]+a[2]*b[2]+a[3]*b[3]
 end
 function v_scale(v,scale)
-	v[1]*=scale
-	v[2]*=scale
-	v[3]*=scale
+v[1]*=scale
+v[2]*=scale
+v[3]*=scale
 end
 function v_add(v,dv,scale)
-	scale=scale or 1
-	v[1]+=scale*dv[1]
-	v[2]+=scale*dv[2]
-	v[3]+=scale*dv[3]
+scale=scale or 1
+v[1]+=scale*dv[1]
+v[2]+=scale*dv[2]
+v[3]+=scale*dv[3]
 end
-
--- matrix functions
 function m_x_v(m,v)
-	local x,y,z=v[1],v[2],v[3]
-	v[1],v[2],v[3]=m[1]*x+m[5]*y+m[9]*z+m[13],m[2]*x+m[6]*y+m[10]*z+m[14],m[3]*x+m[7]*y+m[11]*z+m[15]
+local x,y,z=v[1],v[2],v[3]
+v[1],v[2],v[3]=m[1]*x+m[5]*y+m[9]*z+m[13],m[2]*x+m[6]*y+m[10]*z+m[14],m[3]*x+m[7]*y+m[11]*z+m[15]
 end
-
 function make_m_from_euler(x,y,z)
-		local a,b = cos(x),-sin(x)
-		local c,d = cos(y),-sin(y)
-		local e,f = cos(z),-sin(z)
-  
-    -- yxz order
-  local ce,cf,de,df=c*e,c*f,d*e,d*f
-	 return {
-	  ce+df*b,a*f,cf*b-de,0,
-	  de*b-cf,a*e,df+ce*b,0,
-	  a*d,-b,a*c,0,
-	  0,0,0,1}
+local a,b = cos(x),-sin(x)
+local c,d = cos(y),-sin(y)
+local e,f = cos(z),-sin(z)
+local ce,cf,de,df=c*e,c*f,d*e,d*f
+return {
+ce+df*b,a*f,cf*b-de,0,
+de*b-cf,a*e,df+ce*b,0,
+a*d,-b,a*c,0,
+0,0,0,1}
 end
-
--- only invert 3x3 part
 function m_inv(m)
-	m[2],m[5]=m[5],m[2]
-	m[3],m[9]=m[9],m[3]
-	m[7],m[10]=m[10],m[7]
+m[2],m[5]=m[5],m[2]
+m[3],m[9]=m[9],m[3]
+m[7],m[10]=m[10],m[7]
 end
 function m_set_pos(m,v)
-	m[13],m[14],m[15]=v[1],v[2],v[3]
+m[13],m[14],m[15]=v[1],v[2],v[3]
 end
--- returns up vector from matrix
 function m_up(m)
-	return {m[5],m[6],m[7]}
+return {m[5],m[6],m[7]}
 end
-
 function collect_drawables(model,m,pos,zfar,out)
- -- vertex cache
- local p={}
-
- -- cam pos in object space
- local cam_pos=make_v(pos,cam.pos)
- local x,y,z=cam_pos[1],cam_pos[2],cam_pos[3]
-	cam_pos={m[1]*x+m[2]*y+m[3]*z,m[5]*x+m[6]*y+m[7]*z,m[9]*x+m[10]*y+m[11]*z}
-
- -- select lod
- local safe_pos=v_clone(cam_pos)
- -- todo: using nm?
- v_scale(safe_pos,1/64)
- local d=v_dot(safe_pos,safe_pos)
- 
- -- lod selection
- local lodid=0
- for i=1,#model.lod_dist do
-  --printh(d..">"..model.lod_dist[i])
- 	if(d>model.lod_dist[i]) lodid+=1
- end
-  
- -- not visible?
- if(lodid>=#model.lods) return 
- model=model.lods[lodid+1]
-
- -- reset collision groups
- local groups={}
- for _,f in pairs(model.f) do
-  groups[f.gid]=0
- end
-
- -- model to
- local function v_cache(k)
-  local a=p[k]
-  if not a then
-    a=v_clone(model.v[k])
-    -- relative to world
-    m_x_v(m,a)
-    -- world to cam
-    v_add(a,cam.pos,-1)
-  		m_x_v(cam.m,a)
-
-    -- pilot height (cam space)
-  		v_add(a,pilot_pos,-1)
-	   p[k]=a
-  end
-  return a
- end
-
-	local clips
-	local function set_clips(a)		
-		local az=abs(a[3])
-		-- 5.33 to cover for aspect ratio on y-axis
-		if abs(a[1])>az or abs(5.33*a[2])>az then
-			-- full clipping
-			clips=clipplanes
-	 end
-	end
-
-  -- faces
-	for i=1,#model.f do
-	  local f,n=model.f[i],model.n[i]
-   -- front facing?
-   if v_dot(n,cam_pos)>model.cp[i] then
-	   -- reset clip planes
-		  clips=clipplanes_simple
-    -- face vertices (for clipping)
-    local z,vertices=0,{}
-    -- project vertices
-    for k=1,#f.vi do
- 			 local a=v_cache(f.vi[k])
-     z+=a[3]
-     -- select clip planes
-     set_clips(a)
- 		  vertices[#vertices+1]=a
-    end
-    if f.c!=15 then -- collision hull?
-	    vertices=plane_clip(zfar,clips,vertices)
- 	  	if(#vertices>2) add(out,{key=-64*#f.vi/z,v=vertices,c=f.c,kind=3})
-  	end
-   else
-    groups[f.gid]+=1
-   end
-	 end
-
-  -- collision check
- 	for k,v in pairs(model.groups) do
-			if v==groups[k] then
-    make_msg("crash: collision with obstacle\n❎: exit to menu", 300)
-    -- not already crashed?
-    if(not sim.crashed) sfx(39)
-    sim.crashed=true
-   	break
-   end
- 	end
-
- -- edges
- -- viz distance
- local wfar=zfar and 120/zfar or 0
- for j=1,#model.e do
-		local e=model.e[j]
-  -- edges indices
-  local c=e.c or model.c
-  -- edge positions
-  local a,b=v_cache(e[1]),v_cache(e[2])
-
-  -- reset clip planes
-  clips=clipplanes_simple
-
-  if e.kind==1 or e.kind==4 then -- papi light?
-   local x0,y0,w0=cam:project2d(a)
-   if w0>wfar then
-    -- papi light
-    if e.kind==1 then
-     local n=v_dot(a,a)-v_dot(a,b)
-     c=n>0 and 7 or c
-    end
-    local r=mid(w0/4,0,3)
-    add(out,{r=r,key=-w0,x=x0,y=y0,c=c})
-    -- hightlight
-    add(out,{r=r/2,key=-w0,x=x0,y=y0,c=c})
-   end
-  else
-
-   -- select clip planes
-   set_clips(a)
-   set_clips(b)
-			  
-		 a[4],b[4]=0,e.n or 0
-   local v=plane_clip(zfar,clips,{a,b,a})
-   a,b=v[1],v[2]    
-   -- hide light glare at low angle
-   -- dot(cam up, up) --> 0,180 degrees
-   -- *20 --> 0,9 degrees
-   -- todo: explicit 'bloom' figure
-   if a and b then
-    local x0,y0,w0,u0=cam:project2d(a)
-    local x1,y1,w1,u1=cam:project2d(b)
-    if e.kind==0 then
-     local bloom=lerp(24,12,mid(-20*cam.m[7],0,1))
-     lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,e.scale,out)
-    else
-     line(x0,y0,x1,y1,c)
-				end
-  	end
- 	end
-	end
+local p={}
+local cam_pos=make_v(pos,cam.pos)
+local x,y,z=cam_pos[1],cam_pos[2],cam_pos[3]
+cam_pos={m[1]*x+m[2]*y+m[3]*z,m[5]*x+m[6]*y+m[7]*z,m[9]*x+m[10]*y+m[11]*z}
+local safe_pos=v_clone(cam_pos)
+v_scale(safe_pos,1/64)
+local d=v_dot(safe_pos,safe_pos)
+local lodid=0
+for i=1,#model.lod_dist do
+if(d>model.lod_dist[i]) lodid+=1
 end
-
--- sutherland-hodgman clipping
--- n.p is pre-multiplied in n[4]
+if(lodid>=#model.lods) return
+model=model.lods[lodid+1]
+local groups={}
+for _,f in pairs(model.f) do
+groups[f.gid]=0
+end
+local function v_cache(k)
+local a=p[k]
+if not a then
+a=v_clone(model.v[k])
+m_x_v(m,a)
+v_add(a,cam.pos,-1)
+m_x_v(cam.m,a)
+v_add(a,pilot_pos,-1)
+p[k]=a
+end
+return a
+end
+local clips
+local function set_clips(a)
+local az=abs(a[3])
+if abs(a[1])>az or abs(5.33*a[2])>az then
+clips=clipplanes
+end
+end
+for i=1,#model.f do
+local f,n=model.f[i],model.n[i]
+if v_dot(n,cam_pos)>model.cp[i] then
+clips=clipplanes_simple
+local z,vertices=0,{}
+for k=1,#f.vi do
+local a=v_cache(f.vi[k])
+z+=a[3]
+set_clips(a)
+vertices[#vertices+1]=a
+end
+if f.c!=15 then
+vertices=plane_clip(zfar,clips,vertices)
+if(#vertices>2) add(out,{key=-64*#f.vi/z,v=vertices,c=f.c,kind=3})
+end
+else
+groups[f.gid]+=1
+end
+end
+for k,v in pairs(model.groups) do
+if v==groups[k] then
+make_msg("crash: collision with obstacle\n❎: exit to menu", 300)
+if(not sim.crashed) sfx(39)
+sim.crashed=true
+break
+end
+end
+local wfar=zfar and 120/zfar or 0
+for j=1,#model.e do
+local e=model.e[j]
+local c=e.c or model.c
+local a,b=v_cache(e[1]),v_cache(e[2])
+clips=clipplanes_simple
+if e.kind==1 or e.kind==4 then
+local x0,y0,w0=cam:project2d(a)
+if w0>wfar then
+if e.kind==1 then
+local n=v_dot(a,a)-v_dot(a,b)
+c=n>0 and 7 or c
+end
+local r=mid(w0/4,0,3)
+add(out,{r=r,key=-w0,x=x0,y=y0,c=c})
+add(out,{r=r/2,key=-w0,x=x0,y=y0,c=c})
+end
+else
+set_clips(a)
+set_clips(b)
+a[4],b[4]=0,e.n or 0
+local v=plane_clip(zfar,clips,{a,b,a})
+a,b=v[1],v[2]
+if a and b then
+local x0,y0,w0,u0=cam:project2d(a)
+local x1,y1,w1,u1=cam:project2d(b)
+if e.kind==0 then
+local bloom=lerp(24,12,mid(-20*cam.m[7],0,1))
+lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,e.scale,out)
+else
+line(x0,y0,x1,y1,c)
+end
+end
+end
+end
+end
 function plane_clip(zfar,clips,v)
-	for i=zfar and 1 or 2,#clips do
-  if(#v<2) break
-  v=plane_poly_clip(clips[i],v)
- end
-	return v
+for i=zfar and 1 or 2,#clips do
+if(#v<2) break
+v=plane_poly_clip(clips[i],v)
+end
+return v
 end
 function plane_poly_clip(n,v)
-	local dist,allin={},0
-	for i,a in pairs(v) do
-		local d=n[4]-(a[1]*n[1]+a[2]*n[2]+a[3]*n[3])
-		if(d>0) allin+=1
-	 dist[i]=d
-	end
- -- early exit
-	if(allin==#v) return v
- if(allin==0) return {}
-
-	local res={}
-	local v0,d0,v1,d1,t,r=v[#v],dist[#v]
- -- use local closure
- local clip_line=function()
- 	local r,t=make_v(v0,v1),d0/(d0-d1)
- 	v_scale(r,t)
- 	v_add(r,v0)
- 	if(v0[4]) r[4]=lerp(v0[4],v1[4],t)
- 	if(v0[5]) r[5]=lerp(v0[5],v1[5],t)
- 	res[#res+1]=r
- end
-	for i=1,#v do
-		v1,d1=v[i],dist[i]
-		if d1>0 then
-			if(d0<=0) clip_line()
-			res[#res+1]=v1
-		elseif d0>0 then
-   clip_line()
-		end
-		v0,d0=v1,d1
-	end
-	return res
+local dist,allin={},0
+for i,a in pairs(v) do
+local d=n[4]-(a[1]*n[1]+a[2]*n[2]+a[3]*n[3])
+if(d>0) allin+=1
+dist[i]=d
+end
+if(allin==#v) return v
+if(allin==0) return {}
+local res={}
+local v0,d0,v1,d1,t,r=v[#v],dist[#v]
+local clip_line=function()
+local r,t=make_v(v0,v1),d0/(d0-d1)
+v_scale(r,t)
+v_add(r,v0)
+if(v0[4]) r[4]=lerp(v0[4],v1[4],t)
+if(v0[5]) r[5]=lerp(v0[5],v1[5],t)
+res[#res+1]=r
+end
+for i=1,#v do
+v1,d1=v[i],dist[i]
+if d1>0 then
+if(d0<=0) clip_line()
+res[#res+1]=v1
+elseif d0>0 then
+clip_line()
+end
+v0,d0=v1,d1
+end
+return res
 end
 function make_actor(model,p,angle)
-  angle=angle and angle/360 or 0
-	-- instance
-	local a={
-		pos=v_clone(p),
-    model=all_models[model],
-		-- north is up
-		m=make_m_from_euler(0,angle-0.25,0)
-  }
-
-	-- init position
-  m_set_pos(a.m,p)
-	return a
+angle=angle and angle/360 or 0
+local a={
+pos=v_clone(p),
+model=all_models[model],
+m=make_m_from_euler(0,angle-0.25,0)
+}
+m_set_pos(a.m,p)
+return a
 end
-
 function make_cam(x0,y0,focal)
-	local c={
-		pos={0,0,0},
-		track=function(self,pos,m)
-    self.pos=v_clone(pos)
-
-		-- inverse view matrix
-    self.m=m
-    m_inv(self.m)
-	 end,
-		-- project cam-space points into 2d
-    project2d=function(self,v)
-  	  -- view to screen
-  	  local w=focal/v[3]
-  	  return x0+ceil(v[1]*w),y0-ceil(v[2]*w),w,v[4] and v[4]*w,v[5] and v[5]*w
-		end,
-		-- project cam-space points into 2d
-    -- array version
-    project2da=function(self,v)
-  	  -- view to screen
-  	  local w=focal/v[3]
-  	  return {x0+ceil(v[1]*w),y0-ceil(v[2]*w),w,v[4] and v[4]*w,v[5] and v[5]*w}
-		end
-	}
-	return c
+local c={
+pos={0,0,0},
+track=function(self,pos,m)
+self.pos=v_clone(pos)
+self.m=m
+m_inv(self.m)
+end,
+project2d=function(self,v)
+local w=focal/v[3]
+return x0+ceil(v[1]*w),y0-ceil(v[2]*w),w,v[4] and v[4]*w,v[5] and v[5]*w
+end,
+project2da=function(self,v)
+local w=focal/v[3]
+return {x0+ceil(v[1]*w),y0-ceil(v[2]*w),w,v[4] and v[4]*w,v[5] and v[5]*w}
 end
-
+}
+return c
+end
 function draw_clouds(weather)
- if(not weather.ceiling) return
- local cloudy=weather.ceiling/120-cam.pos[2]
- -- plane coords + u/v (32x32 texture)
- local cloudplane={
-		{512,cloudy,512,0,0},
-		{-512,cloudy,512,32,0},
-		{-512,cloudy,-512,32,32},
-		{512,cloudy,-512,0,32}}
- for _,v in pairs(cloudplane) do
-  m_x_v(cam.m,v)
- end
-	for i=1,#clipplanes do
-	 cloudplane=plane_poly_clip(clipplanes[i],cloudplane)
-	end
- tex_src=weather.tex
-	color(cloudy<0 and 5 or 13)
- project_texpoly(cloudplane)
+if(not weather.ceiling) return
+local cloudy=weather.ceiling/120-cam.pos[2]
+local cloudplane={
+{512,cloudy,512,0,0},
+{-512,cloudy,512,32,0},
+{-512,cloudy,-512,32,32},
+{512,cloudy,-512,0,32}}
+for _,v in pairs(cloudplane) do
+m_x_v(cam.m,v)
 end
-
+for i=1,#clipplanes do
+cloudplane=plane_poly_clip(clipplanes[i],cloudplane)
+end
+tex_src=weather.tex
+color(cloudy<0 and 5 or 13)
+project_texpoly(cloudplane)
+end
 function draw_ground(weather)
-	local horiz=weather.horiz
-  -- update far clip plane=horizon limit
-  clipplanes[1][4]=horiz
-	-- draw horizon
-	local zfar=horiz and -horiz or -128
-	local farplane={
-			{-zfar,zfar,zfar},
-			{-zfar,-zfar,zfar},
-			{zfar,-zfar,zfar},
-			{zfar,zfar,zfar}}
-	-- cam up in world space
-	local n=m_up(cam.m)
-
- local sky_gradient,y0=weather.sky_gradient,cam.pos[2]
-
-	-- ground dots
-	local scale=3*max(ceil(y0/32),1)
-	scale*=scale
-	local x0,z0=cam.pos[1],cam.pos[3]
-	local dx,dy=x0%scale,z0%scale
-
- color(1)
-	for i=-4,4 do
-		local ii=scale*i-dx+x0
-		for j=-4,4 do
-			local v={ii,0,scale*j-dy+z0}
-			v_add(v,cam.pos,-1)
-      m_x_v(cam.m,v)
-      v_add(v,pilot_pos,-1)
-      local x,y,w=cam:project2d(v)
-			if w>0 then
-				pset(x,y)
-			end
-  end
-	end
-
- -- start alt.,color,pattern
-	for i=1,#sky_gradient,3 do
-		-- ground location in cam space
-  -- offset by sky layer ceiling
-		-- or infinite (h=0) for clear sky
-		local p={0,-sky_gradient[i]/120,0}
-		if(horiz) p[2]+=y0
-		m_x_v(cam.m,p)
-		n[4]=v_dot(p,n)
-		farplane=plane_poly_clip(n,farplane)
-		fillp(sky_gradient[i+2])
-  -- display
-		project_poly(farplane,sky_gradient[i+1])
-	end
- fillp()
-
- -- stars (clear ceiling only)
- if not weather.ceiling then
-  -- stars
-  for _,v in pairs(stars) do
-    v=v_clone(v)
-    m_x_v(cam.m,v)
-    local x,y,w=cam:project2d(v)
-    if(w>0) pset(x,y,6)
-  end
- end
+local horiz=weather.horiz
+clipplanes[1][4]=horiz
+local zfar=horiz and -horiz or -128
+local farplane={
+{-zfar,zfar,zfar},
+{-zfar,-zfar,zfar},
+{zfar,-zfar,zfar},
+{zfar,zfar,zfar}}
+local n=m_up(cam.m)
+local sky_gradient,y0=weather.sky_gradient,cam.pos[2]
+local scale=3*max(ceil(y0/32),1)
+scale*=scale
+local x0,z0=cam.pos[1],cam.pos[3]
+local dx,dy=x0%scale,z0%scale
+color(1)
+for i=-4,4 do
+local ii=scale*i-dx+x0
+for j=-4,4 do
+local v={ii,0,scale*j-dy+z0}
+v_add(v,cam.pos,-1)
+m_x_v(cam.m,v)
+v_add(v,pilot_pos,-1)
+local x,y,w=cam:project2d(v)
+if w>0 then
+pset(x,y)
 end
-
+end
+end
+for i=1,#sky_gradient,3 do
+local p={0,-sky_gradient[i]/120,0}
+if(horiz) p[2]+=y0
+m_x_v(cam.m,p)
+n[4]=v_dot(p,n)
+farplane=plane_poly_clip(n,farplane)
+fillp(sky_gradient[i+2])
+project_poly(farplane,sky_gradient[i+1])
+end
+fillp()
+if not weather.ceiling then
+for _,v in pairs(stars) do
+v=v_clone(v)
+m_x_v(cam.m,v)
+local x,y,w=cam:project2d(v)
+if(w>0) pset(x,y,6)
+end
+end
+end
 function project_poly(p,c)
-	if #p>2 then
-		local x0,y0=cam:project2d(p[1])
-    local x1,y1=cam:project2d(p[2])
-		for i=3,#p do
-			local x2,y2=cam:project2d(p[i])
-			trifill(x0,y0,x1,y1,x2,y2,c)
-		  x1,y1=x2,y2
-		end
-	end
+if #p>2 then
+local x0,y0=cam:project2d(p[1])
+local x1,y1=cam:project2d(p[2])
+for i=3,#p do
+local x2,y2=cam:project2d(p[i])
+trifill(x0,y0,x1,y1,x2,y2,c)
+x1,y1=x2,y2
 end
-
+end
+end
 function project_texpoly(p)
-	if #p>2 then
-		local p0,p1=cam:project2da(p[1]),cam:project2da(p[2])
-		for i=3,#p do
-			local p2=cam:project2da(p[i])
-			tritex(p0,p1,p2)
-			p1=p2
-		end
-	end
+if #p>2 then
+local p0,p1=cam:project2da(p[1]),cam:project2da(p[2])
+for i=3,#p do
+local p2=cam:project2da(p[i])
+tritex(p0,p1,p2)
+p1=p2
 end
-
--- draw a light line
+end
+end
 function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,scale,out)
-
- -- get color ramp from weather
- local ramp=wx[wnd].light_ramp or 64
- scale*=(wx[wnd].light_scale or 0.5)
-
- local w,h=abs(x1-x0),abs(y1-y0)
-
- local prevu,du,dw=-1
- -- inner loop function
- local light=function(x,y,u)
-  if prevu and prevu!=u then
-			local col=sget(ramp+3*mid(scale*w0-u%2,0,1),c)
-   if col!=0 then
-    pset(x,y,col)
-   	-- avoid too many lights!
-   	if bloom and w0>bloom then
-		 		circfillt(x,y,min(3,24/w0),light_shades[c])
-   	end
-  	end
-  end
-  u0+=du
-  w0+=dw
-  prevu=u
- end
-
- if h>w then
-  -- order points on y
-  if(y0>y1) x0,y0,x1,y1,u0,u1,w0,w1=x1,y1,x0,y0,u1,u0,w1,w0
-  w,h=x1-x0,y1-y0
-	 du,dw=(u1-u0)/h,(w1-w0)/h
-
-  -- y-major
-  -- u0*=w0
-	 if y0<0 then
-		 local t=-y0/h
-		 -- todo: unroll lerp
-	  x0,y0,u0,w0=x0+w*t,0,lerp(u0,u1,t),lerp(w0,w1,t)
-	  prevu=nil
-  end
-
-  for y=y0,min(y1,40) do
-		 light(x0,y,flr(u0/w0))
-   x0+=w/h
-  end
- else
-   -- x-major
-	  if(x0>x1) x0,y0,x1,y1,u0,u1,w0,w1=x1,y1,x0,y0,u1,u0,w1,w0
-	  w,h=x1-x0,y1-y0
-	  du,dw=(u1-u0)/w,(w1-w0)/w
-
-	  --u0*=w0
-	  if x0<0 then
-	    local t=-x0/w
-	    -- u is not linear
-	    -- u*w is
-	    x0,y0,u0,w0=0,y0+h*t,lerp(u0,u1,t),lerp(w0,w1,t)
-	    prevu=nil
-	  end
-
-   for x=x0,min(x1,127) do
-				light(x,y0,flr(u0/w0))
-		  y0+=h/w
-	  end
-	end
+local ramp=wx[wnd].light_ramp or 64
+scale*=(wx[wnd].light_scale or 0.5)
+local w,h=abs(x1-x0),abs(y1-y0)
+local prevu,du,dw=-1
+local light=function(x,y,u)
+if prevu and prevu!=u then
+local col=sget(ramp+3*mid(scale*w0-u%2,0,1),c)
+if col!=0 then
+pset(x,y,col)
+if bloom and w0>bloom then
+circfillt(x,y,min(3,24/w0),light_shades[c])
 end
-
--->8
--- trifill
--- by @p01
+end
+end
+u0+=du
+w0+=dw
+prevu=u
+end
+if h>w then
+if(y0>y1) x0,y0,x1,y1,u0,u1,w0,w1=x1,y1,x0,y0,u1,u0,w1,w0
+w,h=x1-x0,y1-y0
+du,dw=(u1-u0)/h,(w1-w0)/h
+if y0<0 then
+local t=-y0/h
+x0,y0,u0,w0=x0+w*t,0,lerp(u0,u1,t),lerp(w0,w1,t)
+prevu=nil
+end
+for y=y0,min(y1,40) do
+light(x0,y,flr(u0/w0))
+x0+=w/h
+end
+else
+if(x0>x1) x0,y0,x1,y1,u0,u1,w0,w1=x1,y1,x0,y0,u1,u0,w1,w0
+w,h=x1-x0,y1-y0
+du,dw=(u1-u0)/w,(w1-w0)/w
+if x0<0 then
+local t=-x0/w
+x0,y0,u0,w0=0,y0+h*t,lerp(u0,u1,t),lerp(w0,w1,t)
+prevu=nil
+end
+for x=x0,min(x1,127) do
+light(x,y0,flr(u0/w0))
+y0+=h/w
+end
+end
+end
 function p01_trapeze_h(l,r,lt,rt,y0,y1)
-  lt,rt=(lt-l)/(y1-y0),(rt-r)/(y1-y0)
-  if(y0<0)l,r,y0=l-y0*lt,r-y0*rt,0
-   for y0=y0,min(y1,128) do
-   rectfill(l,y0,r,y0)
-   l+=lt
-   r+=rt
-  end
+lt,rt=(lt-l)/(y1-y0),(rt-r)/(y1-y0)
+if(y0<0)l,r,y0=l-y0*lt,r-y0*rt,0
+for y0=y0,min(y1,128) do
+rectfill(l,y0,r,y0)
+l+=lt
+r+=rt
+end
 end
 function p01_trapeze_w(t,b,tt,bt,x0,x1)
- tt,bt=(tt-t)/(x1-x0),(bt-b)/(x1-x0)
- if(x0<0)t,b,x0=t-x0*tt,b-x0*bt,0
- for x0=x0,min(x1,128) do
-  rectfill(x0,t,x0,b)
-  t+=tt
-  b+=bt
- end
+tt,bt=(tt-t)/(x1-x0),(bt-b)/(x1-x0)
+if(x0<0)t,b,x0=t-x0*tt,b-x0*bt,0
+for x0=x0,min(x1,128) do
+rectfill(x0,t,x0,b)
+t+=tt
+b+=bt
 end
-
+end
 function trifill(x0,y0,x1,y1,x2,y2,col)
- color(col)
- if(y1<y0)x0,x1,y0,y1=x1,x0,y1,y0
- if(y2<y0)x0,x2,y0,y2=x2,x0,y2,y0
- if(y2<y1)x1,x2,y1,y2=x2,x1,y2,y1
- if max(x2,max(x1,x0))-min(x2,min(x1,x0)) > y2-y0 then
-  col=x0+(x2-x0)/(y2-y0)*(y1-y0)
-  p01_trapeze_h(x0,x0,x1,col,y0,y1)
-  p01_trapeze_h(x1,col,x2,x2,y1,y2)
- else
-  if(x1<x0)x0,x1,y0,y1=x1,x0,y1,y0
-  if(x2<x0)x0,x2,y0,y2=x2,x0,y2,y0
-  if(x2<x1)x1,x2,y1,y2=x2,x1,y2,y1
-  col=y0+(y2-y0)/(x2-x0)*(x1-x0)
-  p01_trapeze_w(y0,y0,y1,col,x0,x1)
-  p01_trapeze_w(y1,col,y2,y2,x1,x2)
- end
+color(col)
+if(y1<y0)x0,x1,y0,y1=x1,x0,y1,y0
+if(y2<y0)x0,x2,y0,y2=x2,x0,y2,y0
+if(y2<y1)x1,x2,y1,y2=x2,x1,y2,y1
+if max(x2,max(x1,x0))-min(x2,min(x1,x0)) > y2-y0 then
+col=x0+(x2-x0)/(y2-y0)*(y1-y0)
+p01_trapeze_h(x0,x0,x1,col,y0,y1)
+p01_trapeze_h(x1,col,x2,x2,y1,y2)
+else
+if(x1<x0)x0,x1,y0,y1=x1,x0,y1,y0
+if(x2<x0)x0,x2,y0,y2=x2,x0,y2,y0
+if(x2<x1)x1,x2,y1,y2=x2,x1,y2,y1
+col=y0+(y2-y0)/(x2-x0)*(x1-x0)
+p01_trapeze_w(y0,y0,y1,col,x0,x1)
+p01_trapeze_w(y1,col,y2,y2,x1,x2)
 end
-
--->8
--- transparent drawing functions
-
--- init transparent colors
+end
 local shades=unpack_ramp(79)
-
 function rectfillt(x0,y0,x1,y1)
-	x0,x1=max(flr(x0)),min(flr(x1),127)
-
-	for j=max(y0),min(y1,127) do
-		linet(x0,j,x1,shades)
- end
+x0,x1=max(flr(x0)),min(flr(x1),127)
+for j=max(y0),min(y1,127) do
+linet(x0,j,x1,shades)
+end
 end
 function circfillt(x0,y0,r,ramp)
- if(r==0) return
- x0,y0=flr(x0),flr(y0)
- local x,y=flr(r),0
- local d=1-x
-
-	-- default ramp or provided?
-	ramp=ramp or shades
-
- while x>=y do
-		linet(x0-x,y0+y,x0+x,ramp)
-		if y!=0 then
-			linet(x0-x,y0-y,x0+x,ramp)
-		end
-		y+=1
-
-		if(d<0) then
-			d+=shl(y,1)+1
-		else
-			if x>=y then
-				linet(x0-y+1,y0+x,x0+y-1,ramp)
-				linet(x0-y+1,y0-x,x0+y-1,ramp)
-			end
-			x-=1
-			d+=shl(y-x+1,1)
-		end
- end
+if(r==0) return
+x0,y0=flr(x0),flr(y0)
+local x,y=flr(r),0
+local d=1-x
+ramp=ramp or shades
+while x>=y do
+linet(x0-x,y0+y,x0+x,ramp)
+if y!=0 then
+linet(x0-x,y0-y,x0+x,ramp)
 end
-
+y+=1
+if(d<0) then
+d+=shl(y,1)+1
+else
+if x>=y then
+linet(x0-y+1,y0+x,x0+y-1,ramp)
+linet(x0-y+1,y0-x,x0+y-1,ramp)
+end
+x-=1
+d+=shl(y-x+1,1)
+end
+end
+end
 function linet(x0,y0,x1,ramp)
- if(band(y0,0xff80)!=0) return
- if(x0>127 or x1<0) return
- x0,x1=mid(x0,0,127),mid(x1,0,127)
-
- if band(x0,0x1)==1 then
- 	pset(x0,y0,ramp[pget(x0,y0)])
- 	-- move to even boundary
- 	x0+=1
- end
- if x1%2==0 then
- 	pset(x1,y0,ramp[pget(x1,y0)])
- 	-- move to odd boundary
- 	x1-=1
- end
-
-	local mem=0x6000+shl(y0,6)+shr(x0,1)
-	for i=1,shr(x1-x0+1,1) do
-		poke(mem,ramp[peek(mem)])
-	 mem+=1
-	end
+if(band(y0,0xff80)!=0) return
+if(x0>127 or x1<0) return
+x0,x1=mid(x0,0,127),mid(x1,0,127)
+if band(x0,0x1)==1 then
+pset(x0,y0,ramp[pget(x0,y0)])
+x0+=1
 end
-
--->8
--- unpack data & models
+if x1%2==0 then
+pset(x1,y0,ramp[pget(x1,y0)])
+x1-=1
+end
+local mem=0x6000+shl(y0,6)+shr(x0,1)
+for i=1,shr(x1-x0+1,1) do
+poke(mem,ramp[peek(mem)])
+mem+=1
+end
+end
 local mem=0x1000
-
--- unpack a list into an argument list
--- trick from: https://gist.github.com/josefnpat/bfe4aaa5bbb44f572cd0
 function munpack(t, from, to)
- local from,to=from or 1,to or #t
- if(from<=to) return t[from], munpack(t, from+1, to)
+local from,to=from or 1,to or #t
+if(from<=to) return t[from], munpack(t, from+1, to)
 end
-
--- w: number of bytes (1 or 2)
 function unpack_int(w)
-  w=w or 1
-	local i=w==1 and peek(mem) or bor(shl(peek(mem),8),peek(mem+1))
-	mem+=w
-	return i
+w=w or 1
+local i=w==1 and peek(mem) or bor(shl(peek(mem),8),peek(mem+1))
+mem+=w
+return i
 end
--- unpack a float from 1 byte
 function unpack_float(scale)
-	local f=shr(unpack_int()-128,5)
-	return f*(scale or 1)
+local f=shr(unpack_int()-128,5)
+return f*(scale or 1)
 end
--- unpack a float from 2 bytes
 function unpack_double(scale)
-	local f=shr(unpack_int(2)-0x4000,4)
-	return f*(scale or 1)
+local f=shr(unpack_int(2)-0x4000,4)
+return f*(scale or 1)
 end
--- unpack an array of bytes
 function unpack_array(fn)
-	for i=1,unpack_int() do
-		fn(i)
-	end
+for i=1,unpack_int() do
+fn(i)
 end
--- valid chars for model names
+end
 local itoa='_0123456789abcdefghijklmnopqrstuvwxyz'
 function unpack_string()
-	local s=""
-	unpack_array(function()
-		local c=unpack_int()
-		s=s..sub(itoa,c,c)
-	end)
-	return s
-end
-
-function unpack_models()
-	-- for all models
-	unpack_array(function()
-  local model,name,scale={lods={},lod_dist={}},unpack_string(),1/unpack_int()
-  
-  unpack_array(function()
-  	add(model.lod_dist,unpack_double())
-  end)
-  
-		-- level of details
-		unpack_array(function()
-   local lod={v={},f={},n={},cp={},e={},groups={}}
-   -- vertices
-   unpack_array(function()
-    add(lod.v,{unpack_double(scale),unpack_double(scale),unpack_double(scale)})
-   end)
-
-   -- faces
-   unpack_array(function(i)
-    local f={ni=i,vi={},c=unpack_int(),gid=unpack_int()}
-    -- vertex indices
-    unpack_array(function()
-     add(f.vi,unpack_int())
-    end)
-    add(lod.f,f)
-    -- collision group
-    if(f.gid>0) lod.groups[f.gid]=1+(lod.groups[f.gid] or 0)
-   end)
-
-   -- normals
-   unpack_array(function()
-    add(lod.n,{unpack_float(),unpack_float(),unpack_float()})
-   end)
-
-   -- n.p cache
-   for i=1,#lod.f do
-    local f=lod.f[i]
-    local cp=v_dot(lod.n[i],lod.v[f.vi[1]])
-    add(lod.cp,cp)
-   end
-
-   -- edges
-   unpack_array(function()
-    local e={
-       -- start
-       unpack_int(),
-       -- end
-       unpack_int(),
-   -- kind
-   -- 0: lightline
-   -- 1: papi light
-       -- 2: regular
-       kind=unpack_int(),
-       -- color
-     c=unpack_int()
-     }
-     -- number of light + light intensity
-     if e.kind==0 then
-       e.n,e.scale=unpack_int(),unpack_float()
-     end
-
-	   add(lod.e,e)
-   end)
-
-  add(model.lods,lod)
-  end)
-		-- index by name
-		all_models[name]=model
-	end)
-end
-
--- unpack stars
+local s=""
 unpack_array(function()
- add(stars,{unpack_float(),unpack_float(),unpack_float()})
+local c=unpack_int()
+s=s..sub(itoa,c,c)
 end)
-
--- unpack models
+return s
+end
+function unpack_models()
+unpack_array(function()
+local model,name,scale={lods={},lod_dist={}},unpack_string(),1/unpack_int()
+unpack_array(function()
+add(model.lod_dist,unpack_double())
+end)
+unpack_array(function()
+local lod={v={},f={},n={},cp={},e={},groups={}}
+unpack_array(function()
+add(lod.v,{unpack_double(scale),unpack_double(scale),unpack_double(scale)})
+end)
+unpack_array(function(i)
+local f={ni=i,vi={},c=unpack_int(),gid=unpack_int()}
+unpack_array(function()
+add(f.vi,unpack_int())
+end)
+add(lod.f,f)
+if(f.gid>0) lod.groups[f.gid]=1+(lod.groups[f.gid] or 0)
+end)
+unpack_array(function()
+add(lod.n,{unpack_float(),unpack_float(),unpack_float()})
+end)
+for i=1,#lod.f do
+local f=lod.f[i]
+local cp=v_dot(lod.n[i],lod.v[f.vi[1]])
+add(lod.cp,cp)
+end
+unpack_array(function()
+local e={
+unpack_int(),
+unpack_int(),
+kind=unpack_int(),
+c=unpack_int()
+}
+if e.kind==0 then
+e.n,e.scale=unpack_int(),unpack_float()
+end
+add(lod.e,e)
+end)
+add(model.lods,lod)
+end)
+all_models[name]=model
+end)
+end
+unpack_array(function()
+add(stars,{unpack_float(),unpack_float(),unpack_float()})
+end)
 unpack_models()
-
--->8
--- textured trifill
--- perspective correct
--- based off @p01 trifill
 function trapezefill(l,dl,r,dr,start,finish)
-	local l,dl={
-		l[1],l[3],l[4],l[5],
-		r[1],r[3],r[4],r[5]},{
-		dl[1],dl[3],dl[4],dl[5],
-		dr[1],dr[3],dr[4],dr[5]}
-	local dt=1/(finish-start)
-	for k,v in pairs(dl) do
-		dl[k]=(v-l[k])*dt
-	end
-
-	-- cliping
-	if start<0 then
-		for k,v in pairs(dl) do
-			l[k]-=start*v
-		end
-		start=0
-	end
-
-  -- cloud texture location + cam pos
-  local mx,my,cx,cz=tex_src.x,tex_src.y,cam.pos[1],cam.pos[3]
-	-- rasterization
-	for j=start,min(finish,30) do
-		local len=l[5]-l[1]
-		if len>0 then
-      local w0,u0,v0=l[2],l[3],l[4]
-      -- render every 4 pixels
-			local dw,du,dv=shl(l[6]-w0,2)/len,shl(l[7]-u0,2)/len,shl(l[8]-v0,2)/len
-   for i=l[1],l[5],4 do
-    local sx,sy=(u0/w0)%32,(v0/w0)%32
-    -- shift u/v map from cam pos+texture repeat
-    local c=sget(mx+band(sx*32-cx,31),my+band(sy*32-cz,31))
-    if c!=0 then
-     fillp(dither_pat[c+1])
-	    rectfill(i-2,j,i+1,j)
-		  end
-			u0+=du
-			v0+=dv
-			w0+=dw
-		 end
-  end
-		for k,v in pairs(dl) do
-			l[k]+=v
-		end
-	end
+local l,dl={
+l[1],l[3],l[4],l[5],
+r[1],r[3],r[4],r[5]},{
+dl[1],dl[3],dl[4],dl[5],
+dr[1],dr[3],dr[4],dr[5]}
+local dt=1/(finish-start)
+for k,v in pairs(dl) do
+dl[k]=(v-l[k])*dt
+end
+if start<0 then
+for k,v in pairs(dl) do
+l[k]-=start*v
+end
+start=0
+end
+local mx,my,cx,cz=tex_src.x,tex_src.y,cam.pos[1],cam.pos[3]
+for j=start,min(finish,30) do
+local len=l[5]-l[1]
+if len>0 then
+local w0,u0,v0=l[2],l[3],l[4]
+local dw,du,dv=shl(l[6]-w0,2)/len,shl(l[7]-u0,2)/len,shl(l[8]-v0,2)/len
+for i=l[1],l[5],4 do
+local sx,sy=(u0/w0)%32,(v0/w0)%32
+local c=sget(mx+band(sx*32-cx,31),my+band(sy*32-cz,31))
+if c!=0 then
+fillp(dither_pat[c+1])
+rectfill(i-2,j,i+1,j)
+end
+u0+=du
+v0+=dv
+w0+=dw
+end
+end
+for k,v in pairs(dl) do
+l[k]+=v
+end
+end
 end
 function tritex(v0,v1,v2)
-	local x0,x1,x2=v0[1],v1[1],v2[1]
-	local y0,y1,y2=v0[2],v1[2],v2[2]
+local x0,x1,x2=v0[1],v1[1],v2[1]
+local y0,y1,y2=v0[2],v1[2],v2[2]
 if(y1<y0)v0,v1,x0,x1,y0,y1=v1,v0,x1,x0,y1,y0
 if(y2<y0)v0,v2,x0,x2,y0,y2=v2,v0,x2,x0,y2,y0
 if(y2<y1)v1,v2,x1,x2,y1,y2=v2,v1,x2,x1,y2,y1
-
-	-- mid point
-	local v02,mt={},1/(y2-y0)*(y1-y0)
-	for k,v in pairs(v0) do
-		v02[k]=v+(v2[k]-v)*mt
-	end
-	if(x1>v02[1])v1,v02=v02,v1
-
-	-- upper trapeze
-	-- x u v
-	trapezefill(v0,v1,v0,v02,y0,y1)
-	-- lower trapeze
-  trapezefill(v1,v2,v02,v2,y1,y2)
-  -- reset fillp
-  fillp()
+local v02,mt={},1/(y2-y0)*(y1-y0)
+for k,v in pairs(v0) do
+v02[k]=v+(v2[k]-v)*mt
 end
-
+if(x1>v02[1])v1,v02=v02,v1
+trapezefill(v0,v1,v0,v02,y0,y1)
+trapezefill(v1,v2,v02,v2,y1,y2)
+fillp()
+end
 __gfx__
 00000000fff7777f49777777777777e25fffffff666666666666666666666666000000000000000056777677ffffffffffffffff666666667777777770ffffff
 00000000ff7fffffffffffffffffffff55ffffff666666666666666666666666001100010100001d77677777fffffffffff66666777777771c66666660ffffff
@@ -1982,7 +1523,6 @@ d656d565444444444444444444444444444444444444444444444444444444444444444444444444
 144444444444444444444444444444444444444444444444444444444444444444444444444444455554200000000d700d7715706d0444444e76cccccccccccc
 000244444444444444444444444444444400044444444444444444444444444444444444444444457d545100000006605001067d70144444444f776ccccccccc
 00024444444000444444444444444444440610004444444444444444444444444444444444444445d544566d10000751776100567044444444444e7776ccccc0
-
 __gff__
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -2076,4 +1616,3 @@ __music__
 00 18191a1b
 00 1c1d1e1f
 02 20212223
-
