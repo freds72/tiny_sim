@@ -443,6 +443,7 @@
         {"fn":"rectfill","args":[5,77,116,107,8]},
         {"fn":"rect","args":[5,77,116,107,2]},
         {"fn":"map","args":[82,0,5,70,15,1]},
+        {"fn":"print","args":["READ BEFORE FLIGHT",25,71,7]},
         {"fn":"print","args":["tiny sim",44,10,7]},
         {"fn":"print","args":["the world's smallest flight sim",2,20,6]},
         {"fn":"print","args":["press ❎ for briefing",8,57,7]},
