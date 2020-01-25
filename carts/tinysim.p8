@@ -444,8 +444,8 @@ function make_sim(s)
         local cx,cy=rotatepoint(ai[3],aic,-bank)
         local dx,dy=rotatepoint(ai[4],aic,-bank)
         clip(10,36,118,96)
-        --trifill(ax,ay,bx,by,cx,cy,12)
-        --trifill(ax,ay,bx,by,dx,dy,4)
+        polyfill({{ax,ay},{bx,by},{cx,cy}},12,function(v) return v[1],v[2] end)
+        polyfill({{ax,ay},{bx,by},{dx,dy}},4,function(v) return v[1],v[2] end)
         line(ax,ay,bx,by,7) --horizon
         clip(35,44,55,43)
         for j=0,15 do
@@ -877,10 +877,12 @@ function _draw()
    sim:draw()
 
    -- perf monitor!
+   --[[
    local cpu=(flr(1000*stat(1))/10).."%"
    ?cpu,2,3,2
    ?cpu,2,2,7
-   
+   ]]
+
    end
   dispmessage()
 end
@@ -1110,10 +1112,8 @@ function collect_drawables(model,m,pos,zfar,out)
  -- viz distance
  local wfar=zfar and 120/zfar or 0
  for _,e in pairs(model.e) do
-  -- edges indices
-  local c=e.c or model.c
-  -- edge positions
-  local a,b=v_cache[e[1]],v_cache[e[2]]
+  -- edge positions + color
+  local a,b,c=v_cache[e[1]],v_cache[e[2]],e.c or model.c
 
   -- reset clip planes
   clips=clipplanes_simple
@@ -1216,8 +1216,8 @@ function make_actor(model,p,angle)
 	return a
 end
 
-function make_cam(x0,y0,focal)
-	local c={
+function make_cam()
+	return {
 		pos={0,0,0},
 		track=function(self,pos,m)
     self.pos=v_clone(pos)
@@ -1225,18 +1225,12 @@ function make_cam(x0,y0,focal)
 		-- inverse view matrix
     self.m=m
     m_inv(self.m)
-	 end,
-		-- project cam-space points into 2d
-    -- array version
-    project2da=function(self,v)
-  	  -- view to screen
-  	  local w=63.5/v[3]
-  	  return {63.5+v[1]*w,14.5-v[2]*w,w,v[4] and v[4]*w,v[5] and v[5]*w}
-		end
-	}
-	return c
+	 end
+  }
 end
 
+-- 3d to 2d projection (inc. u/v if any)
+-- screen center is harcoded to 64/15
 function project2d(v)
   -- view to screen
   local w=63.5/v[3]
@@ -1258,9 +1252,9 @@ function draw_clouds(weather)
 	for i=1,#clipplanes do
 	 cloudplane=plane_poly_clip(clipplanes[i],cloudplane)
 	end
- tex_src=weather.tex
+  tex_src=weather.tex
 	color(cloudy<0 and 5 or 13)
- project_texpoly(cloudplane)
+  polytex(cloudplane)
 end
 
 function draw_ground(weather)
@@ -1360,17 +1354,6 @@ function polyfill(p,c,fn)
   end
 end
 
-function project_texpoly(p)
-	if #p>2 then
-		local p0,p1=cam:project2da(p[1]),cam:project2da(p[2])
-		for i=3,#p do
-			local p2=cam:project2da(p[i])
-			tritex(p0,p1,p2)
-			p1=p2
-		end
-	end
-end
-
 -- draw a light line
 function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,scale,out)
 
@@ -1380,23 +1363,18 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,scale,out)
 
  local w,h=abs(x1-x0),abs(y1-y0)
 
- local prevu,du,dw=-1
+ local prevu,du,dw=flr(u0/w0)
  -- inner loop function
  local light=function(x,y,u)
-  if prevu and prevu!=u then
-			local col=sget(ramp+3*mid(scale*w0-u%2,0,1),c)
-   if col!=0 then
-    pset(x,y,col)
-   	-- avoid too many lights!
-   	if bloom and w0>bloom then
+	  local col=sget(ramp+3*mid(scale*w0-u%2,0,1),c)
+    if col!=0 then
+      pset(x,y,col)
+   	  -- avoid too many lights!
+   	  if bloom and w0>bloom then
 		 		circfillt(x,y,min(3,24/w0),light_shades[c])
-   	end
+   	  end
   	end
   end
-  u0+=du
-  w0+=dw
-  prevu=u
- end
 
  if h>w then
   -- order points on y
@@ -1409,17 +1387,24 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,scale,out)
 	 if y0<0 then
 		 local t=-y0/h
 		 -- todo: unroll lerp
-	  x0,y0,u0,w0=x0+w*t,0,lerp(u0,u1,t),lerp(w0,w1,t)
-	  prevu=nil
+	  x0,y0,u0,w0,prevu=x0+w*t,0,lerp(u0,u1,t),lerp(w0,w1,t)
   end
 
+  -- sub-pix shift
   local cy0,dx=ceil(y0),w/h
-  x0+=(cy0-y0)*dx
-  u0+=(cy0-y0)*du
-  w0+=(cy0-y0)*dw
+  local sy=cy0-y0
+  x0+=sy*dx
+  u0+=sy*du
+  w0+=sy*dw
   for y=cy0,min(ceil(y1)-1,40) do
-		 light(x0,y,flr(u0/w0))
-   x0+=dx
+    local u=flr(u0/w0)
+    if prevu and prevu!=u then
+      light(x0,y,u)
+    end
+    x0+=dx
+    u0+=du
+    w0+=dw
+    prevu=u
   end
  else
    -- x-major
@@ -1432,17 +1417,23 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,scale,out)
 	    local t=-x0/w
 	    -- u is not linear
 	    -- u*w is
-	    x0,y0,u0,w0=0,y0+h*t,lerp(u0,u1,t),lerp(w0,w1,t)
-	    prevu=nil
+	    x0,y0,u0,w0,prevu=0,y0+h*t,lerp(u0,u1,t),lerp(w0,w1,t)
 	  end
 
     local cx0,dy=ceil(x0),h/w
-    y0+=(cx0-x0)*dy
-    u0+=(cx0-x0)*du
-    w0+=(cx0-x0)*dw
+    local sx=cx0-x0
+    y0+=sx*dy
+    u0+=sx*du
+    w0+=sx*dw
     for x=cx0,min(ceil(x1)-1,127) do
-			light(x,y0,flr(u0/w0))
-		  y0+=dy
+      local u=flr(u0/w0)
+      if prevu and prevu!=u then
+			  light(x,y0,u)
+      end
+      y0+=dy
+      u0+=du
+      w0+=dw
+      prevu=u
 	  end
 	end
 end
@@ -1635,75 +1626,72 @@ end)
 unpack_models()
 
 -->8
--- textured trifill
+-- textured polygon renderer
 -- perspective correct
--- based off @p01 trifill
-function trapezefill(l,dl,r,dr,start,finish)
-	local l,dl={
-		l[1],l[3],l[4],l[5],
-		r[1],r[3],r[4],r[5]},{
-		dl[1],dl[3],dl[4],dl[5],
-		dr[1],dr[3],dr[4],dr[5]}
-	local dt=1/(finish-start)
-	for k,v in pairs(dl) do
-		dl[k]=(v-l[k])*dt
-	end
-
-	-- cliping
-	if start<0 then
-		for k,v in pairs(dl) do
-			l[k]-=start*v
-		end
-		start=0
-	end
-
+-- skip 
+function polytex(v)
+  if(#v<2) return
   -- cloud texture location + cam pos
   local mx,my,cx,cz=tex_src.x,tex_src.y,cam.pos[1],cam.pos[3]
-	-- rasterization
-	for j=start,min(finish,30) do
-		local len=l[5]-l[1]
-		if len>0 then
-      local w0,u0,v0=l[2],l[3],l[4]
-      -- render every 4 pixels
-			local dw,du,dv=shl(l[6]-w0,2)/len,shl(l[7]-u0,2)/len,shl(l[8]-v0,2)/len
-   for i=l[1],l[5],4 do
-    local sx,sy=(u0/w0)%32,(v0/w0)%32
-    -- shift u/v map from cam pos+texture repeat
-    local c=sget(mx+band(sx*32-cx,31),my+band(sy*32-cz,31))
-    if c!=0 then
-     fillp(dither_pat[c+1])
-	    rectfill(i-2,j,i+1,j)
-		  end
+
+  local v0,nodes=v[#v],{}
+	local x0,y0,w0,u0,v0=project2d(v0)
+	for i=1,#v do
+		local v1=v[i]
+		local x1,y1,w1,u1,v1=project2d(v1)
+		local _x1,_y1,_u1,_v1,_w1=x1,y1,u1,v1,w1
+		if(y0>y1) x0,y0,x1,y1,w0,w1,u0,v0,u1,v1=x1,y1,x0,y0,w1,w0,u1,v1,u0,v0
+		local dy=y1-y0
+		local dx,dw,du,dv=(x1-x0)/dy,(w1-w0)/dy,(u1-u0)/dy,(v1-v0)/dy
+		if(y0<0) x0-=y0*dx u0-=y0*du v0-=y0*dv w0-=y0*dw y0=0
+		local cy0=ceil(y0)
+		-- sub-pix shift (column)
+		local sy=cy0-y0
+		x0+=sy*dx
+		u0+=sy*du
+		v0+=sy*dv
+		w0+=sy*dw
+		for y=cy0,min(ceil(y1)-1,40) do
+			local x=nodes[y]
+			if x then
+				local a,aw,au,av,b,bw,bu,bv=x[1],x[2],x[3],x[4],x0,w0,u0,v0
+				if(a>b) a,aw,au,av,b,bw,bu,bv=b,bw,bu,bv,a,aw,au,av
+				local dab=b-a
+        local daw,dau,dav=(bw-aw)/dab,(bu-au)/dab,(bv-av)/dab
+        if(a<0) au-=a*dau av-=a*dav aw-=a*daw a=0
+				local ca=ceil(a)
+				-- sub-pix shift (row)
+				local sa=ca-a
+				au+=sa*dau
+				av+=sa*dav
+        aw+=sa*daw
+        -- only even pixels
+        dau*=2
+        dav*=2
+        daw*=2
+				for k=ca,min(ceil(b)-1,127),2 do
+          local sx,sy=(au/aw)%32,(av/aw)%32
+          -- shift u/v map from cam pos+texture repeat
+          local c=sget(mx+band(shl(sx,5)-cx,31),my+band(shl(sy,5)-cz,31))
+          if c!=0 then
+            fillp(dither_pat[c+1])
+            rectfill(k,y,k+3,y)
+          end
+      
+          au+=dau
+					av+=dav
+					aw+=daw
+				end
+			else
+				nodes[y]={x0,w0,u0,v0}
+			end
+			x0+=dx
 			u0+=du
 			v0+=dv
 			w0+=dw
-		 end
-  end
-		for k,v in pairs(dl) do
-			l[k]+=v
 		end
-	end
-end
-function tritex(v0,v1,v2)
-	local x0,x1,x2=v0[1],v1[1],v2[1]
-	local y0,y1,y2=v0[2],v1[2],v2[2]
-if(y1<y0)v0,v1,x0,x1,y0,y1=v1,v0,x1,x0,y1,y0
-if(y2<y0)v0,v2,x0,x2,y0,y2=v2,v0,x2,x0,y2,y0
-if(y2<y1)v1,v2,x1,x2,y1,y2=v2,v1,x2,x1,y2,y1
-
-	-- mid point
-	local v02,mt={},1/(y2-y0)*(y1-y0)
-	for k,v in pairs(v0) do
-		v02[k]=v+(v2[k]-v)*mt
-	end
-	if(x1>v02[1])v1,v02=v02,v1
-
-	-- upper trapeze
-	-- x u v
-	trapezefill(v0,v1,v0,v02,y0,y1)
-	-- lower trapeze
-  trapezefill(v1,v2,v02,v2,y1,y2)
-  -- reset fillp
+		x0,y0,w0,u0,v0=_x1,_y1,_w1,_u1,_v1
+  end
   fillp()
 end
 
