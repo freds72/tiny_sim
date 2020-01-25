@@ -147,7 +147,7 @@ function _init()
 
  -- 3d
  -- viewport: 0,30,127,30
- cam=make_cam(63.5,14.5,63.5)
+ cam=make_cam()
 
  -- reset actors & engine
  actors,sim={}
@@ -444,8 +444,8 @@ function make_sim(s)
         local cx,cy=rotatepoint(ai[3],aic,-bank)
         local dx,dy=rotatepoint(ai[4],aic,-bank)
         clip(10,36,118,96)
-        trifill(ax,ay,bx,by,cx,cy,12)
-        trifill(ax,ay,bx,by,dx,dy,4)
+        --trifill(ax,ay,bx,by,cx,cy,12)
+        --trifill(ax,ay,bx,by,dx,dy,4)
         line(ax,ay,bx,by,7) --horizon
         clip(35,44,55,43)
         for j=0,15 do
@@ -877,11 +877,9 @@ function _draw()
    sim:draw()
 
    -- perf monitor!
-   --[[
    local cpu=(flr(1000*stat(1))/10).."%"
    ?cpu,2,3,2
    ?cpu,2,2,7
-   ]]
    
    end
   dispmessage()
@@ -945,7 +943,7 @@ function zbuf_draw(zfar)
 	for i=1,#objs do
 		local d=objs[i]
   if d.kind==3 then
-			project_poly(d.v,d.c)
+			polyfill(d.v,d.c,project2d)
 	 else
    circfillt(d.x,d.y,d.r,light_shades[d.c])
   end
@@ -1014,10 +1012,24 @@ function m_up(m)
 	return {m[5],m[6],m[7]}
 end
 
-function collect_drawables(model,m,pos,zfar,out)
- -- vertex cache
- local p={}
+ -- model to
+ local v_cache_cls={
+   __index=function(t,k)
+    local a=v_clone(t.v[k])
+    -- relative to world
+    m_x_v(t.mw,a)
+    -- world to cam
+    v_add(a,t.pos,-1)
+  		m_x_v(t.m,a)
 
+    -- pilot height (cam space)
+  		v_add(a,t.offset,-1)
+     t[k]=a
+     return a
+  end
+}
+
+function collect_drawables(model,m,pos,zfar,out)
  -- cam pos in object space
  local cam_pos=make_v(pos,cam.pos)
  local x,y,z=cam_pos[1],cam_pos[2],cam_pos[3]
@@ -1046,24 +1058,6 @@ function collect_drawables(model,m,pos,zfar,out)
   groups[f.gid]=0
  end
 
- -- model to
- local function v_cache(k)
-  local a=p[k]
-  if not a then
-    a=v_clone(model.v[k])
-    -- relative to world
-    m_x_v(m,a)
-    -- world to cam
-    v_add(a,cam.pos,-1)
-  		m_x_v(cam.m,a)
-
-    -- pilot height (cam space)
-  		v_add(a,pilot_pos,-1)
-	   p[k]=a
-  end
-  return a
- end
-
 	local clips
 	local function set_clips(a)		
 		local az=abs(a[3])
@@ -1075,21 +1069,22 @@ function collect_drawables(model,m,pos,zfar,out)
 	end
 
   -- faces
-	for i=1,#model.f do
-	  local f,n=model.f[i],model.n[i]
+  local v_cache=setmetatable({v=model.v,mw=m,m=cam.m,pos=cam.pos,offset=pilot_pos},v_cache_cls)
+
+	for _,f in pairs(model.f) do
    -- front facing?
-   if v_dot(n,cam_pos)>model.cp[i] then
+   if v_dot(f.n,cam_pos)>f.cp then
 	   -- reset clip planes
 		  clips=clipplanes_simple
     -- face vertices (for clipping)
     local z,vertices=0,{}
     -- project vertices
-    for k=1,#f.vi do
- 			 local a=v_cache(f.vi[k])
+    for i,k in pairs(f.vi) do
+ 			 local a=v_cache[k]
      z+=a[3]
      -- select clip planes
      set_clips(a)
- 		  vertices[#vertices+1]=a
+ 		  vertices[i]=a
     end
     if f.c!=15 then -- collision hull?
 	    vertices=plane_clip(zfar,clips,vertices)
@@ -1114,18 +1109,17 @@ function collect_drawables(model,m,pos,zfar,out)
  -- edges
  -- viz distance
  local wfar=zfar and 120/zfar or 0
- for j=1,#model.e do
-		local e=model.e[j]
+ for _,e in pairs(model.e) do
   -- edges indices
   local c=e.c or model.c
   -- edge positions
-  local a,b=v_cache(e[1]),v_cache(e[2])
+  local a,b=v_cache[e[1]],v_cache[e[2]]
 
   -- reset clip planes
   clips=clipplanes_simple
 
   if e.kind==1 or e.kind==4 then -- papi light?
-   local x0,y0,w0=cam:project2d(a)
+   local x0,y0,w0=project2d(a)
    if w0>wfar then
     -- papi light
     if e.kind==1 then
@@ -1151,8 +1145,8 @@ function collect_drawables(model,m,pos,zfar,out)
    -- *20 --> 0,9 degrees
    -- todo: explicit 'bloom' figure
    if a and b then
-    local x0,y0,w0,u0=cam:project2d(a)
-    local x1,y1,w1,u1=cam:project2d(b)
+    local x0,y0,w0,u0=project2d(a)
+    local x1,y1,w1,u1=project2d(b)
     if e.kind==0 then
      local bloom=lerp(24,12,mid(-20*cam.m[7],0,1))
      lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,e.scale,out)
@@ -1187,7 +1181,7 @@ function plane_poly_clip(n,v)
 	local res={}
 	local v0,d0,v1,d1,t,r=v[#v],dist[#v]
  -- use local closure
- local clip_line=function()
+ local function clip_line()
  	local r,t=make_v(v0,v1),d0/(d0-d1)
  	v_scale(r,t)
  	v_add(r,v0)
@@ -1233,20 +1227,20 @@ function make_cam(x0,y0,focal)
     m_inv(self.m)
 	 end,
 		-- project cam-space points into 2d
-    project2d=function(self,v)
-  	  -- view to screen
-  	  local w=focal/v[3]
-  	  return x0+ceil(v[1]*w),y0-ceil(v[2]*w),w,v[4] and v[4]*w,v[5] and v[5]*w
-		end,
-		-- project cam-space points into 2d
     -- array version
     project2da=function(self,v)
   	  -- view to screen
-  	  local w=focal/v[3]
-  	  return {x0+ceil(v[1]*w),y0-ceil(v[2]*w),w,v[4] and v[4]*w,v[5] and v[5]*w}
+  	  local w=63.5/v[3]
+  	  return {63.5+v[1]*w,14.5-v[2]*w,w,v[4] and v[4]*w,v[5] and v[5]*w}
 		end
 	}
 	return c
+end
+
+function project2d(v)
+  -- view to screen
+  local w=63.5/v[3]
+  return 63.5+v[1]*w,14.5-v[2]*w,w,v[4] and v[4]*w,v[5] and v[5]*w
 end
 
 function draw_clouds(weather)
@@ -1299,7 +1293,7 @@ function draw_ground(weather)
 			v_add(v,cam.pos,-1)
       m_x_v(cam.m,v)
       v_add(v,pilot_pos,-1)
-      local x,y,w=cam:project2d(v)
+      local x,y,w=project2d(v)
 			if w>0 then
 				pset(x,y)
 			end
@@ -1318,7 +1312,7 @@ function draw_ground(weather)
 		farplane=plane_poly_clip(n,farplane)
 		fillp(sky_gradient[i+2])
   -- display
-		project_poly(farplane,sky_gradient[i+1])
+		polyfill(farplane,sky_gradient[i+1],project2d)
 	end
  fillp()
 
@@ -1328,22 +1322,42 @@ function draw_ground(weather)
   for _,v in pairs(stars) do
     v=v_clone(v)
     m_x_v(cam.m,v)
-    local x,y,w=cam:project2d(v)
+    local x,y,w=project2d(v)
     if(w>0) pset(x,y,6)
   end
  end
 end
 
-function project_poly(p,c)
-	if #p>2 then
-		local x0,y0=cam:project2d(p[1])
-    local x1,y1=cam:project2d(p[2])
-		for i=3,#p do
-			local x2,y2=cam:project2d(p[i])
-			trifill(x0,y0,x1,y1,x2,y2,c)
-		  x1,y1=x2,y2
-		end
-	end
+function polyfill(p,c,fn)
+  color(c)
+  local p0,nodes=p[#p],{}
+  -- band vs. flr: -0.20%
+  local x0,y0=fn(p0)
+
+  for i=1,#p do
+    local p1=p[i]
+    local x1,y1=fn(p1)
+    -- backup before any swap
+    local _x1,_y1=x1,y1
+    if(y0>y1) x0,y0,x1,y1=x1,y1,x0,y0
+    -- exact slope
+    local dx=(x1-x0)/(y1-y0)
+    if(y0<0) x0-=y0*dx y0=0
+    -- subpixel shifting
+    local cy0,cy1=ceil(y0),ceil(y1)
+    x0+=(cy0-y0)*dx
+    for y=cy0,min(cy1-1,127) do
+      local x=nodes[y]
+      if x then
+        rectfill(x,y,x0,y)
+      else
+        nodes[y]=x0
+      end
+      x0+=dx
+    end
+    -- next vertex
+    x0,y0=_x1,_y1
+  end
 end
 
 function project_texpoly(p)
@@ -1399,9 +1413,13 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,scale,out)
 	  prevu=nil
   end
 
-  for y=y0,min(y1,40) do
+  local cy0,dx=ceil(y0),w/h
+  x0+=(cy0-y0)*dx
+  u0+=(cy0-y0)*du
+  w0+=(cy0-y0)*dw
+  for y=cy0,min(ceil(y1)-1,40) do
 		 light(x0,y,flr(u0/w0))
-   x0+=w/h
+   x0+=dx
   end
  else
    -- x-major
@@ -1418,52 +1436,15 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,scale,out)
 	    prevu=nil
 	  end
 
-   for x=x0,min(x1,127) do
-				light(x,y0,flr(u0/w0))
-		  y0+=h/w
+    local cx0,dy=ceil(x0),h/w
+    y0+=(cx0-x0)*dy
+    u0+=(cx0-x0)*du
+    w0+=(cx0-x0)*dw
+    for x=cx0,min(ceil(x1)-1,127) do
+			light(x,y0,flr(u0/w0))
+		  y0+=dy
 	  end
 	end
-end
-
--->8
--- trifill
--- by @p01
-function p01_trapeze_h(l,r,lt,rt,y0,y1)
-  lt,rt=(lt-l)/(y1-y0),(rt-r)/(y1-y0)
-  if(y0<0)l,r,y0=l-y0*lt,r-y0*rt,0
-   for y0=y0,min(y1,128) do
-   rectfill(l,y0,r,y0)
-   l+=lt
-   r+=rt
-  end
-end
-function p01_trapeze_w(t,b,tt,bt,x0,x1)
- tt,bt=(tt-t)/(x1-x0),(bt-b)/(x1-x0)
- if(x0<0)t,b,x0=t-x0*tt,b-x0*bt,0
- for x0=x0,min(x1,128) do
-  rectfill(x0,t,x0,b)
-  t+=tt
-  b+=bt
- end
-end
-
-function trifill(x0,y0,x1,y1,x2,y2,col)
- color(col)
- if(y1<y0)x0,x1,y0,y1=x1,x0,y1,y0
- if(y2<y0)x0,x2,y0,y2=x2,x0,y2,y0
- if(y2<y1)x1,x2,y1,y2=x2,x1,y2,y1
- if max(x2,max(x1,x0))-min(x2,min(x1,x0)) > y2-y0 then
-  col=x0+(x2-x0)/(y2-y0)*(y1-y0)
-  p01_trapeze_h(x0,x0,x1,col,y0,y1)
-  p01_trapeze_h(x1,col,x2,x2,y1,y2)
- else
-  if(x1<x0)x0,x1,y0,y1=x1,x0,y1,y0
-  if(x2<x0)x0,x2,y0,y2=x2,x0,y2,y0
-  if(x2<x1)x1,x2,y1,y2=x2,x1,y2,y1
-  col=y0+(y2-y0)/(x2-x0)*(x1-x0)
-  p01_trapeze_w(y0,y0,y1,col,x0,x1)
-  p01_trapeze_w(y1,col,y2,y2,x1,x2)
- end
 end
 
 -->8
@@ -1525,9 +1506,8 @@ function linet(x0,y0,x1,ramp)
  end
 
 	local mem=0x6000+shl(y0,6)+shr(x0,1)
-	for i=1,shr(x1-x0+1,1) do
+	for mem=mem,mem+shr(x1-x0+1,1)-1 do
 		poke(mem,ramp[peek(mem)])
-	 mem+=1
 	end
 end
 
@@ -1606,15 +1586,14 @@ function unpack_models()
    end)
 
    -- normals
-   unpack_array(function()
-    add(lod.n,{unpack_float(),unpack_float(),unpack_float()})
+   unpack_array(function(i)
+    lod.f[i].n={unpack_float(),unpack_float(),unpack_float()}
    end)
 
    -- n.p cache
    for i=1,#lod.f do
     local f=lod.f[i]
-    local cp=v_dot(lod.n[i],lod.v[f.vi[1]])
-    add(lod.cp,cp)
+    f.cp=v_dot(f.n,lod.v[f.vi[1]])
    end
 
    -- edges
