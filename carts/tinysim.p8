@@ -129,6 +129,11 @@ local scen,wnd=1,1
 --3d
 -- world axis
 local v_fwd,v_right,v_up={0,0,1},{1,0,0},{0,1,0}
+-- clip planes
+local clipplanes_fullscreen=json_parse'[[0,0,1,8],[0.707,0,-0.707,0.1767],[-0.707,0,-0.707,0.1767],[0,0.707,-0.707,0.1767],[0,-0.707,-0.707,0.1767],[0,0,-1,-0.25]]'
+local clipplanes_cockpit=json_parse'[[0,0,1,8],[0.707,0,-0.707,0.1767],[-0.707,0,-0.707,0.1767],[0,0.973,-0.228,0.243],[0,-0.973,-0.228,0.243],[0,0,-1,-0.25]]'
+local clipplanes_simple=json_parse'[[0,0,1,8],[0,0,-1,-0.25]]'
+local maxy,ycenter,clipplanes=40,14.5,clipplanes_cockpit
 
 -- models & actors
 local all_models,actors,stars,cam={},{},{}
@@ -144,8 +149,9 @@ music(0)
 function _init()
  menu,item=1,0
  scen,wnd=1,1
-
- -- 3d
+ 
+ -- 3d settings
+ maxy,ycenter,clipplanes=40,14.5,clipplanes_cockpit
  -- viewport: 0,30,127,30
  cam=make_cam()
 
@@ -193,10 +199,10 @@ function make_sim(s)
     end
   end
 
-		function next_dto()
-   dto+=1
-   if(dto==#db+1) dto=1
-		end
+	function next_dto()
+    dto+=1
+    if(dto==#db+1) dto=1
+	end
 		
     -- sfx starts at 36
 		-- engine sound
@@ -204,7 +210,79 @@ function make_sim(s)
     -- wind
 		sfx(43)
 
-  return {
+  local function dispspeed(full)
+      -- dispspeed()
+      if full then
+        clip(22,50,32,41)
+        local dy,n=ias*3,ias>20 and flr(ias/10) or 2
+        for i=n,n+2 do
+          local x=i*10>99 and 22 or 26
+          ?i*10,x,70-(i*30)+dy,6
+          line(31,72-(i*30)-15+dy,33,72-(i*30)-15+dy)
+        end
+      end
+      clip()
+      -- red or black
+      rectfill(21,68,33,74,ias>=163 and 8 or 0)
+      rectfill(29,65,33,77)
+      local y=ias-flr(ias/10)*10
+      local y2,y3=ceil(y),(y*7)%7
+      if ias>=20 then
+        clip(30,65,3,13)
+        ?y2%10,30,66+y3,7
+        ?(y2-1)%10,30,72+y3
+        ?(y2+1)%10,30,60+y3
+        clip()
+        local z=ias>=99.5 and 22 or 26
+        -- ensure smooth transition to next ias
+        ?flr((ias+0.5)/10),z,69
+      else
+        -- warn: minify bug
+        ?'---',22,69,7
+      end
+
+      if full then
+        clip(34,50,8,41)
+        for _,v in pairs(vspeeds) do
+          spr(v.s,34,(ias-v.ias)*3+69)
+        end
+        clip()
+      end
+    end
+
+    local function dispalt(full)
+      if full then
+        clip(95,50,16,41)
+        local dy,n=alt/5,alt>199 and flr(alt/100) or 2
+        for i=n-2,n+2 do
+            local x=i<100 and 96 or 92
+            ?i*100,x,70-(i*20)+dy,6
+            line(95,62-(i*20)+dy,97,62-(i*20)+dy,6)
+        end
+      end
+      clip()
+      rectfill(95,68,111,74,0)
+      rectfill(103,65,111,77)
+      local y=alt/10-flr(alt/100)*10
+      local y2,y3=ceil(y),(y*7)%7
+      clip(104,65,7,13)
+      ?(y2%10)..0,104,66+y3,7
+      ?((y2-1)%10)..0,104,72+y3
+      ?((y2+1)%10)..0,104,60+y3
+      clip()
+      local z=96
+      if alt>=9995 then
+        rectfill(91,68,94,74,0)
+        z=92
+      elseif alt<995 then
+        z=100
+      end
+      if alt>=100 then
+       ?flr((alt/10+0.5)/10),z,69,7
+      end
+    end
+
+    return {
     -- pos and orientation
     get_pos=function()
       return {lat,alt/120,lon},make_m_from_euler(-pitch/360,heading/360-0.25,-bank/360)
@@ -264,7 +342,7 @@ function make_sim(s)
       if(abs(bank)>20) pitch-=0.3*abs(sin(bank/360))
       if(abs(bank)>160) pitch-=0.15
 
-						if(bank>180) bank-=360
+			if(bank>180) bank-=360
       if(bank<-180) bank+=360
 						
       -- flaps()
@@ -501,68 +579,9 @@ function make_sim(s)
         end
         spr(4,1,109-throttle/4.4)
 
-        -- dispspeed()
-        clip(22,50,32,41)
-        local dy,n=ias*3,ias>20 and flr(ias/10) or 2
-        for i=n,n+2 do
-          local x=i*10>99 and 22 or 26
-          ?i*10,x,70-(i*30)+dy,6
-          line(31,72-(i*30)-15+dy,33,72-(i*30)-15+dy)
-        end
-        clip()
-        -- red or black
-        rectfill(21,68,33,74,ias>=163 and 8 or 0)
-        rectfill(29,65,33,77)
-        local y=ias-flr(ias/10)*10
-        local y2,y3=ceil(y),(y*7)%7
-        if ias>=20 then
-          clip(30,65,3,13)
-          ?y2%10,30,66+y3,7
-          ?(y2-1)%10,30,72+y3
-          ?(y2+1)%10,30,60+y3
-          clip()
-          local z=ias>=99.5 and 22 or 26
-          -- ensure smooth transition to next ias
-          ?flr((ias+0.5)/10),z,69
-        else
-          -- warn: minify bug
-          ?'===',22,69,7
-        end
+        dispspeed(true)
 
-        clip(34,50,8,41)
-        for _,v in pairs(vspeeds) do
-          spr(v.s,34,(ias-v.ias)*3+69)
-        end
-        clip()
-
-        -- dispalt()
-        clip(95,50,16,41)
-        local dy,n=alt/5,alt>199 and flr(alt/100) or 2
-        for i=n-2,n+2 do
-            local x=i<100 and 96 or 92
-            ?i*100,x,70-(i*20)+dy,6
-            line(95,62-(i*20)+dy,97,62-(i*20)+dy,6)
-        end
-        clip()
-        rectfill(95,68,111,74,0)
-        rectfill(103,65,111,77)
-        local y=alt/10-flr(alt/100)*10
-        local y2,y3=ceil(y),(y*7)%7
-        clip(104,65,7,13)
-        ?(y2%10)..0,104,66+y3,7
-        ?((y2-1)%10)..0,104,72+y3
-        ?((y2+1)%10)..0,104,60+y3
-        clip()
-        local z=96
-        if alt>=9995 then
-          rectfill(91,68,94,74,0)
-          z=92
-        elseif alt<995 then
-          z=100
-        end
-        if alt>=100 then
-         ?flr((alt/10+0.5)/10),z,69,7
-        end
+        dispalt(true)
 
         -- dispvs()
         local vsoffset=ceil(vs/100)
@@ -586,7 +605,7 @@ function make_sim(s)
         -- old: disptime()
         disptime(timer,108,122)
 
-								-- dispnav
+				-- dispnav
         ?db[nav1].name,29,37,11
         dispdist(dist[dto],89,116,7)
         dispdist(dist[dto],88,37,14)
@@ -631,7 +650,7 @@ function make_sim(s)
         elseif relwind<=-90 and relwind>-180 then
           s=95
         end
-							 spr(s,40,95)
+               spr(s,40,95)
       elseif menu==2 then
        drawmap(lat,lon,heading)
 
@@ -641,8 +660,11 @@ function make_sim(s)
        color(14)
        disptime(flr(dist[dto]/groundspeed*3600),94,37)
        ?groundspeed,54,37
-
-      end     
+      elseif menu==10 then
+        -- basic HUD / full screen
+        dispspeed()
+        dispalt()
+      end
     end
   }
 end
@@ -820,7 +842,7 @@ function _update()
       sfx(37)
     end
   elseif menu==3 then --briefing
-    if btnp(5) then --x
+    if btnp(5) then --(x)
       menu=0
       -- stop music when playing
       music(-1,250)
@@ -829,15 +851,15 @@ function _update()
       sim=make_sim(scen)
       -- ugly hack to get everything setup before _draw
       _update()
-    elseif btnp(4) then -- z
+    elseif btnp(4) then -- (o)
       _init()
     end
   else
    if sim.crashed then
     --stop sounds
     exec(world.stopsfx)
-    -- wait input
-    if(btnp(4)) make_msg() menu=1 music(0)
+    -- wait input (x)
+    if(btnp(5)) make_msg() music(0) menu,maxy,ycenter,clipplanes=1,40,14.5,clipplanes_cockpit
    else
     sim:input() 
     sim:update()
@@ -846,11 +868,23 @@ function _update()
 	  -- update cam
 	  cam:track(sim:get_pos())
 
-			-- switch l/r cockpit
-   if btnp(4,1) then -- c (p2)
-    menu=menu==0 and 2 or 0
-   	-- offset pilot pos when looking right
-   	pilot_pos[1]=menu==0 and 0 or 0.03
+    -- not in full screen mode
+   if menu!=10 then
+	  -- switch l/r cockpit
+    if btnp(4,1) then -- c (p2)
+      menu=menu==0 and 2 or 0
+      -- offset pilot pos when looking right
+      pilot_pos[1]=menu==0 and 0 or 0.03
+    end
+   end
+   if btnp(3,1) then
+    -- set up 3d constants
+    if menu==10 then
+      -- back to normal
+      menu,maxy,ycenter,clipplanes=0,40,14.5,clipplanes_cockpit
+    else
+      menu,maxy,ycenter,clipplanes=10,127,64,clipplanes_fullscreen
+    end
    end
   end
  -- pause menu
@@ -926,9 +960,6 @@ for c=0,15 do
  sset(74,1,hc)
 	light_shades[c]=unpack_ramp(74)
 end
-
-local clipplanes=json_parse'[[0,0,1,8],[0.707,0,-0.707,0.1767],[-0.707,0,-0.707,0.1767],[0,0.973,-0.228,0.243],[0,-0.973,-0.228,0.243],[0,0,-1,-0.25]]'
-local clipplanes_simple=json_parse'[[0,0,1,8],[0,0,-1,-0.25]]'
 
 -- zbuffer (kind of)
 function zbuf_draw(zfar)
@@ -1233,8 +1264,8 @@ end
 -- screen center is harcoded to 64/15
 function project2d(v)
   -- view to screen
-  local w=63.5/v[3]
-  return 63.5+v[1]*w,14.5-v[2]*w,w,v[4] and v[4]*w,v[5] and v[5]*w
+  local w=64/v[3]
+  return 64+v[1]*w,ycenter-v[2]*w,w,v[4] and v[4]*w,v[5] and v[5]*w
 end
 
 function draw_clouds(weather)
@@ -1323,6 +1354,7 @@ function draw_ground(weather)
 end
 
 function polyfill(p,c,fn)
+  if(#p<2) return
   color(c)
   local p0,nodes=p[#p],{}
   -- band vs. flr: -0.20%
@@ -1396,7 +1428,7 @@ function lightline(x0,y0,x1,y1,c,u0,w0,u1,w1,bloom,scale,out)
   x0+=sy*dx
   u0+=sy*du
   w0+=sy*dw
-  for y=cy0,min(ceil(y1)-1,40) do
+  for y=cy0,min(ceil(y1)-1,maxy) do
     local u=flr(u0/w0)
     if prevu and prevu!=u then
       light(x0,y,u)
@@ -1651,7 +1683,7 @@ function polytex(v)
 		u0+=sy*du
 		v0+=sy*dv
 		w0+=sy*dw
-		for y=cy0,min(ceil(y1)-1,40) do
+		for y=cy0,min(ceil(y1)-1,maxy) do
 			local x=nodes[y]
 			if x then
 				local a,aw,au,av,b,bw,bu,bv=x[1],x[2],x[3],x[4],x0,w0,u0,v0
