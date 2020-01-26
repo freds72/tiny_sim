@@ -1,5 +1,5 @@
 pico-8 cartridge // http://www.pico-8.com
-version 16
+version 18
 __lua__
 -- tiny sim
 -- @yellowbaron, 3d engine @freds72
@@ -223,13 +223,18 @@ function make_sim(s)
       end
       clip()
       -- red or black
+      if not full then
+        rectfill(20,67,34,75,11)
+        rectfill(28,64,34,78)          
+      end
       rectfill(21,68,33,74,ias>=163 and 8 or 0)
       rectfill(29,65,33,77)
       local y=ias-flr(ias/10)*10
       local y2,y3=ceil(y),(y*7)%7
+      color(full and 7 or 11)
       if ias>=20 then
         clip(30,65,3,13)
-        ?y2%10,30,66+y3,7
+        ?y2%10,30,66+y3
         ?(y2-1)%10,30,72+y3
         ?(y2+1)%10,30,60+y3
         clip()
@@ -238,7 +243,7 @@ function make_sim(s)
         ?flr((ias+0.5)/10),z,69
       else
         -- warn: minify bug
-        ?'---',22,69,7
+        ?'---',22,69
       end
 
       if full then
@@ -261,12 +266,16 @@ function make_sim(s)
         end
       end
       clip()
+      if not full then
+        rectfill(94,67,112,75,11)
+        rectfill(102,64,112,78)
+      end
       rectfill(95,68,111,74,0)
       rectfill(103,65,111,77)
       local y=alt/10-flr(alt/100)*10
       local y2,y3=ceil(y),(y*7)%7
       clip(104,65,7,13)
-      ?(y2%10)..0,104,66+y3,7
+      ?(y2%10)..0,104,66+y3,full and 7 or 11
       ?((y2-1)%10)..0,104,72+y3
       ?((y2+1)%10)..0,104,60+y3
       clip()
@@ -278,7 +287,22 @@ function make_sim(s)
         z=100
       end
       if alt>=100 then
-       ?flr((alt/10+0.5)/10),z,69,7
+       ?flr((alt/10+0.5)/10),z,69,full and 7 or 11
+      end
+    end
+
+    local function dispheading(full)
+      if not full then
+        rectfill(56,87,72,95,11)
+      end
+      rectfill(57,88,71,94,0)
+      color(full and 7 or 11)
+      pset(70,89)
+      local hdg=ceil(heading)%360
+      if hdg<10 then print("00"..hdg,58,89)
+      elseif hdg<100 then print("0"..hdg,58,89)
+      else
+        ?hdg,58,89
       end
     end
 
@@ -592,15 +616,7 @@ function make_sim(s)
          ?ceil(vs/100),115,69-vsoffset,7
         end
 
-        -- dispheading()
-        rectfill(57,88,71,94,0)
-        pset(70,89,7)
-        local hdg=ceil(heading)%360
-        if hdg<10 then print("00"..hdg,58,89,7)
-        elseif hdg<100 then print("0"..hdg,58,89,7)
-        else
-          ?hdg,58,89,7
-        end
+        dispheading(true)
 
         -- old: disptime()
         disptime(timer,108,122)
@@ -661,9 +677,18 @@ function make_sim(s)
        disptime(flr(dist[dto]/groundspeed*3600),94,37)
        ?groundspeed,54,37
       elseif menu==10 then
+        -- artificial horizon line
+        local ax,ay=rotatepoint({20,64+pitch},{64,64},-bank)
+        local bx,by=rotatepoint({110,64+pitch},{64,64},-bank)
+        line(ax,ay,bx,by,11)
+
         -- basic HUD / full screen
         dispspeed()
         dispalt()
+        dispheading()
+        --
+        spr(1,64,64)
+        spr(1,56,64,1,1,true)        
       end
     end
   }
@@ -1728,10 +1753,10 @@ function polytex(v)
 end
 
 __gfx__
-00000000fff7777f49777777777777e25fffffff666666666666666666666666000000000000000056777677ffffffffffffffff666666667777777770ffffff
-00000000ff7fffffffffffffffffffff55ffffff666666666666666666666666001100010100001d77677777fffffffffff66666777777771c66666660ffffff
-00000000f7ffffffff3b77777777d5ff555fffff000000000000000000000000000000002280002e10507677ffffffff6667777755555555cc66666660ffffff
-000000007fffffffffffffffffffffff55ffffff0000077707770777007700770000000053b0003b77077777ffffff667775555511111111c777777760ffffff
+00000000fffbbbbf49777777777777e25fffffff666666666666666666666666000000000000000056777677ffffffffffffffff666666667777777770ffffff
+00000000ffbfffffffffffffffffffff55ffffff666666666666666666666666001100010100001d77677777fffffffffff66666777777771c66666660ffffff
+00000000fbffffffff3b77777777d5ff555fffff000000000000000000000000000000002280002e10507677ffffffff6667777755555555cc66666660ffffff
+00000000bfffffffffffffffffffffff55ffffff0000077707770777007700770000000053b0003b77077777ffffff667775555511111111c777777760ffffff
 00000000ffffffffffff1c7777c1ffff5fffffff000007000070070007000700000000002490004556777677ffff667755511111000000001777777760ffffff
 00000000ffffffffffffffffffffffffffffffff000007700070077007000777000000005560005677677777ffff77551110000000000000c555555560ffffff
 00000000ffffffffffffffffffffffffffffffff000007000070070007070007015600565670006d10507677ffff55110000000000000000c555555560ffffff
