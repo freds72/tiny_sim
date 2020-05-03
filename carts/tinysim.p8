@@ -107,7 +107,7 @@ end
 
 local world=json_parse'{"scenarios":[{"name":"visual approach","args":[-417,326.3,85,600,-1,0,25,112,3,2],"weather":1,"briefing":[{"fn":"print","args":["remain on runway axis. extend the\nflaps and keep speed at 65-70\nknots by using pitch and\nthrottle. at 50 feet, smoothly\nclose throttle and raise the\nnose to gently touch down\nbelow 65 knots.\ntoo easy? add some wind!",8,30,5]}]},{"name":"final approach","args":[-408.89,230.77,85,1000,1,0,75,112,3,2],"weather":2,"briefing":[{"fn":"print","args":["fly heading of approx. 085\nkeep localizer (  ) centered\n(the wind might push you away)\nmaintain 1000 ft\nintercept glide slope ( )\nreduce power and extend flaps\nstart 500 ft/min descent\nkeep localizer centered\nkeep glideslope centered\nat 200 ft reduce power & land",8,30,5]},{"fn":"spr","args":[20,71,36]},{"fn":"spr","args":[38,100,55]}]},{"name":"full approach","args":[-222.22,461.54,313,3000,0,0,91,112,1,2],"weather":3,"briefing":[{"fn":"print","args":["cross pco (  ) on heading 313\nintercept localizer (  )\nturn left heading 265\ndescend to 2000 ft\nturn right heading 310\nfly 1 minute\nturn left heading 130\nintercept localizer\nturn left heading 085\nfly final approach and land",8,30,5]},{"fn":"spr","args":[35,51,29]},{"fn":"spr","args":[20,91,36]}]},{"name":"engine failure!","args":[-422.2,408,85,500,10,0,0,65,3,2],"weather":1,"briefing":[{"fn":"print","args":["you have just taken off\nfrom tinyville for a trip\nto the beach, when the\nengine suddenly quits at\nonly 500 feet! make a steep\nturn back to airport while\nmaintaining best glide\nspeed (65 knots). can you\nmake it back? good luck!",8,30,5]}]},{"name":"unusual attitude","args":[-222.22,461.54,330,450,99,99,100,112,3,2],"weather":1,"briefing":[{"fn":"print","args":["while checking the map you did\nnot pay attention to your\nattitude. when you look up,\nthe airplane is out of control\nat low altitude. oops!\ncan you recover?\nhint: bank first, then pull up",8,30,5]}]},{"name":"free flight","args":[-422.2,384.6,85,0,0,0,0,0,5,2,true],"weather":1,"briefing":[{"fn":"print","args":["you are cleared for take-off\non runway 08 at tinyville.\napply full power and raise\nthe nose at 50-55 knots.\nhave fun!",8,30,5]}]}],"wx":[{"name":"clear, calm","dir":[0,0],"sky_gradient":[0,14,0,360,2,0,1440,1,0]},{"name":"clouds, breezy","dir":[60,10],"ceiling":500,"horiz":56,"sky_gradient":[0,213,-23131,500,5,0],"tex":{"x":0,"y":32},"light_ramp":68,"light_scale":0.125},{"name":"low clouds, stormy","dir":[10,20],"ceiling":200,"horiz":28,"sky_gradient":[0,5,0],"tex":{"x":64,"y":32},"light_ramp":68,"light_scale":0.08}],"db":[{"lat":-251.11,"lon":430.77,"name":"pco","type":"vor","nav":true},{"lat":-422.46,"lon":387.59,"name":"itn","type":"ils","angle":85},{"lat":-422.2,"lon":384.6,"name":"tny","type":"apt","model":"apt","angle":85,"nav":true},{"lat":-244,"lon":268.5,"name":"smallville","model":"cty"},{"lat":-66.67,"lon":153.85,"name":"smv","type":"apt","model":"apt","angle":40,"nav":true},{"lat":-177.78,"lon":246.15,"name":"wee","type":"vor","nav":true},{"lat":-70.17,"lon":531.28,"name":"pti","type":"apt","model":"apt2","angle":170,"nav":true},{"lat":0,"lon":0,"model":"grnd"},{"lat":-169.64,"lon":100.27,"name":"mt. big","model":"mnt_big"},{"lat":-157.76,"lon":402.52,"model":"ship","angle":56},{"lat":-342.95,"lon":575.45,"model":"ship","angle":156},{"lon":544.49,"lat":-107.86,"model":"windt","angle":21},{"lon":550.84,"lat":-105.59,"model":"windt","angle":21},{"lon":556.43,"lat":-103.61,"model":"windt","angle":21},{"lon":116.03,"lat":-409.66,"model":"windt","angle":90},{"lon":114.03,"lat":-408.52,"model":"windt","angle":90},{"lon":116.03,"lat":-406.93,"model":"windt","angle":90}],"vspeeds":[{"ias":55,"s":40},{"ias":60,"s":56},{"ias":65,"s":41},{"ias":79,"s":57}],"hsic":[64,111],"bp":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124]],"e":[[1,2],[1,3],[1,4],[5,6]]},"nesw":[[64,99,52],[52,111,53],[64,123,36],[76,111,37]],"cdii":{"v":[[64,98],[64,102],[62,100],[66,100],[64,120],[64,124],[64,104],[64,118]],"e":[[1,2],[1,3],[1,4],[5,6],[7,8]]},"apsymbol":{"v":[[55,87],[61,87],[58,86],[58,91],[57,91],[59,91]],"e":[[1,2],[3,4],[5,6]]},"lcockpit":[{"fn":"map","args":[0,0,-4,26,17,3]},{"fn":"map","args":[0,3,-4,48,2,11]},{"fn":"spr","args":[18,71,120]},{"fn":"spr","args":[34,79,115]},{"fn":"rectfill","args":[107,121,127,127,0]},{"fn":"rectfill","args":[87,115,100,127,0]},{"fn":"spr","args":[35,79,122]}],"rcockpit":[{"fn":"clip","args":[]},{"fn":"map","args":[17,0,-4,26,27,3]},{"fn":"map","args":[32,3,116,50,2,10]},{"fn":"spr","args":[21,107,120]},{"fn":"spr","args":[42,115,120]},{"fn":"line","args":[4,36,4,42,0]}],"briefing":[{"fn":"map","args":[82,1,0,17,16,10]},{"fn":"print","args":["press ❎ to   fly",8,112,7]},{"fn":"spr","args":[2,54,112]},{"fn":"spr","args":[3,77,112]},{"fn":"print","args":["🅾️: back to menu",8,119,6]}],"intro":[{"fn":"spr","args":[2,34,10]},{"fn":"spr","args":[3,78,10]},{"fn":"rectfill","args":[5,77,116,107,8]},{"fn":"rect","args":[5,77,116,107,2]},{"fn":"map","args":[82,0,5,70,15,1]},{"fn":"print","args":["READ BEFORE FLIGHT",25,71,7]},{"fn":"print","args":["tiny sim",44,10,7]},{"fn":"print","args":["the world\'s smallest flight sim",2,20,6]},{"fn":"print","args":["press ❎ for briefing",8,57,7]},{"fn":"print","args":["❎/🅾️ : throttle",8,80,6]},{"fn":"print","args":["❎[p2]: toggle flaps",8,87]},{"fn":"print","args":["🅾️[p2]: instruments / map",8,94]},{"fn":"print","args":["⬆️[p2]: cycle gps waypoint",8,101]}],"gs":[{"fn":"pset","args":[92,61,7]},{"fn":"pset","args":[92,66,7]},{"fn":"pset","args":[92,71,7]},{"fn":"pset","args":[92,76,7]},{"fn":"pset","args":[92,81,7]},{"fn":"line","args":[91,71,93,71,7]}],"stopsfx":[{"fn":"sfx","args":[38,-2]},{"fn":"sfx","args":[42,-2]},{"fn":"sfx","args":[43,-2]},{"fn":"sfx","args":[45,-2]}]}'
 -- dither pattern 4x4 kernel
-local dither_pat=json_parse'[0xffff.8,0x7fff.8,0x7fdf.8,0x5fdf.8,0x5f5f.8,0x5b5f.8,0x5b5e.8,0x5a5e.8,0x5a5a.8,0x1a5a.8,0x1a4a.8,0x0a4a.8,0x0a0a.8,0x020a.8,0x0208.8,0x0000.8]'
+local dither_pat=json_parse'[0x0.ffff,0x0.7fff,0x0.7fdf,0x0.5fdf,0x0.5f5f,0x0.5b5f,0x0.5b5e,0x0.5a5e,0x0.5a5a,0x0.1a5a,0x0.1a4a,0x0.0a4a,0x0.0a0a,0x0.020a,0x0.0208,0x0]'
 
 --scenarios (name,lat,lon,hdg,alt,pitch,bank,throttle,tas,dto,nav1,onground)
 
@@ -941,7 +941,6 @@ function _draw()
    ?cpu,2,3,2
    ?cpu,2,2,7
    ]]
-
    end
   dispmessage()
 end
@@ -1309,8 +1308,7 @@ function draw_clouds(weather)
 	 cloudplane=plane_poly_clip(clipplanes[i],cloudplane)
 	end
   tex_src=weather.tex
-	color(cloudy<0 and 5 or 13)
-  polytex(cloudplane)
+  polytex(cloudplane,cloudy<0 and 5 or 13)
 end
 
 function draw_ground(weather)
@@ -1502,7 +1500,7 @@ end
 local shades=unpack_ramp(79)
 
 function rectfillt(x0,y0,x1,y1)
-	x0,x1=max(flr(x0)),min(flr(x1),127)
+	x0,x1=max(x0\1),min(x1\1,127)
 
 	for j=max(y0),min(y1,127) do
 		linet(x0,j,x1,shades)
@@ -1510,8 +1508,9 @@ function rectfillt(x0,y0,x1,y1)
 end
 function circfillt(x0,y0,r,ramp)
  if(r==0) return
- x0,y0=flr(x0),flr(y0)
- local x,y=flr(r),0
+ x0\=1
+ y0\=1
+ local x,y=r\1,0
  local d=1-x
 
 	-- default ramp or provided?
@@ -1525,38 +1524,38 @@ function circfillt(x0,y0,r,ramp)
 		y+=1
 
 		if(d<0) then
-			d+=shl(y,1)+1
+			d+=(y<<1)+1
 		else
 			if x>=y then
 				linet(x0-y+1,y0+x,x0+y-1,ramp)
 				linet(x0-y+1,y0-x,x0+y-1,ramp)
 			end
 			x-=1
-			d+=shl(y-x+1,1)
+			d+=((y-x+1)<<1)
 		end
  end
 end
 
 function linet(x0,y0,x1,ramp)
- if(band(y0,0xff80)!=0) return
- if(x0>127 or x1<0) return
- x0,x1=mid(x0,0,127),mid(x1,0,127)
-
- if band(x0,0x1)==1 then
- 	pset(x0,y0,ramp[pget(x0,y0)])
- 	-- move to even boundary
- 	x0+=1
- end
- if x1%2==0 then
- 	pset(x1,y0,ramp[pget(x1,y0)])
- 	-- move to odd boundary
- 	x1-=1
- end
-
-	local mem=0x6000+shl(y0,6)+shr(x0,1)
-	for mem=mem,mem+shr(x1-x0+1,1)-1 do
-		poke(mem,ramp[peek(mem)])
-	end
+  if(y0&0xff80!=0) return
+  if(x0>127 or x1<0) return
+  x0,x1=mid(x0,0,127),mid(x1,0,127)
+ 
+  if x0&0x1==1 then
+    pset(x0,y0,ramp[pget(x0,y0)])
+    -- move to even boundary
+    x0+=1
+  end
+  if x1%2==0 then
+    pset(x1,y0,ramp[pget(x1,y0)])
+    -- move to odd boundary
+    x1-=1
+  end
+ 
+   local mem=0x6000|y0<<6|x0>>1
+   for mem=mem,mem+((x1-x0+1)>>1)-1 do
+     poke(mem,ramp[@mem])
+   end
 end
 
 -->8
@@ -1686,10 +1685,14 @@ unpack_models()
 -- textured polygon renderer
 -- perspective correct
 -- skip 
-function polytex(v)
+function polytex(v,c)
   if(#v<2) return
+  poke(0x5f34, 1)
+  -- fillp mode + transparency
+  c|=0x1100
   -- cloud texture location + cam pos
-  local mx,my,cx,cz=tex_src.x,tex_src.y,cam.pos[1],cam.pos[3]
+  -- localized dither_pat (faster)
+  local mx,my,cx,cz,dither_pat=tex_src.x,tex_src.y,cam.pos[1],cam.pos[3],dither_pat
 
   local v0,nodes=v[#v],{}
 	local x0,y0,w0,u0,v0=project2d(v0)
@@ -1727,14 +1730,9 @@ function polytex(v)
         dav*=2
         daw*=2
 				for k=ca,min(ceil(b)-1,127),2 do
-          local sx,sy=(au/aw)%32,(av/aw)%32
           -- shift u/v map from cam pos+texture repeat
-          local c=sget(mx+band(shl(sx,5)-cx,31),my+band(shl(sy,5)-cz,31))
-          if c!=0 then
-            fillp(dither_pat[c+1])
-            rectfill(k,y,k+3,y)
-          end
-      
+          rectfill(k,y,k+3,y,c|dither_pat[sget(mx+((((au/aw)<<5)-cx)&31),my+((((av/aw)<<5)-cz)&31))+1])
+          
           au+=dau
 					av+=dav
 					aw+=daw
@@ -1750,6 +1748,7 @@ function polytex(v)
 		x0,y0,w0,u0,v0=_x1,_y1,_w1,_u1,_v1
   end
   fillp()
+  poke(0x5f34, 0)
 end
 
 __gfx__
